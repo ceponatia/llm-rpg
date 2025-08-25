@@ -269,7 +269,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 2. [x] Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Implemented fallback candidate resolution (explicit -> admin-dashboard -> legacy frontend) and normalized base path.
 3. [x] Refactor backend static serve code – Extracted logic into `packages/backend/src/staticAdmin.ts::setupStaticAdmin` handling resolution, fallbacks, logging, and graceful failure.
 4. [x] Add Vite base toggle (`EMBED_ADMIN`) – Added embed mode logic & sourcemap gating in `packages/admin-dashboard/vite.config.ts` using `EMBED_ADMIN`, `ADMIN_BUILD_BASE`, `EMBED_ADMIN_SOURCEMAPS`.
-5. [ ] Introduce build scripts + copy script (Option B) – Root scripts: `build:admin`, `build:backend`, `build:embed`, plus `scripts/embed-copy-admin.cjs` copying dist into backend.
+5. [x] Introduce build scripts + copy script (Option B) – Added root scripts (`build:admin`, `build:backend`, `build:embed`, `embed:copy`) and `scripts/embed-copy-admin.cjs` to copy admin dist into backend artifact.
 6. [ ] Add compression + cache headers – Register `@fastify/compress`; set long cache for hashed assets, `no-cache` for HTML, verify via response headers.
 7. [ ] Add security gating logic for HTML – Enforce `X-Admin-Key` (or future auth) when `ADMIN_PUBLIC!='true'`; allow static asset passthrough; add tests for 401 behavior.
 8. [ ] Write embed-copy script – Implement file copy (clean + recreate) with robust error handling & log output; support relative path overrides.

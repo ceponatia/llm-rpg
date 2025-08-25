@@ -7,6 +7,10 @@
 	"scripts": {
 		"build": "pnpm -r build",
 		"build:all": "pnpm -r build",
+		"build:admin": "pnpm -F @rpg/admin-dashboard build",
+		"build:backend": "pnpm -F @rpg/backend build",
+		"embed:copy": "node scripts/embed-copy-admin.cjs",
+		"build:embed": "pnpm build:admin && pnpm build:backend && pnpm embed:copy",
 		"dev:backend": "pnpm --filter @rpg/backend dev",
 		"dev:admin": "pnpm --filter @rpg/admin-dashboard dev",
 		"dev:frontend": "pnpm --filter @rpg/frontend dev",
