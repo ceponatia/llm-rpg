@@ -47,16 +47,31 @@ export async function setupStaticAdmin(fastify: FastifyInstance, opts: StaticAdm
       return { served: false, error: 'assets_not_found' };
     }
 
-    await fastify.register(staticMod.default, { root: chosen, prefix: basePath });
+    await fastify.register(staticMod.default, { root: chosen, prefix: basePath, decorateReply: false });
 
+    // HTML route (no-cache to always pull latest deployment)
     fastify.get(basePath + '*', async (req, reply) => {
       // Optional security gating for HTML will be added in later tasks.
+      reply.header('Cache-Control', 'no-cache');
       if (typeof (reply as any).sendFile === 'function') {
         (reply as any).sendFile('index.html');
       } else {
         const html = await fs.readFile(join(chosen!, 'index.html'), 'utf-8');
         reply.type('text/html').send(html);
       }
+    });
+
+    // Add onSend hook to set long cache headers for hashed static assets (simple heuristic)
+    fastify.addHook('onSend', async (req, reply, payload) => {
+      try {
+        const url = req.raw.url || '';
+        if (url.startsWith(basePath)) {
+          if (/\.[a-f0-9]{8,}\.(js|css|png|jpg|svg|woff2?)$/i.test(url)) {
+            reply.header('Cache-Control', 'public, max-age=86400, immutable');
+          }
+        }
+      } catch { /* ignore */ }
+      return payload;
     });
 
     fastify.log.info(`[static-admin] Serving from ${chosen} at ${basePath}`);

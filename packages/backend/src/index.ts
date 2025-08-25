@@ -33,6 +33,15 @@ const fastify = Fastify({
   logger: { level: config.NODE_ENV === 'development' ? 'debug' : 'info' }
 });
 
+// Task 6: register compression globally (gzip/brotli) for responses including static assets
+// Using dynamic import to avoid type resolution issues if types are absent.
+try {
+  const compressMod: any = await import('@fastify/compress');
+  await fastify.register(compressMod.default || compressMod, { global: true });
+} catch (e) {
+  fastify.log.warn('Compression plugin failed to register: ' + (e as Error).message);
+}
+
 // Register plugins (broadened CORS for story + admin dashboards)
 await fastify.register(cors, {
   origin: (origin, cb) => {
