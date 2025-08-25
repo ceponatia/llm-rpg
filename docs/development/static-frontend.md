@@ -194,33 +194,95 @@ When using Option B, set `ADMIN_STATIC_DIR=./admin` relative to backend dist in 
 
 ---
 
-## Docker / Deployment Example
+## Docker / Deployment (Final Option B)
 
-1. Build multi-stage image:
-   * Stage 1: Install deps & build admin + backend.
-   * Stage 2: Copy only `packages/backend/dist` (which now includes `admin/`).
-2. Set env: `SERVE_ADMIN_STATIC=true ADMIN_PUBLIC=false ADMIN_BASE_PATH=/admin/`.
-3. Provide `ADMIN_API_KEY` secret.
+Goal: Produce a single image containing only the backend dist (with embedded admin assets under `dist/admin`) and run it with minimal env.
 
-Pseudo Dockerfile snippet (illustrative only):
+### Overview
+
+Key Points:
+
+* Build admin + backend in builder stage using workspace scripts.
+* Copy only `packages/backend/dist` to the runtime image (small surface area).
+* Provide `ADMIN_STATIC_DIR=./admin` so the server resolves embedded copy (since helper searches explicit env first).
+* Disable sourcemaps by default; opt-in with `EMBED_ADMIN_SOURCEMAPS=true` at build time if needed.
+* Decide whether admin is public (`ADMIN_PUBLIC=true`) or gated (`ADMIN_PUBLIC=false` + `ADMIN_API_KEY`).
+
+Recommended directory layout after build stage:
+
+```text
+packages/backend/dist/
+  index.js
+  admin/            # copied admin-dashboard build output
+    assets/*
+    index.html
+```
+
+Final multi-stage Dockerfile example:
 
 ```Dockerfile
-# build stage
+#############################
+# Stage 1: build
+#############################
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY . .
-RUN corepack enable && pnpm install --frozen-lockfile \
- && EMBED_ADMIN=true ADMIN_BUILD_BASE=/admin/ pnpm build:admin \
- && pnpm build:backend \
- && node scripts/embed-copy-admin.cjs
+# Enable corepack for pnpm
+RUN corepack enable \
+  && pnpm install --frozen-lockfile \
+  && EMBED_ADMIN=true ADMIN_BUILD_BASE=/admin/ pnpm build:embed
 
-# runtime
-FROM node:22-alpine
+#############################
+# Stage 2: runtime
+#############################
+FROM node:22-alpine AS runtime
 WORKDIR /app
-COPY packages/backend/dist ./packages/backend/dist
-ENV NODE_ENV=production SERVE_ADMIN_STATIC=true ADMIN_PUBLIC=false ADMIN_BASE_PATH=/admin/
+ENV NODE_ENV=production \
+    SERVE_ADMIN_STATIC=true \
+    ADMIN_PUBLIC=false \
+    ADMIN_BASE_PATH=/admin/ \
+    ADMIN_STATIC_DIR=./admin
+
+# Copy only backend dist (contains admin under dist/admin)
+COPY --from=build /app/packages/backend/dist ./packages/backend/dist
+
+# Optionally supply ADMIN_API_KEY via secret / env at deploy time
+EXPOSE 3001
 CMD ["node", "packages/backend/dist/index.js"]
 ```
+
+Build & run locally (example):
+
+```bash
+docker build -t rpg-backend:embed .
+docker run --rm -p 3001:3001 -e ADMIN_API_KEY=dev-secret rpg-backend:embed
+```
+
+Environment variables summary for runtime image:
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| NODE_ENV | yes | Production logging / behavior |
+| SERVE_ADMIN_STATIC | yes | Enable static embed serving |
+| ADMIN_STATIC_DIR | yes (Option B) | Points to copied `./admin` directory inside backend dist |
+| ADMIN_BASE_PATH | optional | Public path prefix (`/admin/`) |
+| ADMIN_PUBLIC | optional | If `true`, HTML not gated; else require key |
+| ADMIN_API_KEY | required if ADMIN_PUBLIC!=true | Key checked in `X-Admin-Key` header for HTML routes |
+| ADMIN_EMBED_MODE | optional | Future switch (not currently required) |
+
+CI/CD Pipeline Sketch:
+
+1. `pnpm install --frozen-lockfile`
+2. `EMBED_ADMIN=true ADMIN_BUILD_BASE=/admin/ pnpm build:embed`
+3. (Optional) run integration tests against built dist.
+4. `docker build -t your-org/rpg-backend:$(git rev-parse --short HEAD) .`
+5. Push image, deploy with orchestrator setting secrets / env.
+
+Operational Notes:
+
+* If wanting blue/green with cache-busting, rely on hashed asset filenames (already long-cache) and set `ADMIN_PUBLIC=true` only if safe.
+* To disable embedding for a particular build, skip `build:embed` and do normal backend build; ensure `SERVE_ADMIN_STATIC` false.
+* To include sourcemaps temporarily for debugging: add `--build-arg EMBED_ADMIN_SOURCEMAPS=true` and pass that to build stage env (adjust Dockerfile accordingly).
 
 ---
 
@@ -273,7 +335,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 6. [x] Add compression + cache headers – Registered `@fastify/compress` globally and added cache-control logic (immutable for hashed assets, no-cache for HTML) in `staticAdmin`.
 7. [x] Add security gating logic for HTML – Implemented in `staticAdmin` (checks `ADMIN_PUBLIC` & `ADMIN_API_KEY`, returns 401 for HTML when key missing; assets pass through).
 8. [x] Write embed-copy script – Enhanced `scripts/embed-copy-admin.cjs` with flags (--src, --dest, --dry-run, --clean=false), stats & checksum logging, error handling.
-9. [ ] Document Docker example (doc section present) – Finalize Dockerfile snippet reflecting chosen Option B and updated scripts; ensure env vars enumerated in README/ops docs.
+9. [x] Document Docker example (doc section present) – Finalized Option B Dockerfile, env var table, CI/CD sketch, operational notes.
 10. [ ] Add tests (optional but recommended) – Add integration test asserting static HTML + asset served; negative test when assets missing; header gating test.
 
 <!-- markdownlint-enable MD029 MD004 -->
