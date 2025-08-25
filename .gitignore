@@ -36,7 +36,6 @@ pnpm-debug.log*
 # Editor & project meta
 .idea/
 .vscode/
-.github/
 .DS_Store
 
 # Misc
