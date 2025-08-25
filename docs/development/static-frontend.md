@@ -262,18 +262,20 @@ CMD ["node", "packages/backend/dist/index.js"]
 
 ## Incremental Implementation Checklist
 
-Use GitHub task list checkboxes below (clickable in GitHub UI):
+Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers only render task text with ordered or dash lists; switching to ordered format for compatibility.
 
-* [ ] 1. Align naming (`admin-dashboard`) – Rename any residual `frontend` directory references in docs/scripts; ensure backend static path defaults to `../../admin-dashboard/dist`; update `package.json` name if needed.
-* [ ] 2. Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Introduce variables, document defaults, and update backend static serve block to resolve candidates in priority order.
-* [ ] 3. Refactor backend static serve code – Replace current inline block with resilient function: path resolution, existence checks, logging structure, error fallback (no crash if assets missing).
-* [ ] 4. Add Vite base toggle (`EMBED_ADMIN`) – Modify `packages/admin-dashboard/vite.config.ts` to switch `base` dynamically and disable sourcemaps unless opted in.
-* [ ] 5. Introduce build scripts + copy script (Option B) – Root scripts: `build:admin`, `build:backend`, `build:embed`, plus `scripts/embed-copy-admin.cjs` copying dist into backend.
-* [ ] 6. Add compression + cache headers – Register `@fastify/compress`; set long cache for hashed assets, `no-cache` for HTML, verify via response headers.
-* [ ] 7. Add security gating logic for HTML – Enforce `X-Admin-Key` (or future auth) when `ADMIN_PUBLIC!='true'`; allow static asset passthrough; add tests for 401 behavior.
-* [ ] 8. Write embed-copy script – Implement file copy (clean + recreate) with robust error handling & log output; support relative path overrides.
-* [ ] 9. Document Docker example (doc section present) – Finalize Dockerfile snippet reflecting chosen Option B and updated scripts; ensure env vars enumerated in README/ops docs.
-* [ ] 10. Add tests (optional but recommended) – Add integration test asserting static HTML + asset served; negative test when assets missing; header gating test.
+<!-- markdownlint-disable MD029 MD004 -->
+1. [ ] Align naming (`admin-dashboard`) – Rename any residual `frontend` directory references in docs/scripts; ensure backend static path defaults to `../../admin-dashboard/dist`; update `package.json` name if needed.
+2. [ ] Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Introduce variables, document defaults, and update backend static serve block to resolve candidates in priority order.
+3. [ ] Refactor backend static serve code – Replace current inline block with resilient function: path resolution, existence checks, logging structure, error fallback (no crash if assets missing).
+4. [ ] Add Vite base toggle (`EMBED_ADMIN`) – Modify `packages/admin-dashboard/vite.config.ts` to switch `base` dynamically and disable sourcemaps unless opted in.
+5. [ ] Introduce build scripts + copy script (Option B) – Root scripts: `build:admin`, `build:backend`, `build:embed`, plus `scripts/embed-copy-admin.cjs` copying dist into backend.
+6. [ ] Add compression + cache headers – Register `@fastify/compress`; set long cache for hashed assets, `no-cache` for HTML, verify via response headers.
+7. [ ] Add security gating logic for HTML – Enforce `X-Admin-Key` (or future auth) when `ADMIN_PUBLIC!='true'`; allow static asset passthrough; add tests for 401 behavior.
+8. [ ] Write embed-copy script – Implement file copy (clean + recreate) with robust error handling & log output; support relative path overrides.
+9. [ ] Document Docker example (doc section present) – Finalize Dockerfile snippet reflecting chosen Option B and updated scripts; ensure env vars enumerated in README/ops docs.
+10. [ ] Add tests (optional but recommended) – Add integration test asserting static HTML + asset served; negative test when assets missing; header gating test.
+<!-- markdownlint-enable MD029 MD004 -->
 
 ---
 
