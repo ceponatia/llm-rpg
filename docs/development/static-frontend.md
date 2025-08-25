@@ -271,7 +271,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 4. [x] Add Vite base toggle (`EMBED_ADMIN`) – Added embed mode logic & sourcemap gating in `packages/admin-dashboard/vite.config.ts` using `EMBED_ADMIN`, `ADMIN_BUILD_BASE`, `EMBED_ADMIN_SOURCEMAPS`.
 5. [x] Introduce build scripts + copy script (Option B) – Added root scripts (`build:admin`, `build:backend`, `build:embed`, `embed:copy`) and `scripts/embed-copy-admin.cjs` to copy admin dist into backend artifact.
 6. [x] Add compression + cache headers – Registered `@fastify/compress` globally and added cache-control logic (immutable for hashed assets, no-cache for HTML) in `staticAdmin`.
-7. [ ] Add security gating logic for HTML – Enforce `X-Admin-Key` (or future auth) when `ADMIN_PUBLIC!='true'`; allow static asset passthrough; add tests for 401 behavior.
+7. [x] Add security gating logic for HTML – Implemented in `staticAdmin` (checks `ADMIN_PUBLIC` & `ADMIN_API_KEY`, returns 401 for HTML when key missing; assets pass through).
 8. [ ] Write embed-copy script – Implement file copy (clean + recreate) with robust error handling & log output; support relative path overrides.
 9. [ ] Document Docker example (doc section present) – Finalize Dockerfile snippet reflecting chosen Option B and updated scripts; ensure env vars enumerated in README/ops docs.
 10. [ ] Add tests (optional but recommended) – Add integration test asserting static HTML + asset served; negative test when assets missing; header gating test.

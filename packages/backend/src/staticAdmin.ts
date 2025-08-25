@@ -49,15 +49,29 @@ export async function setupStaticAdmin(fastify: FastifyInstance, opts: StaticAdm
 
     await fastify.register(staticMod.default, { root: chosen, prefix: basePath, decorateReply: false });
 
-    // HTML route (no-cache to always pull latest deployment)
+    // Security / gating for HTML (Task 7). Assets (hashed files) are always public to leverage caching unless ADMIN_PUBLIC=strict in future.
+    const isHtmlRequest = (url: string) => !/\.[a-zA-Z0-9]{2,5}$/.test(url); // heuristic: no extension -> HTML route (SPA)
+
     fastify.get(basePath + '*', async (req, reply) => {
-      // Optional security gating for HTML will be added in later tasks.
-      reply.header('Cache-Control', 'no-cache');
-      if (typeof (reply as any).sendFile === 'function') {
-        (reply as any).sendFile('index.html');
+      const url = req.raw.url || '';
+      if (isHtmlRequest(url)) {
+        if (process.env.ADMIN_PUBLIC !== 'true') {
+          const provided = req.headers['x-admin-key'];
+          const expected = process.env.ADMIN_API_KEY;
+          if (expected && provided !== expected) {
+            return reply.code(401).send({ error: 'Unauthorized' });
+          }
+        }
+        reply.header('Cache-Control', 'no-cache');
+        if (typeof (reply as any).sendFile === 'function') {
+          (reply as any).sendFile('index.html');
+        } else {
+          const html = await fs.readFile(join(chosen!, 'index.html'), 'utf-8');
+          reply.type('text/html').send(html);
+        }
       } else {
-        const html = await fs.readFile(join(chosen!, 'index.html'), 'utf-8');
-        reply.type('text/html').send(html);
+        // let static plugin handle asset (served earlier in lifecycle)
+        reply.callNotFound(); // triggers fastify-static handling
       }
     });
 
