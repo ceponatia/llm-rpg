@@ -3,8 +3,7 @@
  * Analyzes user messages to detect emotional/contextual intent using lightweight NLP
  */
 
-import type { Intent, IntentDetectionRule } from '../../types/src/zod/contextModifier.zod.js';
-import { intentSchema, intentDetectionRuleSchema } from '../../types/src/zod/contextModifier.zod.js';
+import { intentSchema, intentDetectionRuleSchema, type Intent, type IntentDetectionRule } from '../../types/src/zod/contextModifier.zod.js';
 
 /**
  * Result of intent detection analysis
@@ -12,7 +11,7 @@ import { intentSchema, intentDetectionRuleSchema } from '../../types/src/zod/con
 export interface IntentDetectionResult {
   intent: Intent;
   confidence: number;
-  matchedRules: string[];
+  matchedRules: Array<string>;
   fallbackUsed: boolean;
 }
 
@@ -20,7 +19,7 @@ export interface IntentDetectionResult {
  * Configuration for intent detection
  */
 export interface IntentDetectorConfig {
-  rules: IntentDetectionRule[];
+  rules: Array<IntentDetectionRule>;
   defaultIntent: Intent;
   confidenceThreshold: number;
   enableFallback: boolean;
@@ -30,14 +29,14 @@ export interface IntentDetectorConfig {
  * Intent detector using keyword matching and pattern recognition
  */
 export class IntentDetector {
-  private rules: InternalRule[] = [];
+  private rules: Array<InternalRule> = [];
   private defaultIntent: Intent = 'neutral';
-  private confidenceThreshold: number = 0.6;
-  private enableFallback: boolean = true;
-  private idCounter: number = 0;
+  private confidenceThreshold = 0.6;
+  private enableFallback = true;
+  private idCounter = 0;
 
-  constructor(config?: Partial<IntentDetectorConfig>) {
-    if (config) {
+  public constructor(config?: Partial<IntentDetectorConfig>) {
+    if (config != null) {
       this.updateConfig(config);
     }
   }
@@ -46,7 +45,7 @@ export class IntentDetector {
    * Detect intent from user message
    * TODO: Implement intent detection using keyword/pattern matching
    */
-  detectIntent(userMessage: string): IntentDetectionResult {
+  public detectIntent(userMessage: string): IntentDetectionResult {
     const normalized: string = userMessage.toLowerCase().trim();
     const candidates: Array<{ rule: InternalRule; confidence: number; keywordScore: number; patternScore: number }> = [];
 
@@ -65,14 +64,14 @@ export class IntentDetector {
     if (passing.length > 0) {
       // Sort: higher confidence desc, then lower priority value (higher priority), then earlier insertion (id order)
       passing.sort((a, b) => {
-        if (b.confidence !== a.confidence) return b.confidence - a.confidence;
-        if (a.rule.priority !== b.rule.priority) return a.rule.priority - b.rule.priority;
+        if (b.confidence !== a.confidence) {return b.confidence - a.confidence;}
+        if (a.rule.priority !== b.rule.priority) {return a.rule.priority - b.rule.priority;}
         return a.rule.__numericId - b.rule.__numericId;
       });
       chosen = passing[0];
     }
 
-    if (!chosen) {
+  if (chosen == null) {
       return {
         intent: this.defaultIntent,
         confidence: 1.0,
@@ -93,8 +92,8 @@ export class IntentDetector {
    * Update detector configuration
    * TODO: Implement configuration updates with validation
    */
-  updateConfig(config: Partial<IntentDetectorConfig>): void {
-    if (config.defaultIntent) {
+  public updateConfig(config: Partial<IntentDetectorConfig>): void {
+    if (config.defaultIntent !== undefined) {
       this.defaultIntent = intentSchema.parse(config.defaultIntent);
     }
     if (typeof config.confidenceThreshold === 'number') {
@@ -103,7 +102,7 @@ export class IntentDetector {
     if (typeof config.enableFallback === 'boolean') {
       this.enableFallback = config.enableFallback;
     }
-    if (config.rules) {
+    if (config.rules != null) {
       this.rules = [];
       for (const rule of config.rules) {
         this.addRule(rule);
@@ -117,13 +116,13 @@ export class IntentDetector {
    * Add a new intent detection rule
    * TODO: Implement rule addition with validation
    */
-  addRule(rule: IntentDetectionRule): void {
+  public addRule(rule: IntentDetectionRule): void {
     const validated: IntentDetectionRule = intentDetectionRuleSchema.parse(rule);
     // Construct internal rule
     const internal: InternalRule = { ...validated, __id: this.generateRuleId(validated), __numericId: this.idCounter++ };
     // Prevent exact duplicate (same intent + same keywords + patterns)
     const duplicate: InternalRule | undefined = this.rules.find(r => r.intent === internal.intent && arrayEqual(r.keywords, internal.keywords) && arrayEqual(r.patterns, internal.patterns));
-    if (duplicate) {
+    if (duplicate != null) {
       return; // silently ignore duplicates
     }
     this.rules.push(internal);
@@ -134,7 +133,7 @@ export class IntentDetector {
    * Remove an intent detection rule
    * TODO: Implement rule removal
    */
-  removeRule(intent: Intent, ruleId: string): void {
+  public removeRule(intent: Intent, ruleId: string): void {
   this.rules = this.rules.filter(r => !(r.intent === intent && r.__id === ruleId));
   }
 
@@ -142,24 +141,26 @@ export class IntentDetector {
    * Get current detection rules
    * TODO: Implement rule listing
    */
-  getRules(): IntentDetectionRule[] {
-  return this.rules.map(r => ({ intent: r.intent, keywords: [...r.keywords], patterns: [...r.patterns], confidence_threshold: r.confidence_threshold, priority: r.priority })).sort((a, b) => a.priority - b.priority);
+  public getRules(): Array<IntentDetectionRule> {
+	return this.rules
+      .map(r => ({ intent: r.intent, keywords: [...r.keywords], patterns: [...r.patterns], confidence_threshold: r.confidence_threshold, priority: r.priority }))
+      .sort((a, b) => a.priority - b.priority);
   }
 
   /**
    * Analyze message for keyword matches (helper method)
    * TODO: Implement keyword analysis
    */
-  private analyzeKeywords(message: string, keywords: string[]): number {
-    if (!keywords || keywords.length === 0) {
+  private analyzeKeywords(message: string, keywords: Array<string>): number {
+    if (keywords.length === 0) {
       return 0;
     }
-    const tokens: string[] = message.split(/[^a-z0-9]+/g).filter(Boolean);
+    const tokens: Array<string> = message.split(/[^a-z0-9]+/g).filter(Boolean);
     if (tokens.length === 0) {
       return 0;
     }
-    const tokenSet: Set<string> = new Set(tokens);
-    let matches: number = 0;
+    const tokenSet = new Set<string>(tokens);
+    let matches = 0;
     for (const kw of keywords) {
       if (tokenSet.has(kw.toLowerCase())) {
         matches += 1;
@@ -172,14 +173,14 @@ export class IntentDetector {
    * Apply pattern matching (helper method)  
    * TODO: Implement pattern matching
    */
-  private matchPatterns(message: string, patterns: string[]): number {
-    if (!patterns || patterns.length === 0) {
+  private matchPatterns(message: string, patterns: Array<string>): number {
+    if (patterns.length === 0) {
       return 0;
     }
-    let matches: number = 0;
+    let matches = 0;
     for (const raw of patterns) {
       try {
-        const regex: RegExp = new RegExp(raw, 'i');
+        const regex = new RegExp(raw, 'i');
         if (regex.test(message)) {
           matches += 1;
         }
@@ -192,9 +193,9 @@ export class IntentDetector {
 
   /** Generate deterministic id for a rule */
   private generateRuleId(rule: IntentDetectionRule): string {
-    const base: string = `${rule.intent}|${rule.priority}|${rule.keywords.join(',')}|${rule.patterns.join(',')}`;
-    let hash: number = 0;
-    for (let i: number = 0; i < base.length; i++) {
+    const base = `${rule.intent}|${rule.priority}|${rule.keywords.join(',')}|${rule.patterns.join(',')}`;
+    let hash = 0;
+    for (let i = 0; i < base.length; i++) {
       hash = (hash * 31 + base.charCodeAt(i)) >>> 0;
     }
     return `r_${hash.toString(16)}`;
@@ -204,10 +205,10 @@ export class IntentDetector {
 /** Internal decorated rule */
 interface InternalRule extends IntentDetectionRule { __id: string; __numericId: number; }
 
-function arrayEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i: number = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
+function arrayEqual(a: Array<string>, b: Array<string>): boolean {
+  if (a.length !== b.length) {return false;}
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {return false;}
   }
   return true;
 }

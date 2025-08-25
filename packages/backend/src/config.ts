@@ -46,24 +46,26 @@ function resolvePromptTemplate(): Config['PROMPT_TEMPLATE'] {
 }
 
 export const config: Config = {
-  PORT: parseInt(process.env.PORT || '3001'),
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: parseInt(process.env.PORT ?? '3001', 10),
+  NODE_ENV: process.env.NODE_ENV ?? 'development',
   
-  NEO4J_URI: process.env.NEO4J_URI || 'bolt://localhost:7687',
-  NEO4J_USER: process.env.NEO4J_USERNAME || 'neo4j',
-  NEO4J_PASSWORD: process.env.NEO4J_PASSWORD || 'test1234',
+  NEO4J_URI: process.env.NEO4J_URI ?? 'bolt://localhost:7687',
+  NEO4J_USER: process.env.NEO4J_USERNAME ?? 'neo4j',
+  NEO4J_PASSWORD: process.env.NEO4J_PASSWORD ?? 'test1234',
   
   REDIS_URL: process.env.REDIS_URL,
   
-  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-  OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'mistral:instruct',
+  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434',
+  OLLAMA_MODEL: process.env.OLLAMA_MODEL ?? 'mistral:instruct',
 
   PROMPT_TEMPLATE: resolvePromptTemplate(),
-  PROMPT_CONSISTENCY_ENABLED: process.env.PROMPT_CONSISTENCY_ENABLED ? process.env.PROMPT_CONSISTENCY_ENABLED === 'true' : true,
-  PROMPT_CONSISTENCY_TURN_INTERVAL: parseInt(process.env.PROMPT_CONSISTENCY_TURN_INTERVAL || '6'),
-  PROMPT_CONSISTENCY_COOLDOWN_TURNS: parseInt(process.env.PROMPT_CONSISTENCY_COOLDOWN_TURNS || '3'),
-  PROMPT_CONSISTENCY_TIME_MINUTES: parseInt(process.env.PROMPT_CONSISTENCY_TIME_MINUTES || '10'),
+  PROMPT_CONSISTENCY_ENABLED: process.env.PROMPT_CONSISTENCY_ENABLED === undefined
+    ? true
+    : process.env.PROMPT_CONSISTENCY_ENABLED === 'true',
+  PROMPT_CONSISTENCY_TURN_INTERVAL: parseInt(process.env.PROMPT_CONSISTENCY_TURN_INTERVAL ?? '6', 10),
+  PROMPT_CONSISTENCY_COOLDOWN_TURNS: parseInt(process.env.PROMPT_CONSISTENCY_COOLDOWN_TURNS ?? '3', 10),
+  PROMPT_CONSISTENCY_TIME_MINUTES: parseInt(process.env.PROMPT_CONSISTENCY_TIME_MINUTES ?? '10', 10),
   
-  FAISS_INDEX_PATH: process.env.FAISS_INDEX_PATH || './data/faiss_index',
-  VECTOR_DIMENSION: parseInt(process.env.VECTOR_DIMENSION || '1536')
+  FAISS_INDEX_PATH: process.env.FAISS_INDEX_PATH ?? './data/faiss_index',
+  VECTOR_DIMENSION: parseInt(process.env.VECTOR_DIMENSION ?? '1536', 10)
 };

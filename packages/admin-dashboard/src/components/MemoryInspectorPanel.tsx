@@ -68,7 +68,7 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
 
   const renderL1Inspector = (): JSX.Element | null => {
     const l1 = memoryState?.l1_working_memory;
-    if (!l1) return null;
+    if (!l1) {return null;}
 
     return (
       <div className="space-y-4">
@@ -127,7 +127,7 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
 
   const renderL2Inspector = (): JSX.Element | null => {
     const l2 = memoryState?.l2_graph_memory;
-    if (!l2) return null;
+    if (!l2) {return null;}
 
     return (
       <div className="space-y-4">
@@ -175,7 +175,7 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
 
   const renderL3Inspector = (): JSX.Element | null => {
     const l3 = memoryState?.l3_vector_memory;
-    if (!l3) return null;
+    if (!l3) {return null;}
 
     return (
       <div className="space-y-4">

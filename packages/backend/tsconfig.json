@@ -7,7 +7,11 @@
     "types": ["node"],
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@rpg/utils": ["../utils/src"],
+      "@rpg/utils/*": ["../utils/src/*"]
+    }
   },
   "references": [
     { "path": "../types" }

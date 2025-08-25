@@ -1,5 +1,5 @@
-import { FastifyInstance } from 'fastify';
-import { ChatRequest, ChatResponse } from '@rpg/types';
+import type { FastifyInstance } from 'fastify';
+import type { ChatRequest, ChatResponse } from '@rpg/types';
 import { OllamaService } from '../services/ollama.js';
 import { randomUUID } from 'crypto';
 import { CharacterRegistry } from '../services/character-registry.js';
@@ -10,7 +10,7 @@ type ChatBody = ChatRequest & {
   character_id?: string;
 };
 
-export async function chatRoutes(fastify: FastifyInstance): Promise<void> {
+export function chatRoutes(fastify: FastifyInstance): void {
   const ollama = new OllamaService();
   const characterRegistry = CharacterRegistry.getInstance();
 
@@ -18,32 +18,37 @@ export async function chatRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post<{ Body: ChatBody }>('/message', async (request, reply) => {
     const body: ChatBody = request.body;
     const { message, session_id, fusion_weights, prompt_template, template_vars, character_id } = body;
+  if (message === '') {
+      reply.status(400).send({ error: 'Message text required' });
+      return;
+    }
     const startTime = Date.now();
     
     try {
       // Use provided session_id or create new one
-      const baseSessionId = session_id || randomUUID();
-      const sessionId = character_id ? `${baseSessionId}:${character_id}` : baseSessionId;
+  const baseSessionId = session_id ?? randomUUID();
+  const useCharacter = character_id !== undefined && character_id !== '';
+  const sessionId = useCharacter ? `${baseSessionId}:${character_id}` : baseSessionId;
       
       // Use provided fusion weights or defaults
-      const weights = fusion_weights || fastify.mca.config.default_fusion_weights;
+  const weights = fusion_weights ?? fastify.mca.config.default_fusion_weights;
 
       // Character handling
-      let effectiveTemplate = prompt_template;
+  let effectiveTemplate = prompt_template;
       const vars = { ...template_vars };
-      if (character_id) {
+      if (useCharacter) {
         const profile = characterRegistry.get(character_id);
-        if (profile) {
-          if (!effectiveTemplate) effectiveTemplate = 'roleplay';
-          const salientAttributes = (profile.attributes || [])
+  if (profile !== undefined) {
+          effectiveTemplate ??= 'roleplay';
+          const salientAttributes = (profile.attributes ?? [])
             .filter((a: { salience?: number }) => (a.salience ?? 0) >= 0.6)
             .slice(0, 8);
           const attrText = salientAttributes.map((a: { key: string; value: unknown }) => {
-            const raw: unknown = a.value as unknown;
+            const raw: unknown = a.value;
             const val: unknown = typeof raw === 'object' && raw !== null && 'value' in (raw as Record<string, unknown>) ? (raw as Record<string, unknown>).value : a.value;
             return `${a.key.replace(/_/g,' ')}: ${String(val)}`;
           }).join('; ');
-          vars.char = `${profile.name}${attrText ? ' | ' + attrText : ''}`;
+          vars.char = `${profile.name}${attrText !== '' ? ' | ' + attrText : ''}`;
         }
       }
       
@@ -105,7 +110,7 @@ export async function chatRoutes(fastify: FastifyInstance): Promise<void> {
              WITH t
              MATCH (s:Session {id: $sessionId})
              MERGE (t)-[:IN_SESSION]->(s)`,
-            { id: userTurn.id, role: userTurn.role, content: userTurn.content, timestamp: userTurn.timestamp, tokens: userTurn.tokens, sessionId, characterId: character_id || null }
+            { id: userTurn.id, role: userTurn.role, content: userTurn.content, timestamp: userTurn.timestamp, tokens: userTurn.tokens, sessionId, characterId: character_id ?? null }
           );
           // Create assistant turn
           await tx.run(
@@ -115,9 +120,9 @@ export async function chatRoutes(fastify: FastifyInstance): Promise<void> {
              WITH t
              MATCH (s:Session {id: $sessionId})
              MERGE (t)-[:IN_SESSION]->(s)`,
-            { id: assistantTurn.id, role: assistantTurn.role, content: assistantTurn.content, timestamp: assistantTurn.timestamp, tokens: assistantTurn.tokens, sessionId, characterId: character_id || null }
+            { id: assistantTurn.id, role: assistantTurn.role, content: assistantTurn.content, timestamp: assistantTurn.timestamp, tokens: assistantTurn.tokens, sessionId, characterId: character_id ?? null }
           );
-          if (character_id) {
+          if (useCharacter) {
             await tx.run(
               'MATCH (c:Character {id: $characterId}) MATCH (t:Turn {id: $turnId}) MERGE (c)-[:PARTICIPATED_IN]->(t)',
               { characterId: character_id, turnId: assistantTurn.id }
@@ -164,7 +169,7 @@ export async function chatRoutes(fastify: FastifyInstance): Promise<void> {
       
       // Broadcast to WebSocket clients
       fastify.websocketClients?.forEach(client => {
-        if (client.readyState === 1) { // OPEN
+        if (client.readyState === 1) { // OPEN constant from ws
           client.send(JSON.stringify({
             type: 'chat_response',
             data: chatResponse
@@ -172,7 +177,7 @@ export async function chatRoutes(fastify: FastifyInstance): Promise<void> {
         }
       });
       
-      return chatResponse;
+  return chatResponse;
     } catch (error) {
       fastify.log.error(error);
       reply.status(500).send({
@@ -223,7 +228,8 @@ export async function chatRoutes(fastify: FastifyInstance): Promise<void> {
         { characterId }
       ));
       await session.close();
-      const turns = result.records.map(r => r.get('turn'));
+  interface TurnRecord { id: string; role: string; content: string; timestamp: string; tokens: number; character_id: string | null; session_id: string }
+  const turns = result.records.map(r => r.get('turn') as TurnRecord);
       return { character_id: characterId, turns };
     } catch (err) {
       fastify.log.error({ err }, 'Failed to fetch character history');

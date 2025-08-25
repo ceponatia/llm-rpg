@@ -1,8 +1,5 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
-export async function publicRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/api/memory/summary', async () => {
-    const stats = await fastify.db.getHighLevelStats();
-    return stats;
-  });
+export function publicRoutes(fastify: FastifyInstance): void {
+  fastify.get('/api/memory/summary', async () => fastify.db.getHighLevelStats());
 }

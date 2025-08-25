@@ -1,10 +1,10 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { CharacterRegistry } from '../services/character-registry.js';
 
-export async function charactersRoutes(fastify: FastifyInstance): Promise<void> {
+export function charactersRoutes(fastify: FastifyInstance): void {
   const registry = CharacterRegistry.getInstance();
 
-  fastify.get('/', async () => {
+  fastify.get('/', () => {
     const list = registry.list().map(c => ({
       id: c.id,
       name: c.name,
@@ -14,10 +14,10 @@ export async function charactersRoutes(fastify: FastifyInstance): Promise<void> 
     return { characters: list };
   });
 
-  fastify.get('/:id', async (request, reply) => {
+  fastify.get('/:id', (request, reply) => {
     const { id } = request.params as { id: string };
     const c = registry.get(id);
-    if (!c) {
+    if (c === undefined) {
       reply.code(404);
       return { error: 'Character not found' };
     }

@@ -1,6 +1,6 @@
 // Handles character upsertion into Neo4j graph
-import { ManagedTransaction } from 'neo4j-driver';
-import { VADState } from '@rpg/types';
+import type { ManagedTransaction } from 'neo4j-driver';
+import type { VADState } from '@rpg/types';
 
 export async function upsertCharacter(
   tx: ManagedTransaction, 

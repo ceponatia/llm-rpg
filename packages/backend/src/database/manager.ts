@@ -1,10 +1,11 @@
-import neo4j, { Driver, Session } from 'neo4j-driver';
+import neo4j, { type Driver, type Session, type Integer } from 'neo4j-driver';
 // import { FaissNode } from 'faiss-node';
-import { createClient, RedisClientType } from 'redis';
+import { createClient, type RedisClientType } from 'redis';
 import { promises as fs } from 'fs';
 import { dirname } from 'path';
 // Using local copy of interface until mca package builds and exports properly
 import type { IDatabaseManager } from '../../../mca/src/interfaces/database.js';
+import { logger } from '../../../utils/src/logger.ts';
 
 interface Neo4jConfig {
   uri: string;
@@ -29,8 +30,8 @@ interface DatabaseConfig {
 
 // Minimal mock FAISS index shape used in code
 interface MockFaissIndex {
-  add(v: number[][]): void;
-  search(v: number[][], k: number): { distances: number[][]; labels: number[][] };
+  add(v: Array<Array<number>>): void;
+  search(v: Array<Array<number>>, k: number): { distances: Array<Array<number>>; labels: Array<Array<number>> };
   ntotal(): number;
   writeIndex(path: string): Promise<void>;
   readIndex(path: string): Promise<void>;
@@ -41,12 +42,12 @@ export class DatabaseManager implements IDatabaseManager {
   private faissIndex: MockFaissIndex | null = null;
   public redis: RedisClientType | null = null;
   
-  constructor(private config: DatabaseConfig) {}
+  public constructor(private readonly config: DatabaseConfig) {}
 
-  async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     await this.initializeNeo4j();
     await this.initializeFaiss();
-    if (this.config.redis) {
+    if (this.config.redis != null) {
       await this.initializeRedis();
     }
   }
@@ -71,15 +72,19 @@ export class DatabaseManager implements IDatabaseManager {
       // Create constraints and indexes
       await this.createNeo4jConstraints();
       
-      console.log('✅ Neo4j connection established');
+      logger.info('Neo4j connection established');
     } catch (error) {
-      console.error('❌ Failed to connect to Neo4j:', error);
+      logger.error('Failed to connect to Neo4j', error);
       throw error;
     }
   }
 
   private async createNeo4jConstraints(): Promise<void> {
-    const session = this.neo4jDriver!.session();
+    const driver = this.neo4jDriver;
+    if (driver == null) {
+      throw new Error('Neo4j driver not initialized');
+    }
+    const session = driver.session();
     
     try {
       // Create constraints for unique IDs
@@ -97,7 +102,7 @@ export class DatabaseManager implements IDatabaseManager {
           // Constraint might already exist, that's okay
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           if (!errorMessage.includes('already exists')) {
-            console.warn('Constraint creation warning:', errorMessage);
+            logger.warn(`Constraint creation warning: ${errorMessage}`);
           }
         }
       }
@@ -115,10 +120,10 @@ export class DatabaseManager implements IDatabaseManager {
         try {
           await session.run(index);
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            if (!errorMessage.includes('already exists')) {
-              console.warn('Index creation warning:', errorMessage);
-            }
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          if (!errorMessage.includes('already exists')) {
+            logger.warn(`Index creation warning: ${errorMessage}`);
+          }
         }
       }
     } finally {
@@ -133,36 +138,41 @@ export class DatabaseManager implements IDatabaseManager {
 
       // Mock FAISS initialization (would use actual FaissNode in production)
       this.faissIndex = {
-        add: (v: number[][]): void => { void v; },
-        search: (v: number[][], k: number): { distances: number[][]; labels: number[][] } => { void v; void k; return { distances: [[]], labels: [[]] }; },
+        add: (v: Array<Array<number>>): void => { void v; },
+        search: (v: Array<Array<number>>, k: number): { distances: Array<Array<number>>; labels: Array<Array<number>> } => { void v; void k; return { distances: [[]], labels: [[]] }; },
         ntotal: (): number => 0,
-        writeIndex: async (p: string): Promise<void> => { void p; },
-        readIndex: async (p: string): Promise<void> => { void p; }
+        // Return resolved promises without triggering require-await rule
+        writeIndex: (p: string): Promise<void> => { void p; return Promise.resolve(); },
+        readIndex: (p: string): Promise<void> => { void p; return Promise.resolve(); }
       };
-      console.log('✅ Mock FAISS index created');
+      logger.info('Mock FAISS index created');
     } catch (error) {
-      console.error('❌ Failed to initialize FAISS:', error);
+      logger.error('Failed to initialize FAISS', error);
       throw error;
     }
   }
 
   private async initializeRedis(): Promise<void> {
     try {
-      this.redis = createClient({ url: this.config.redis!.url });
+      const redisCfg = this.config.redis;
+      if (redisCfg == null) {
+        return; // optional
+      }
+      this.redis = createClient({ url: redisCfg.url });
       await this.redis.connect();
       
       // Test connection
       await this.redis.ping();
-      console.log('✅ Redis connection established');
+      logger.info('Redis connection established');
     } catch (error) {
-      console.error('❌ Failed to connect to Redis:', error);
+      logger.error('Failed to connect to Redis', error);
       // Redis is optional, so we don't throw here
       this.redis = null;
     }
   }
 
-  async checkNeo4jHealth(): Promise<boolean> {
-    if (!this.neo4jDriver) return false;
+  public async checkNeo4jHealth(): Promise<boolean> {
+    if (this.neo4jDriver == null) { return false; }
     
     try {
       const session = this.neo4jDriver.session();
@@ -174,67 +184,88 @@ export class DatabaseManager implements IDatabaseManager {
     }
   }
 
-  getNeo4jSession(): Session {
-    if (!this.neo4jDriver) {
+  public getNeo4jSession(): Session {
+    if (this.neo4jDriver == null) {
       throw new Error('Neo4j driver not initialized');
     }
     return this.neo4jDriver.session();
   }
 
-  getDriver(): Driver {
-    if (!this.neo4jDriver) {
+  public getDriver(): Driver {
+    if (this.neo4jDriver == null) {
       throw new Error('Neo4j driver not initialized');
     }
     return this.neo4jDriver;
   }
 
-  getFaissIndex(): MockFaissIndex {
-    if (!this.faissIndex) {
+  public getFaissIndex(): MockFaissIndex {
+    if (this.faissIndex == null) {
       throw new Error('FAISS index not initialized');
     }
     return this.faissIndex;
   }
 
-  async saveFaissIndex(): Promise<void> {
-    if (this.faissIndex) {
+  public async saveFaissIndex(): Promise<void> {
+    if (this.faissIndex !== null) {
       await this.faissIndex.writeIndex(this.config.faiss.indexPath);
     }
   }
 
-  async close(): Promise<void> {
-    if (this.neo4jDriver) {
+  public async close(): Promise<void> {
+    if (this.neo4jDriver !== null) {
       await this.neo4jDriver.close();
     }
     
-    if (this.faissIndex) {
+    if (this.faissIndex !== null) {
       await this.saveFaissIndex();
     }
     
-    if (this.redis) {
+    if (this.redis !== null) {
       await this.redis.quit();
     }
     
-    console.log('🔌 Database connections closed');
+    logger.info('Database connections closed');
   }
 
   // High-level aggregate stats for lightweight public summary
-  async getHighLevelStats(): Promise<{ sessions: number; characters: number; facts: number; lastEventAt?: string } > {
-    if (!this.neo4jDriver) throw new Error('Neo4j driver not initialized');
+  public async getHighLevelStats(): Promise<{ sessions: number; characters: number; facts: number; lastEventAt?: string } > {
+    if (this.neo4jDriver == null) { throw new Error('Neo4j driver not initialized'); }
     const session = this.neo4jDriver.session();
     try {
       const result = await session.run(`
         MATCH (s:Session) RETURN count(s) AS sessions;
       `);
-      const sessions = result.records[0]?.get('sessions').toNumber?.() ?? result.records[0]?.get('sessions') ?? 0;
-      const charsResult = await session.run(`MATCH (c:Character) RETURN count(c) AS characters`);
-      const characters = charsResult.records[0]?.get('characters').toNumber?.() ?? charsResult.records[0]?.get('characters') ?? 0;
-      const factsResult = await session.run(`MATCH (f:Fact) RETURN count(f) AS facts`);
-      const facts = factsResult.records[0]?.get('facts').toNumber?.() ?? factsResult.records[0]?.get('facts') ?? 0;
-      const lastEventResult = await session.run(`MATCH (t:Turn) RETURN t.timestamp AS ts ORDER BY t.timestamp DESC LIMIT 1`);
-      const lastEventAt = lastEventResult.records[0]?.get('ts') || undefined;
+      const sessions = extractNumber(result.records[0]?.get('sessions'));
+
+      const charsResult = await session.run('MATCH (c:Character) RETURN count(c) AS characters');
+      const characters = extractNumber(charsResult.records[0]?.get('characters'));
+
+      const factsResult = await session.run('MATCH (f:Fact) RETURN count(f) AS facts');
+      const facts = extractNumber(factsResult.records[0]?.get('facts'));
+
+  const lastEventResult = await session.run('MATCH (t:Turn) RETURN t.timestamp AS ts ORDER BY t.timestamp DESC LIMIT 1');
+  const lastEventAtRaw: unknown = lastEventResult.records[0]?.get('ts');
+      const lastEventAt = typeof lastEventAtRaw === 'string' ? lastEventAtRaw : undefined;
       return { sessions, characters, facts, lastEventAt };
     } finally {
       await session.close();
     }
   }
+}
+
+// Helper utilities (file-local): number extraction from potentially neo4j Integer values
+function isNeo4jInteger(value: unknown): value is Integer {
+  return typeof value === 'object' && value !== null && 'toNumber' in value && typeof (value as { toNumber?: unknown }).toNumber === 'function';
+}
+
+function extractNumber(value: unknown): number {
+  if (typeof value === 'number') { return value; }
+  if (isNeo4jInteger(value)) {
+    try {
+      return value.toNumber();
+    } catch {
+      return 0;
+    }
+  }
+  return 0;
 }

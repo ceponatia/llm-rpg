@@ -16,17 +16,24 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-  "@rpg/types": ["./packages/types/src"],
-  "@rpg/types/*": ["./packages/types/src/*"],
-  "@rpg/backend": ["./packages/backend/src"],
-  "@rpg/backend/*": ["./packages/backend/src/*"],
-  "@rpg/admin-dashboard": ["./packages/admin-dashboard/src"],
-  "@rpg/admin-dashboard/*": ["./packages/admin-dashboard/src/*"],
-  "@rpg/frontend": ["./packages/frontend/src"],
-  "@rpg/frontend/*": ["./packages/frontend/src/*"]
+      "@rpg/types": ["./packages/types/src"],
+      "@rpg/types/*": ["./packages/types/src/*"],
+      "@rpg/backend": ["./packages/backend/src"],
+      "@rpg/backend/*": ["./packages/backend/src/*"],
+      "@rpg/admin-dashboard": ["./packages/admin-dashboard/src"],
+      "@rpg/admin-dashboard/*": ["./packages/admin-dashboard/src/*"],
+      "@rpg/frontend": ["./packages/frontend/src"],
+      "@rpg/frontend/*": ["./packages/frontend/src/*"],
+      "@rpg/utils": ["./packages/utils/src"],
+      "@rpg/utils/*": ["./packages/utils/src/*"]
     }
   },
   "references": [],
-  "include": [],
+  "include": [
+    "packages/**/src/**/*.ts",
+    "packages/**/src/**/*.tsx",
+    "packages/**/tests/**/*.ts",
+    "packages/**/tests/**/*.tsx"
+  ],
   "exclude": ["node_modules", "dist", "build"]
 }

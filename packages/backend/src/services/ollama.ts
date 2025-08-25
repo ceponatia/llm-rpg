@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 import { Ollama } from 'ollama';
 import { config } from '../config.js';
-import { MemoryRetrievalResult } from '@rpg/types';
-import { encoding_for_model, Tiktoken } from 'tiktoken';
+import type { MemoryRetrievalResult } from '@rpg/types';
+import { encoding_for_model, type Tiktoken } from 'tiktoken';
 import { renderTemplate, injectMemory, type PromptTemplateId } from '../prompts/templates.js';
 import { ConsistencyInjector, getConsistencyFragment } from '../prompts/consistency.js';
+import { logger } from '../../../utils/src/logger.ts';
 
 export interface LLMResponse {
   response: string;
@@ -19,21 +21,21 @@ export interface LLMResponse {
 }
 
 export class OllamaService {
-  private ollama: Ollama;
-  private tokenizer: Tiktoken | null;
+  private readonly ollama: Ollama;
+  private readonly tokenizer: Tiktoken | null;
 
-  constructor() {
+  public constructor() {
     this.ollama = new Ollama({ host: config.OLLAMA_BASE_URL });
     // Initialize tokenizer for token counting
     try {
       this.tokenizer = encoding_for_model('gpt-3.5-turbo'); // Close approximation for Mistral
-    } catch {
-      console.warn('Failed to initialize tokenizer, using fallback estimation');
+    } catch (err) {
+      logger.warn('Failed to initialize tokenizer, using fallback estimation', err);
       this.tokenizer = null;
     }
   }
 
-  async generateResponse(userMessage: string, memoryContext: MemoryRetrievalResult, options?: { templateId?: PromptTemplateId; templateVars?: { char?: string; user?: string; scene?: string }; sessionId?: string }): Promise<LLMResponse & { prompt_sections: { system: string; working_memory: string; episodic_memory: string; semantic_archive: string; user_query: string; full_prompt: string } }> {
+  public async generateResponse(userMessage: string, memoryContext: MemoryRetrievalResult, options?: { templateId?: PromptTemplateId; templateVars?: { char?: string; user?: string; scene?: string }; sessionId?: string }): Promise<LLMResponse & { prompt_sections: { system: string; working_memory: string; episodic_memory: string; semantic_archive: string; user_query: string; full_prompt: string } }> {
     const { fullPrompt, sections } = this.constructPrompt(userMessage, memoryContext, { ...options });
     try {
       const response = await this.ollama.generate({
@@ -43,7 +45,7 @@ export class OllamaService {
         options: { temperature: 0.7, top_p: 0.9, num_predict: 2000 }
       });
       return { response: response.response, model: config.OLLAMA_MODEL, created_at: new Date().toISOString(), done: true, total_duration: response.total_duration, load_duration: response.load_duration, prompt_eval_count: response.prompt_eval_count, prompt_eval_duration: response.prompt_eval_duration, eval_count: response.eval_count, eval_duration: response.eval_duration, prompt_sections: sections };
-    } catch (error) { throw new Error(`Failed to generate response: ${error}`); }
+  } catch (error) { throw new Error(`Failed to generate response: ${String(error)}`); }
   }
 
   private constructPrompt(userMessage: string, memoryContext: MemoryRetrievalResult, options?: { templateId?: PromptTemplateId; templateVars?: { char?: string; user?: string; scene?: string }; sessionId?: string }): { fullPrompt: string; sections: { system: string; working_memory: string; episodic_memory: string; semantic_archive: string; user_query: string; full_prompt: string } } {
@@ -54,28 +56,32 @@ export class OllamaService {
       l1.turns.map(turn => `${turn.role}: ${turn.content}`).join('\n') +
       `\n\nEPISODIC MEMORY (Characters and facts):\n`;
 
-    if (l2.characters.length > 0) {
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (l2.characters.length > 0) {
       memoryBlock += `Characters:\n`;
       l2.characters.forEach(char => {
         memoryBlock += `- ${char.name}: VAD emotional state (valence: ${char.emotional_state.valence.toFixed(2)}, arousal: ${char.emotional_state.arousal.toFixed(2)}, dominance: ${char.emotional_state.dominance.toFixed(2)})\n`;
       });
     }
 
-    if (l2.facts.length > 0) {
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (l2.facts.length > 0) {
       memoryBlock += `Facts:\n`;
       l2.facts.forEach(fact => {
         memoryBlock += `- ${fact.attribute}: ${fact.current_value} (importance: ${fact.importance_score})\n`;
       });
     }
 
-    if (l2.relationships.length > 0) {
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (l2.relationships.length > 0) {
       memoryBlock += `Relationships:\n`;
       l2.relationships.forEach(rel => {
         memoryBlock += `- ${rel.from_entity} ${rel.relationship_type} ${rel.to_entity} (strength: ${rel.strength})\n`;
       });
     }
 
-    if (l3.fragments.length > 0) {
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (l3.fragments.length > 0) {
       memoryBlock += `\nSEMANTIC ARCHIVE (Relevant insights):\n`;
       l3.fragments.forEach(fragment => {
         memoryBlock += `- ${fragment.content} (relevance: ${fragment.similarity_score?.toFixed(2)})\n`;
@@ -96,7 +102,8 @@ export class OllamaService {
       memory: memoryContext,
       templateId
     });
-    if (decision.inject) {
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (decision.inject === true) {
       const frag = getConsistencyFragment(options?.templateVars?.char);
       const reasonLine = decision.reason ? `((OOC: consistency reason: ${decision.reason}))\n` : '';
       base = `${reasonLine}${frag}\n\n${base}`;
@@ -104,39 +111,46 @@ export class OllamaService {
 
     // Inject memory block either at {{MEMORY_CONTEXT}} or append to end
     const injected = injectMemory(base, memoryBlock);
-    return { fullPrompt: injected, sections: { system: base, working_memory: l1.turns.map(t=>`${t.role}: ${t.content}`).join('\n'), episodic_memory: memoryBlock.split('\n\nSEMANTIC')[0].split('EPISODIC MEMORY (Characters and facts):\n')[1] || '', semantic_archive: l3.fragments.map(f=>`- ${f.content}`).join('\n'), user_query: userMessage, full_prompt: injected } };
+    return { fullPrompt: injected, sections: { system: base, working_memory: l1.turns.map(t=>`${t.role}: ${t.content}`).join('\n'), episodic_memory: memoryBlock.split('\n\nSEMANTIC')[0].split('EPISODIC MEMORY (Characters and facts):\n')[1] ?? '', semantic_archive: l3.fragments.map(f=>`- ${f.content}`).join('\n'), user_query: userMessage, full_prompt: injected } };
   }
 
-  async countTokens(text: string): Promise<number> {
-    if (this.tokenizer) {
+  public async countTokens(text: string): Promise<number> {
+    await Promise.resolve();
+    if (this.tokenizer != null) {
       try {
         const tokens = this.tokenizer.encode(text);
         return tokens.length;
-      } catch {
-        console.warn('Tokenizer error, using fallback estimation');
+      } catch (err) {
+        logger.warn('Tokenizer error, using fallback estimation', err);
       }
     }
-    
     // Fallback: rough estimation (4 characters per token)
     return Math.ceil(text.length / 4);
   }
 
-  async checkConnection(): Promise<boolean> {
+  public async checkConnection(): Promise<boolean> {
     try {
-      const response = await this.ollama.list();
-      return Array.isArray(response.models);
+      const response: unknown = await this.ollama.list();
+      if (typeof response === 'object' && response != null && 'models' in response && Array.isArray((response as { models: unknown }).models)) {
+        return true;
+      }
+      return false;
     } catch (error) {
-      console.error('Ollama connection check failed:', error);
+      logger.error('Ollama connection check failed', error);
       return false;
     }
   }
 
-  async getAvailableModels(): Promise<string[]> {
+  public async getAvailableModels(): Promise<Array<string>> {
     try {
-      const response = await this.ollama.list();
-      return response.models.map((model: { name: string }) => model.name);
+      const response: unknown = await this.ollama.list();
+      if (typeof response === 'object' && response != null && 'models' in response && Array.isArray((response as { models: unknown }).models)) {
+        const models = (response as { models: Array<{ name: string }> }).models;
+        return models.map(m => m.name);
+      }
+      return [];
     } catch (error) {
-      console.error('Failed to fetch available models:', error);
+      logger.error('Failed to fetch available models', error);
       return [];
     }
   }

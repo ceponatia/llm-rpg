@@ -7,8 +7,9 @@
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-  "seed:characters": "tsx src/scripts/seed-characters.ts",
-  "test": "vitest run"
+    "seed:characters": "tsx src/scripts/seed-characters.ts",
+    "write:admin-config": "tsx src/scripts/write-admin-config.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fastify/compress": "^8.1.0",

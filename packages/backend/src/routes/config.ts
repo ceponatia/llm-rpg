@@ -1,12 +1,10 @@
-import { FastifyInstance } from 'fastify';
-import { WeightedMemoryFusion } from '@rpg/types';
+import type { FastifyInstance } from 'fastify';
+import type { WeightedMemoryFusion } from '@rpg/types';
 
-export async function configRoutes(fastify: FastifyInstance): Promise<void> {
+export function configRoutes(fastify: FastifyInstance): void {
   
   // Get current MCA configuration
-  fastify.get('/', async () => {
-    return fastify.mca.config;
-  });
+  fastify.get('/', () => fastify.mca.config);
 
   // Update fusion weights
   fastify.post<{ Body: { fusion_weights: WeightedMemoryFusion } }>('/fusion-weights', async (request, reply) => {

@@ -42,7 +42,7 @@ export function renderTemplate(
   id: PromptTemplateId,
   vars: TemplateVars = {}
 ): string {
-  const base = templates[id] ?? templates.default;
+  const base = templates[id];
   return base
     .replace(/\{\{char\}\}/g, vars.char ?? 'Assistant')
     .replace(/\{\{user\}\}/g, vars.user ?? 'User')

@@ -3,7 +3,7 @@
  * Main orchestrator that composes final system prompts from persona + modifier + RAG context
  */
 
-import type { Intent, PersonaDefinition, ModifierState, PromptParts, ModifierFragment } from '../../types/src/zod/contextModifier.zod.js';
+import type { PersonaDefinition, ModifierState, PromptParts, ModifierFragment } from '../../types/src/zod/contextModifier.zod.js';
 import type { VADState } from '../../types/src/common.js';
 import { PersonaManager } from './persona.js';
 import { IntentDetector, type IntentDetectionResult } from './intentDetector.js';
@@ -17,7 +17,7 @@ import { buildSceneContext } from './prompts/scene.js';
 
 // Temporary interface until proper export exists in @rpg/types
 interface ModifierApplicationResult {
-  applied_modifiers: string[];
+  applied_modifiers: Array<string>;
   intensities: Record<string, number>;
   emotional_adjustment: VADState;
   final_intensity?: number; // placeholder for future aggregate
@@ -41,7 +41,7 @@ export interface PromptBuildResult {
   finalPrompt: string;
   promptParts: PromptParts;
   detectedIntent: IntentDetectionResult;
-  appliedModifiers: string[];
+  appliedModifiers: Array<string>;
   totalTokens: number;
   truncated: boolean;
 }
@@ -50,13 +50,13 @@ export interface PromptBuildResult {
  * Main prompt builder that orchestrates all components
  */
 export class PromptBuilder {
-  private personaManager: PersonaManager;
-  private intentDetector: IntentDetector;
-  private modifierManager: ModifierManager;
-  private stateManager: ModifierStateManager;
+  private readonly personaManager: PersonaManager;
+  private readonly intentDetector: IntentDetector;
+  private readonly modifierManager: ModifierManager;
+  private readonly stateManager: ModifierStateManager;
   private config: PromptBuilderConfig;
 
-  constructor(
+  public constructor(
     personaManager: PersonaManager,
     intentDetector: IntentDetector,
     modifierManager: ModifierManager,
@@ -81,28 +81,30 @@ export class PromptBuilder {
   /**
    * Build final system prompt from user message and optional RAG context
    */
-  async buildPrompt(
+  public async buildPrompt(
     userMessage: string,
     sessionId: string,
-    personaId?: string,
-    ragContext?: string[]
+  personaId?: string,
+  ragContext?: Array<string>
   ): Promise<PromptBuildResult> {
-    const persona: PersonaDefinition | null = personaId
+    const persona: PersonaDefinition | null = personaId !== undefined && personaId !== ''
       ? await this.personaManager.loadPersona(personaId)
       : this.personaManager.getDefaultPersona();
-    if (!persona) {
+    if (persona == null) {
       throw new Error('Persona not found');
     }
 
     const detectedIntent: IntentDetectionResult = this.intentDetector.detectIntent(userMessage);
     const existingState: ModifierState | null = await this.stateManager.getState(sessionId);
-    const baseEmotional: VADState = existingState?.current_emotional_state || persona.base_emotional_state;
+  const baseEmotional: VADState = existingState?.current_emotional_state ?? persona.base_emotional_state;
 
-    const currentIntensities: Record<string, number> = existingState?.active_modifiers
-      ? Object.fromEntries(
-          Object.entries(existingState.active_modifiers).map(([k, v]): [string, number] => [k, (v as { intensity: number }).intensity])
-        )
-      : {};
+    let currentIntensities: Record<string, number> = {};
+    const active = existingState?.active_modifiers;
+    if (active !== undefined) {
+      currentIntensities = Object.fromEntries(
+        Object.entries(active).map(([k, v]): [string, number] => [k, (v as { intensity: number }).intensity])
+      );
+    }
 
     const modifierApplication: ModifierApplicationResult = this.modifierManager.applyModifiers(
       detectedIntent.intent,
@@ -119,14 +121,14 @@ export class PromptBuilder {
       {}
     );
 
-    const updatedState: ModifierState = await this.stateManager.updateState(
+  const updatedState: ModifierState = await this.stateManager.updateState(
       sessionId,
       detectedIntent.intent,
       newActive,
-      modifierApplication.emotional_adjustment || baseEmotional
+      modifierApplication.emotional_adjustment
     );
 
-    const parts: PromptParts = await this.composePromptParts(
+    const parts: PromptParts = this.composePromptParts(
       persona,
       modifierApplication.applied_modifiers,
       updatedState.current_emotional_state,
@@ -149,28 +151,29 @@ export class PromptBuilder {
   /**
    * Compose prompt parts into structured components
    */
-  private async composePromptParts(
+  private composePromptParts(
     persona: PersonaDefinition,
-    appliedModifiers: string[],
+    appliedModifiers: Array<string>,
     currentEmotionalState: VADState,
-    ragContext?: string[]
-  ): Promise<PromptParts> {
+    ragContext?: Array<string>
+  ): PromptParts {
     const personaText: string = renderPersona(persona);
-    const modifierObjects: ModifierFragment[] = appliedModifiers
-      .map((id: string): ModifierFragment | undefined => this.modifierManager.listModifiers().find((m: ModifierFragment) => m.id === id))
-      .filter((m: ModifierFragment | undefined): m is ModifierFragment => Boolean(m));
+    const all = this.modifierManager.listModifiers();
+    const modifierObjects: Array<ModifierFragment> = appliedModifiers
+      .map((id: string): ModifierFragment | undefined => all.find((m: ModifierFragment) => m.id === id))
+      .filter((m: ModifierFragment | undefined): m is ModifierFragment => m !== undefined);
     const modifierText: string = formatActiveModifiers(modifierObjects, {});
-    const emotionalContext: string | undefined = this.config.includeEmotionalContext
+  const emotionalContext: string | undefined = this.config.includeEmotionalContext === true
       ? buildEmotionalContext(currentEmotionalState)
       : undefined;
-    const sceneContext: string | undefined = this.config.includeSceneContext
+  const sceneContext: string | undefined = this.config.includeSceneContext === true
       ? buildSceneContext(appliedModifiers)
       : undefined;
 
     return {
       persona_text: personaText,
       modifier_text: modifierText,
-      rag_context: ragContext,
+  rag_context: (ragContext !== undefined && ragContext.length > 0) ? ragContext : undefined,
       emotional_context: emotionalContext,
       scene_context: sceneContext
     } as PromptParts;
@@ -206,24 +209,24 @@ export class PromptBuilder {
     return { prompt: truncatedPrompt, truncated: true, tokens: newTokens };
   }
 
-  updateConfig(newConfig: Partial<PromptBuilderConfig>): void {
+  public updateConfig(newConfig: Partial<PromptBuilderConfig>): void {
     this.config = { ...this.config, ...newConfig };
   }
 
-  getConfig(): PromptBuilderConfig {
+  public getConfig(): PromptBuilderConfig {
     return { ...this.config };
   }
 }
 
 export async function buildPrompt(
   userMessage: string, 
-  ragContext?: string[]
+  ragContext?: Array<string>
 ): Promise<string> {
   const personaManager: PersonaManager = new PersonaManager();
   const intentDetector: IntentDetector = new IntentDetector();
   const modifierManager: ModifierManager = new ModifierManager();
   const stateManager: ModifierStateManager = new ModifierStateManager();
   const builder: PromptBuilder = new PromptBuilder(personaManager, intentDetector, modifierManager, stateManager, {});
-  const result: PromptBuildResult = await builder.buildPrompt(userMessage, 'default');
+  const result: PromptBuildResult = await builder.buildPrompt(userMessage, 'default', undefined, ragContext);
   return result.finalPrompt;
 }

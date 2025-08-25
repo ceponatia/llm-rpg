@@ -1,5 +1,4 @@
-import type { ModeTransitionContext, ModeTransitionResult, Mode } from './types.js';
-import type { EmotionState } from './types.js';
+import type { ModeTransitionContext, ModeTransitionResult, Mode, EmotionState } from './types.js';
 
 export function maybeTransition(ctx: ModeTransitionContext): ModeTransitionResult | undefined {
   const state: EmotionState = ctx.state;
@@ -17,7 +16,7 @@ export function maybeTransition(ctx: ModeTransitionContext): ModeTransitionResul
   } else if (state.mode === 'Distressed' && v >= state.baseline.valence) {
     target = 'Guarded'; reason = 'recovered';
   }
-  if (target && target !== state.mode && reason) {
+  if (target !== undefined && target !== state.mode && reason !== undefined) {
     return { nextMode: target, reason };
   }
   return undefined;

@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import WebSocket from 'ws';
 import { webSocketMessageSchema } from '@rpg/types';
 
@@ -19,19 +19,17 @@ type WebSocketOutboundMessage =
   | { type: 'narrative_event'; event: Record<string, unknown> }
   | { type: 'memory_operation'; data: unknown; timestamp?: string };
 
-export async function websocketRoutes(fastify: FastifyInstance): Promise<void> {
+export function websocketRoutes(fastify: FastifyInstance): void {
   // Initialize WebSocket clients set
-  if (!fastify.websocketClients) {
-    fastify.websocketClients = new Set<WebSocket>();
-  }
+  fastify.websocketClients ??= new Set<WebSocket>();
 
   // WebSocket endpoint for real-time updates
-  fastify.register(async function (fastify) {
+  fastify.register(function (fastify) {
     fastify.get('/updates', { websocket: true }, (connection) => {
       const socket = connection;
       
       // Add client to the set
-      fastify.websocketClients!.add(socket);
+      fastify.websocketClients?.add(socket);
       
       fastify.log.info('New WebSocket client connected');
       
@@ -43,9 +41,18 @@ export async function websocketRoutes(fastify: FastifyInstance): Promise<void> {
       }));
 
       // Handle incoming messages
-      socket.on('message', async (message: WebSocket.Data) => {
+    socket.on('message', (rawMessage: WebSocket.Data) => {
         try {
-          const rawData = JSON.parse(message.toString());
+        if (typeof rawMessage !== 'string' && !(rawMessage instanceof Buffer)) {
+          socket.send(JSON.stringify({
+            type: 'error',
+            message: 'Unsupported message format',
+            timestamp: new Date().toISOString()
+          }));
+          return;
+        }
+        const text = typeof rawMessage === 'string' ? rawMessage : rawMessage.toString('utf8');
+        const rawData: unknown = JSON.parse(text);
           const parseResult = webSocketMessageSchema.safeParse(rawData);
           
           if (!parseResult.success) {
@@ -104,20 +111,20 @@ export async function websocketRoutes(fastify: FastifyInstance): Promise<void> {
 
       // Handle client disconnect
       socket.on('close', () => {
-        fastify.websocketClients!.delete(socket);
+        fastify.websocketClients?.delete(socket);
         fastify.log.info('WebSocket client disconnected');
       });
 
       // Handle errors
       socket.on('error', (error: Error) => {
         fastify.log.error({ err: error }, 'WebSocket error');
-        fastify.websocketClients!.delete(socket);
+        fastify.websocketClients?.delete(socket);
       });
     });
   });
 
   // Helper function to broadcast to all connected clients
-  fastify.decorate('broadcastToClients', function(data: WebSocketOutboundMessage) {
+  fastify.decorate('broadcastToClients', function (data: WebSocketOutboundMessage) {
     const message = JSON.stringify(data);
     this.websocketClients?.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {

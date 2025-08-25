@@ -1,4 +1,4 @@
-import { Driver } from 'neo4j-driver';
+import type { Driver } from 'neo4j-driver';
 
 /**
  * Database manager interface for dependency injection

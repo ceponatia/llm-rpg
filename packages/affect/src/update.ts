@@ -5,7 +5,7 @@ import { maybeTransition } from './mode.js';
 import { clamp, distanceFromBaseline, applyMaxStep } from './math.js';
 
 export function updateEmotion(state: EmotionState, signal: AffectSignal, cfg: EmotionConfig): UpdateResult {
-  const notes: string[] = [];
+  const notes: Array<string> = [];
   const prevState: EmotionState = state;
   const newDiscrete = normalizeAffects(applyStimuli(decayAffects(prevState.discrete, cfg), signal, cfg), cfg.clampRange.min, cfg.clampRange.max);
 
@@ -42,23 +42,23 @@ export function updateEmotion(state: EmotionState, signal: AffectSignal, cfg: Em
   rawValence *= saturationFactor * frictionFactor;
   rawArousal *= saturationFactor * frictionFactor;
   rawDominance *= saturationFactor * frictionFactor;
-  if (saturationFactor < 0.95) notes.push('saturation');
-  if (frictionFactor < 0.95) notes.push('friction');
+  if (saturationFactor < 0.95) {notes.push('saturation');}
+  if (frictionFactor < 0.95) {notes.push('friction');}
 
   // Trait caps (reserved)
   const traitAdjusted = applyTraitCaps(prevState, { valence: rawValence, arousal: rawArousal, dominance: rawDominance }, cfg);
-  if (traitAdjusted.notes.length) notes.push(...traitAdjusted.notes);
+  if (traitAdjusted.notes.length) {notes.push(...traitAdjusted.notes);}
 
   // Apply max-step clamps BEFORE trust gate so clamp detection still recorded
   let valenceDelta: number = applyMaxStep(traitAdjusted.adjusted.valence, cfg.maxStep.valence);
   const arousalDelta: number = applyMaxStep(traitAdjusted.adjusted.arousal, cfg.maxStep.arousal);
   const dominanceDelta: number = applyMaxStep(traitAdjusted.adjusted.dominance, cfg.maxStep.dominance);
-  if (valenceDelta !== traitAdjusted.adjusted.valence) notes.push('valence_max_step');
-  if (arousalDelta !== traitAdjusted.adjusted.arousal) notes.push('arousal_max_step');
-  if (dominanceDelta !== traitAdjusted.adjusted.dominance) notes.push('dominance_max_step');
+  if (valenceDelta !== traitAdjusted.adjusted.valence) {notes.push('valence_max_step');}
+  if (arousalDelta !== traitAdjusted.adjusted.arousal) {notes.push('arousal_max_step');}
+  if (dominanceDelta !== traitAdjusted.adjusted.dominance) {notes.push('dominance_max_step');}
 
   // Trust gate (scale positive valence gains after clamp; retains max_step note)
-  if (valenceDelta > 0) {
+  if (valenceDelta > 0 && !Number.isNaN(valenceDelta)) {
     const trustLevel: number = newDiscrete.trust; // 0..1
     const gate: number = cfg.trustGate.minFactor + (cfg.trustGate.maxFactor - cfg.trustGate.minFactor) * trustLevel;
     valenceDelta *= gate;
@@ -87,7 +87,7 @@ export function updateEmotion(state: EmotionState, signal: AffectSignal, cfg: Em
   };
 
   const mt = maybeTransition({ state: nextState, config: cfg });
-  if (mt) {
+  if (mt !== undefined) {
     notes.push('mode_transition_' + mt.reason);
     nextState.mode = mt.nextMode;
   }
@@ -97,6 +97,6 @@ export function updateEmotion(state: EmotionState, signal: AffectSignal, cfg: Em
     delta: { valence: rawValence, arousal: rawArousal, dominance: rawDominance },
     applied: { valence: valenceDelta, arousal: arousalDelta, dominance: dominanceDelta },
     notes,
-    modeTransition: mt ? { from: prevState.mode, to: mt.nextMode, reason: mt.reason } : undefined
+  modeTransition: mt !== undefined ? { from: prevState.mode, to: mt.nextMode, reason: mt.reason } : undefined
   };
 }

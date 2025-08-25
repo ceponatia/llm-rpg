@@ -1,6 +1,6 @@
 // Retrieves relevant facts from Neo4j graph based on query
-import { ManagedTransaction } from 'neo4j-driver';
-import { MemoryRetrievalQuery, FactNode } from '@rpg/types';
+import type { ManagedTransaction } from 'neo4j-driver';
+import type { MemoryRetrievalQuery, FactNode } from '@rpg/types';
 import { mapNodeToFact } from '../mapping/fact.js';
 
 interface Neo4jNode { properties: { id: string; entity: string; attribute: string; current_value: string; importance_score: number; created_at: { toString(): string }; last_updated?: { toString(): string } } }
@@ -8,7 +8,7 @@ interface Neo4jNode { properties: { id: string; entity: string; attribute: strin
 export async function retrieveRelevantFacts(
   tx: ManagedTransaction,
   query: MemoryRetrievalQuery
-): Promise<FactNode[]> {
+): Promise<Array<FactNode>> {
   const cypherQuery = `
     MATCH (f:Fact)
     WHERE toLower(f.attribute) CONTAINS toLower($queryText)

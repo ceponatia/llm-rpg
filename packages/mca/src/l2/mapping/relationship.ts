@@ -1,5 +1,5 @@
 // Maps Neo4j relationship records to RelationshipEdge interface
-import { RelationshipEdge } from '@rpg/types';
+import type { RelationshipEdge } from '@rpg/types';
 
 interface Neo4jRecordLike { get(key: string): unknown }
 
@@ -15,6 +15,6 @@ export function mapRecordToRelationship(record: Neo4jRecordLike): RelationshipEd
     relationship_type: rel.relationship_type,
     strength: rel.strength,
     created_at: rel.created_at.toString(),
-    last_updated: rel.last_updated?.toString() || rel.created_at.toString()
+  last_updated: rel.last_updated?.toString() ?? rel.created_at.toString()
   };
 }

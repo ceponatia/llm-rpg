@@ -1,4 +1,4 @@
-import { 
+import type { 
   MCAConfig, 
   WorkingMemoryTurn,
   L2RetrievalResult,
@@ -9,8 +9,8 @@ import {
   MemoryOperation
 } from '@rpg/types';
 // DatabaseManager passed as parameter
-import { ManagedTransaction, Driver } from 'neo4j-driver';
-import { IDatabaseManager } from '../interfaces/database.js';
+import type { ManagedTransaction, Driver } from 'neo4j-driver';
+import type { IDatabaseManager } from '../interfaces/database.js';
 
 // Import extracted modules
 import { processFact } from '../l2/ingestion/fact-store.js';
@@ -31,9 +31,9 @@ import { mapNodeToFact } from '../l2/mapping/fact.js';
 export class L2GraphMemory {
   private readonly driver: Driver;
   
-  constructor(
-    private dbManager: IDatabaseManager,
-    private config: MCAConfig
+  public constructor(
+    private readonly dbManager: IDatabaseManager,
+    private readonly config: MCAConfig
   ) {
     try {
       this.driver = dbManager.getDriver();
@@ -45,21 +45,21 @@ export class L2GraphMemory {
   /**
    * Ingest a conversation turn into the graph memory
    */
-  async ingestTurn(
+  public async ingestTurn(
     turn: WorkingMemoryTurn,
     eventDetection: EventDetectionResult,
     sessionId: string
   ): Promise<{
-    operations: MemoryOperation[];
-    facts_updated: string[];
-    relationships_modified: string[];
+    operations: Array<MemoryOperation>;
+    facts_updated: Array<string>;
+    relationships_modified: Array<string>;
   }> {
     const session = this.driver.session();
     try {
       return await session.executeWrite(async (tx: ManagedTransaction) => {
-        const operations: MemoryOperation[] = [];
-        const factsUpdated: string[] = [];
-        const relationshipsModified: string[] = [];
+        const operations: Array<MemoryOperation> = [];
+        const factsUpdated: Array<string> = [];
+        const relationshipsModified: Array<string> = [];
 
         // 1. Create or update characters with emotional states
         for (const emotionalChange of eventDetection.emotional_changes) {
@@ -121,7 +121,7 @@ export class L2GraphMemory {
   /**
    * Retrieve relevant context from graph memory
    */
-  async retrieve(query: MemoryRetrievalQuery): Promise<L2RetrievalResult> {
+  public async retrieve(query: MemoryRetrievalQuery): Promise<L2RetrievalResult> {
     const session = this.driver.session();
     try {
       return await session.executeRead(async (tx: ManagedTransaction) => {
@@ -136,7 +136,7 @@ export class L2GraphMemory {
         let scopedCharacters = characters;
         let scopedFacts = facts;
         let scopedRelationships = relationships;
-        if (query.character_id) {
+  if (query.character_id != null && query.character_id.trim().length > 0) {
           // Simple filter heuristic: keep items mentioning character id or name
           const cid = query.character_id.toLowerCase();
           scopedCharacters = characters.filter(c => c.id.toLowerCase().includes(cid) || c.name.toLowerCase().includes(cid));
@@ -164,7 +164,7 @@ export class L2GraphMemory {
   }
 
   // Public API methods
-  async getAllCharacters(): Promise<Character[]> {
+  public async getAllCharacters(): Promise<Array<Character>> {
     const session = this.driver.session();
     try {
       return await session.executeRead(async (tx: ManagedTransaction) => {
@@ -179,38 +179,36 @@ export class L2GraphMemory {
     }
   }
 
-  async getEmotionalHistory(): Promise<unknown[]> {
+  public getEmotionalHistory(): Promise<Array<unknown>> {
     // TODO: Implement emotional history tracking
-    return [];
+    return Promise.resolve([]);
   }
 
-  async getFactWithHistory(factId: string): Promise<FactNode | null> {
+  public async getFactWithHistory(factId: string): Promise<FactNode | null> {
     const session = this.driver.session();
     try {
       return await session.executeRead(async (tx: ManagedTransaction) => {
         const result = await tx.run('MATCH (f:Fact {id: $factId}) RETURN f', { factId });
-        if (result.records.length === 0) return null;
+        if (result.records.length === 0) {return null;}
         
-        const node = result.records[0].get('f');
-        return mapNodeToFact(node);
+  const node = result.records[0].get('f') as { properties: { id: string; entity: string; attribute: string; current_value: string; importance_score: number; created_at: { toString(): string }; last_updated?: { toString(): string } } };
+  return mapNodeToFact(node);
       });
     } finally {
       await session.close();
     }
   }
 
-  async inspect(): Promise<{
+  public async inspect(): Promise<{
     characters: number;
     facts: number;
     relationships: number;
     conversation_turns: number;
   }> {
-    if (!this.driver) {
-      throw new Error('Neo4j driver not initialized in L2GraphMemory');
-    }
-    
     const session = this.driver.session();
     try {
+      interface NeoInt { toNumber(): number }
+      const toNum = (val: unknown): number => (val as NeoInt).toNumber();
       return await session.executeRead(async (tx: ManagedTransaction) => {
         const [charResult, factResult, relResult, turnResult] = await Promise.all([
           tx.run('MATCH (c:Character) RETURN count(c) as count'),
@@ -218,20 +216,18 @@ export class L2GraphMemory {
           tx.run('MATCH ()-[r:RELATIONSHIP]->() RETURN count(r) as count'),
           tx.run('MATCH (t:Turn) RETURN count(t) as count')
         ]);
-
-        return {
-          characters: charResult.records[0].get('count').toNumber(),
-          facts: factResult.records[0].get('count').toNumber(),
-          relationships: relResult.records[0].get('count').toNumber(),
-          conversation_turns: turnResult.records[0].get('count').toNumber()
-        };
+        const characters = toNum(charResult.records[0].get('count'));
+        const facts = toNum(factResult.records[0].get('count'));
+        const relationships = toNum(relResult.records[0].get('count'));
+        const conversation_turns = toNum(turnResult.records[0].get('count'));
+        return { characters, facts, relationships, conversation_turns };
       });
     } finally {
       await session.close();
     }
   }
 
-  async getStatistics(): Promise<{
+  public async getStatistics(): Promise<{
     characters: number;
     facts: number;
     relationships: number;

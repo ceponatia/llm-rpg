@@ -16,6 +16,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  /* Runtime branding variables (overridden after fetching config) */
+  --color-primary: #6d28d9;
 }
 
 body {
@@ -27,6 +29,11 @@ body {
   color: #213547;
   background-color: #ffffff;
 }
+
+/* Utility classes leveraging runtime primary color */
+.text-primary { color: var(--color-primary); }
+.bg-primary { background-color: var(--color-primary); }
+.border-primary { border-color: var(--color-primary); }
 
 #root {
   width: 100%;

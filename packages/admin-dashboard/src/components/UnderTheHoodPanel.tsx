@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Activity, Clock, Database, Brain } from 'lucide-react';
-import { MemoryOperation } from '@rpg/types';
+import type { MemoryOperation } from '@rpg/types';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface UnderTheHoodPanelProps {
-  operations: MemoryOperation[];
+  operations: Array<MemoryOperation>;
 }
 
 export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations }) => {
-  const [allOperations, setAllOperations] = useState<MemoryOperation[]>(operations);
+  const [allOperations, setAllOperations] = useState<Array<MemoryOperation>>(operations);
   const { lastMessage } = useWebSocket();
 
   // Listen for real-time memory operations from WebSocket

@@ -1,5 +1,5 @@
-import { VADState, MemoryOperation } from './common.js';
-import { WorkingMemoryTurn } from './memory.js';
+import type { VADState, MemoryOperation } from './common.js';
+import type { WorkingMemoryTurn } from './memory.js';
 
 // Memory Controller Agent Core Types
 export interface MCAConfig {
@@ -31,16 +31,16 @@ export interface MCAConfig {
 export interface EventDetectionResult {
   is_significant: boolean;
   significance_score: number;
-  detected_events: DetectedEvent[];
-  emotional_changes: EmotionalChange[];
-  named_entities: NamedEntity[];
+  detected_events: Array<DetectedEvent>;
+  emotional_changes: Array<EmotionalChange>;
+  named_entities: Array<NamedEntity>;
 }
 
 export interface DetectedEvent {
   type: 'relationship_change' | 'fact_assertion' | 'emotional_peak' | 'conflict' | 'resolution';
   confidence: number;
   description: string;
-  entities_involved: string[];
+  entities_involved: Array<string>;
 }
 
 export interface EmotionalChange {
@@ -60,19 +60,19 @@ export interface NamedEntity {
 }
 
 export interface SignificanceScorer {
-  scoreConversationTurn(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): number;
-  detectEvents(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): EventDetectionResult;
+  scoreConversationTurn(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): number;
+  detectEvents(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): EventDetectionResult;
   calculateVADDelta(current: VADState, previous: VADState): number;
 }
 
 export interface MemoryIngestionResult {
   success: boolean;
-  operations_performed: MemoryOperation[];
+  operations_performed: Array<MemoryOperation>;
   significance_score: number;
-  events_detected: DetectedEvent[];
-  emotional_changes: EmotionalChange[];
-  facts_updated: string[];
-  relationships_modified: string[];
+  events_detected: Array<DetectedEvent>;
+  emotional_changes: Array<EmotionalChange>;
+  facts_updated: Array<string>;
+  relationships_modified: Array<string>;
 }
 
 export interface MemoryRetrievalQuery {

@@ -1,16 +1,15 @@
 // Handles relationship creation and updates in Neo4j graph
-import { ManagedTransaction } from 'neo4j-driver';
-import { WorkingMemoryTurn } from '@rpg/types';
-import { MemoryOperation } from '@rpg/types';
+import type { ManagedTransaction } from 'neo4j-driver';
+import type { WorkingMemoryTurn, MemoryOperation } from '@rpg/types';
 
 export interface RelationshipWriteResult {
-  operations: MemoryOperation[];
-  relationship_ids: string[];
+  operations: Array<MemoryOperation>;
+  relationship_ids: Array<string>;
 }
 
 export async function processRelationship(
   tx: ManagedTransaction, 
-  event: { entities_involved: string[]; type: string; confidence: number }, 
+  event: { entities_involved: Array<string>; type: string; confidence: number }, 
   turn: WorkingMemoryTurn, 
   sessionId: string
 ): Promise<RelationshipWriteResult> {
@@ -19,7 +18,7 @@ export async function processRelationship(
   }
 
   const relationshipId = `rel:${crypto.randomUUID()}`;
-  const operations: MemoryOperation[] = [];
+  const operations: Array<MemoryOperation> = [];
 
   const query = `
     MATCH (from:Character {id: $fromEntity})

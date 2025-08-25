@@ -9,7 +9,7 @@ import { readFileSync } from 'fs';
 async function buildServer(env: Record<string,string|undefined>) {
   const fastify = Fastify({ logger: false });
   // inject env
-  Object.entries(env).forEach(([k,v]) => { if (v !== undefined) (process.env as any)[k] = v; });
+  Object.entries(env).forEach(([k,v]) => { if (v !== undefined) {(process.env as unknown)[k] = v;} });
   await setupStaticAdmin(fastify, { serve: true });
   await fastify.get('/healthz', async () => ({ ok: true }));
   await fastify.listen({ port: 0 });
@@ -34,7 +34,7 @@ describe('static admin embed', () => {
   beforeAll(() => { adminDist = findAdminDist(); });
 
   it('serves index.html (public mode)', async () => {
-    if (!adminDist) return; // skip if not built
+    if (!adminDist) {return;} // skip if not built
     const { fastify, url } = await buildServer({ ADMIN_STATIC_DIR: adminDist, ADMIN_PUBLIC: 'true', ADMIN_BASE_PATH: '/admin/' });
     const res = await fetch(url + '/admin/');
     const text = await res.text();
@@ -44,7 +44,7 @@ describe('static admin embed', () => {
   });
 
   it('enforces X-Admin-Key when ADMIN_PUBLIC!=true', async () => {
-    if (!adminDist) return; // skip if not built
+    if (!adminDist) {return;} // skip if not built
     const { fastify, url } = await buildServer({ ADMIN_STATIC_DIR: adminDist, ADMIN_PUBLIC: 'false', ADMIN_API_KEY: 'secret', ADMIN_BASE_PATH: '/admin/' });
     const resUnauth = await fetch(url + '/admin/');
     expect(resUnauth.status).toBe(401);
@@ -54,7 +54,7 @@ describe('static admin embed', () => {
   });
 
   it('returns 200 for hashed asset if exists', async () => {
-    if (!adminDist) return; // skip if not built
+    if (!adminDist) {return;} // skip if not built
     // crude: look for first .js file inside assets
     let asset: string | null = null;
     try {
@@ -62,7 +62,7 @@ describe('static admin embed', () => {
       const assetsDir = path.join(adminDist, 'assets');
       const files = await fs.readdir(assetsDir);
       asset = files.find(f => f.endsWith('.js')) || null;
-      if (!asset) return; // skip test
+      if (!asset) {return;} // skip test
       const { fastify, url } = await buildServer({ ADMIN_STATIC_DIR: adminDist, ADMIN_PUBLIC: 'true', ADMIN_BASE_PATH: '/admin/' });
       const res = await fetch(`${url}/admin/assets/${asset}`);
       expect(res.status).toBe(200);

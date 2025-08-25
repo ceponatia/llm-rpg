@@ -12,8 +12,8 @@ export function distanceFromBaseline(baseline: VADState, current: VADState): num
 }
 
 export function applyMaxStep(delta: number, maxStep: number): number {
-  if (delta > maxStep) return maxStep;
-  if (delta < -maxStep) return -maxStep;
+  if (delta > maxStep) {return maxStep;}
+  if (delta < -maxStep) {return -maxStep;}
   return delta;
 }
 

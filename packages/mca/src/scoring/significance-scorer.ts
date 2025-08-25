@@ -1,4 +1,4 @@
-import { 
+import type { 
   MCAConfig, 
   WorkingMemoryTurn, 
   EventDetectionResult, 
@@ -13,14 +13,14 @@ import {
  * Uses VAD deltas, keyword flags, and named entity detection
  */
 export class SignificanceScorer  {
-  private emotionalKeywords = {
+  private readonly emotionalKeywords = {
     high_valence: ['happy', 'joy', 'excited', 'love', 'wonderful', 'amazing', 'fantastic'],
     low_valence: ['sad', 'angry', 'hate', 'terrible', 'awful', 'depressed', 'frustrated'],
     high_arousal: ['excited', 'energetic', 'thrilled', 'panicked', 'furious', 'ecstatic'],
     high_dominance: ['powerful', 'confident', 'strong', 'control', 'command', 'dominant']
   };
 
-  private significantEvents = {
+  private readonly significantEvents = {
     relationship_change: ['friend', 'enemy', 'love', 'hate', 'marry', 'divorce', 'meet', 'leave'],
     conflict: ['fight', 'argue', 'conflict', 'war', 'battle', 'dispute', 'disagree'],
     resolution: ['resolve', 'agree', 'peace', 'solution', 'compromise', 'reconcile'],
@@ -28,12 +28,12 @@ export class SignificanceScorer  {
     loss: ['lose', 'fail', 'death', 'end', 'defeat', 'failure']
   };
 
-  constructor(private config: MCAConfig) {}
+  public constructor(private readonly config: MCAConfig) {}
 
   /**
    * Score a conversation turn for significance (0-10 scale)
    */
-  scoreConversationTurn(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): number {
+  public scoreConversationTurn(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): number {
     let score = 0;
 
     // Base score for all turns
@@ -50,8 +50,10 @@ export class SignificanceScorer  {
     score += this.scoreEmotionalIntensity(turn.content);
 
     // Question/exclamation scoring
-    const questionCount = (turn.content.match(/\?/g) || []).length;
-    const exclamationCount = (turn.content.match(/!/g) || []).length;
+  const questionMatches = turn.content.match(/\?/g);
+  const exclamationMatches = turn.content.match(/!/g);
+  const questionCount = questionMatches !== null ? questionMatches.length : 0;
+  const exclamationCount = exclamationMatches !== null ? exclamationMatches.length : 0;
     score += Math.min(1, (questionCount + exclamationCount) * 0.3);
 
     // Context-based scoring (response to significant previous turn)
@@ -73,7 +75,7 @@ export class SignificanceScorer  {
   /**
    * Detect significant events in a conversation turn
    */
-  detectEvents(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): EventDetectionResult {
+  public detectEvents(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): EventDetectionResult {
     const significance_score = this.scoreConversationTurn(turn, context);
     const is_significant = significance_score >= this.config.l2_significance_threshold;
 
@@ -87,7 +89,7 @@ export class SignificanceScorer  {
   /**
    * Calculate magnitude of VAD state change
    */
-  calculateVADDelta(current: VADState, previous: VADState): number {
+  public calculateVADDelta(current: VADState, previous: VADState): number {
     const valenceDelta = Math.abs(current.valence - previous.valence);
     const arousalDelta = Math.abs(current.arousal - previous.arousal);
     const dominanceDelta = Math.abs(current.dominance - previous.dominance);
@@ -102,12 +104,12 @@ export class SignificanceScorer  {
 
     // Check for emotional keywords
     Object.values(this.emotionalKeywords).forEach(keywords => {
-      keywords.forEach(keyword => { if (lowerContent.includes(keyword)) score += 0.5; });
+      keywords.forEach(keyword => { if (lowerContent.includes(keyword)) {score += 0.5;} });
     });
 
     // Check for significant event keywords
     Object.values(this.significantEvents).forEach(keywords => {
-      keywords.forEach(keyword => { if (lowerContent.includes(keyword)) score += 0.8; });
+      keywords.forEach(keyword => { if (lowerContent.includes(keyword)) {score += 0.8;} });
     });
 
     return Math.min(3, score);
@@ -117,22 +119,24 @@ export class SignificanceScorer  {
     let intensity = 0;
 
     // All caps words (shouting)
-    const capsWords = content.match(/\b[A-Z]{2,}\b/g) || [];
-    intensity += Math.min(1, capsWords.length * 0.3);
+  const capsWords = content.match(/\b[A-Z]{2,}\b/g);
+  const capsCount = capsWords !== null ? capsWords.length : 0;
+  intensity += Math.min(1, capsCount * 0.3);
 
     // Repeated punctuation
-    const repeatedPunct = content.match(/[!?]{2,}|\.{3,}/g) || [];
-    intensity += Math.min(1, repeatedPunct.length * 0.4);
+  const repeatedPunct = content.match(/[!?]{2,}|\.{3,}/g);
+  const repeatCount = repeatedPunct !== null ? repeatedPunct.length : 0;
+  intensity += Math.min(1, repeatCount * 0.4);
 
     // Extreme adjectives
     const extremeWords = ['absolutely', 'completely', 'totally', 'extremely', 'incredibly', 'unbelievably'];
-    extremeWords.forEach(word => { if (content.toLowerCase().includes(word)) intensity += 0.3; });
+    extremeWords.forEach(word => { if (content.toLowerCase().includes(word)) {intensity += 0.3;} });
 
     return Math.min(2, intensity);
   }
 
-  private extractEvents(content: string): DetectedEvent[] {
-    const events: DetectedEvent[] = [];
+  private extractEvents(content: string): Array<DetectedEvent> {
+    const events: Array<DetectedEvent> = [];
     const lowerContent = content.toLowerCase();
 
     Object.entries(this.significantEvents).forEach(([eventType, keywords]) => {
@@ -154,14 +158,14 @@ export class SignificanceScorer  {
     return events;
   }
 
-  private detectEmotionalChanges(content: string, context: WorkingMemoryTurn[]): EmotionalChange[] {
-    const changes: EmotionalChange[] = [];
+  private detectEmotionalChanges(content: string, context: Array<WorkingMemoryTurn>): Array<EmotionalChange> {
+    const changes: Array<EmotionalChange> = [];
     const entities = this.extractNamedEntities(content);
 
     // For each detected person, estimate their emotional state
     entities.filter(e => e.type === 'PERSON').forEach(entity => {
       const currentVAD = this.estimateVADFromContent(content);
-      const previousVAD = this.findPreviousVAD(entity.text, context) || { valence: 0, arousal: 0, dominance: 0 }; // Neutral default
+      const previousVAD = this.findPreviousVAD(entity.text, context) ?? { valence: 0, arousal: 0, dominance: 0 }; // Neutral default
 
       const delta = this.calculateVADDelta(currentVAD, previousVAD);
       
@@ -179,25 +183,35 @@ export class SignificanceScorer  {
     return changes;
   }
 
-  private extractNamedEntities(content: string): NamedEntity[] {
-    const entities: NamedEntity[] = [];
+  private extractNamedEntities(content: string): Array<NamedEntity> {
+    const entities: Array<NamedEntity> = [];
     
     // Simple pattern-based NER (in reality, would use a proper NER model)
     
     // Detect proper nouns (capitalized words)
-    const properNouns = content.match(/\b[A-Z][a-z]+\b/g) || [];
-    properNouns.forEach((noun) => {
+  const properNouns = content.match(/\b[A-Z][a-z]+\b/g);
+  if (properNouns !== null && properNouns.length > 0) {
+      for (const noun of properNouns) {
       const startPos = content.indexOf(noun);
-      entities.push({ text: noun, type: this.classifyEntity(noun, content), confidence: 0.8, start_pos: startPos, end_pos: startPos + noun.length });
-    });
+      entities.push({
+        text: noun,
+        type: this.classifyEntity(noun, content),
+        confidence: 0.8,
+        start_pos: startPos,
+        end_pos: startPos + noun.length
+      });
+      }
+    }
 
     // Detect quoted strings (might be objects or concepts)
-    const quotedStrings = content.match(/"([^"]+)"/g) || [];
-    quotedStrings.forEach(quoted => {
+  const quotedStrings = content.match(/"([^"]+)"/g);
+  if (quotedStrings !== null && quotedStrings.length > 0) {
+      quotedStrings.forEach(quoted => {
       const text = quoted.slice(1, -1); // Remove quotes
       const startPos = content.indexOf(quoted);
       entities.push({ text, type: 'OBJECT', confidence: 0.6, start_pos: startPos, end_pos: startPos + quoted.length });
-    });
+      });
+    }
 
     return entities;
   }
@@ -222,17 +236,18 @@ export class SignificanceScorer  {
     return 'PERSON';
   }
 
-  private findNearbyEntities(content: string, keyword: string): string[] {
+  private findNearbyEntities(content: string, keyword: string): Array<string> {
     // Find proper nouns within 50 characters of the keyword
     const keywordIndex = content.toLowerCase().indexOf(keyword.toLowerCase());
-    if (keywordIndex === -1) return [];
+    if (keywordIndex === -1) {return [];}
 
     const start = Math.max(0, keywordIndex - 50);
     const end = Math.min(content.length, keywordIndex + keyword.length + 50);
     const nearby = content.substring(start, end);
 
-    const properNouns = nearby.match(/\b[A-Z][a-z]+\b/g) || [];
-    return [...new Set(properNouns)]; // Remove duplicates
+    const properNouns = nearby.match(/\b[A-Z][a-z]+\b/g);
+  if (properNouns === null || properNouns.length === 0) { return []; }
+  return [...new Set(properNouns)];
   }
 
   private estimateVADFromContent(content: string): VADState {
@@ -240,16 +255,16 @@ export class SignificanceScorer  {
     let valence = 0; let arousal = 0; let dominance = 0;
 
     // Analyze emotional keywords in context
-    this.emotionalKeywords.high_valence.forEach(word => { if (lowerContent.includes(word)) valence += 0.3; });
-    this.emotionalKeywords.low_valence.forEach(word => { if (lowerContent.includes(word)) valence -= 0.3; });
-    this.emotionalKeywords.high_arousal.forEach(word => { if (lowerContent.includes(word)) arousal += 0.3; });
-    this.emotionalKeywords.high_dominance.forEach(word => { if (lowerContent.includes(word)) dominance += 0.3; });
+    this.emotionalKeywords.high_valence.forEach(word => { if (lowerContent.includes(word)) {valence += 0.3;} });
+    this.emotionalKeywords.low_valence.forEach(word => { if (lowerContent.includes(word)) {valence -= 0.3;} });
+    this.emotionalKeywords.high_arousal.forEach(word => { if (lowerContent.includes(word)) {arousal += 0.3;} });
+    this.emotionalKeywords.high_dominance.forEach(word => { if (lowerContent.includes(word)) {dominance += 0.3;} });
 
     // Clamp values to valid ranges
     return { valence: Math.max(-1, Math.min(1, valence)), arousal: Math.max(0, Math.min(1, arousal)), dominance: Math.max(0, Math.min(1, dominance)) };
   }
 
-  private findPreviousVAD(entityName: string, context: WorkingMemoryTurn[]): VADState | null {
+  private findPreviousVAD(entityName: string, context: Array<WorkingMemoryTurn>): VADState | null {
     // Look through previous turns for mentions of this entity
     for (let i = context.length - 1; i >= 0; i--) {
       const turn = context[i];

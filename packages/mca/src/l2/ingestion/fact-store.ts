@@ -1,23 +1,22 @@
 // Handles fact assertion and storage into Neo4j graph
-import { ManagedTransaction } from 'neo4j-driver';
-import { WorkingMemoryTurn } from '@rpg/types';
-import { MemoryOperation } from '@rpg/types';
+import type { ManagedTransaction } from 'neo4j-driver';
+import type { WorkingMemoryTurn, MemoryOperation } from '@rpg/types';
 
 export interface FactWriteResult {
-  operations: MemoryOperation[];
-  fact_ids: string[];
+  operations: Array<MemoryOperation>;
+  fact_ids: Array<string>;
 }
 
 export async function processFact(
   tx: ManagedTransaction, 
-  event: { entities_involved: string[]; description: string; confidence: number }, 
+  event: { entities_involved: Array<string>; description: string; confidence: number }, 
   turn: WorkingMemoryTurn, 
   sessionId: string
 ): Promise<FactWriteResult> {
   // Extract fact information from the event
   // This is a simplified implementation - in reality, we'd use NLP
   const factId = `fact:${crypto.randomUUID()}`;
-  const operations: MemoryOperation[] = [];
+  const operations: Array<MemoryOperation> = [];
   
   // For now, create a simple fact from the event description
   const query = `
@@ -37,7 +36,7 @@ export async function processFact(
 
   await tx.run(query, {
     factId,
-    entity: event.entities_involved[0] || 'unknown',
+  entity: (event.entities_involved[0] ?? 'unknown'),
     attribute: 'description',
     value: event.description,
     importance: event.confidence * 10,

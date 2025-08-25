@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Copy, Eye, EyeOff, Zap } from 'lucide-react';
-import { ChatMessage, WeightedMemoryFusion } from '@rpg/types';
+import type { ChatMessage, WeightedMemoryFusion } from '@rpg/types';
 
 interface PromptInspectorPanelProps {
-  messages: ChatMessage[];
+  messages: Array<ChatMessage>;
   fusionWeights: WeightedMemoryFusion;
 }
 
@@ -36,10 +36,10 @@ export const PromptInspectorPanel: React.FC<PromptInspectorPanelProps> = ({
 
   // Mock prompt construction (in a real implementation, this would come from the backend)
   useEffect(() => {
-    if (messages.length === 0) return;
+    if (messages.length === 0) {return;}
     const latestAssistant = [...messages].reverse().find(m => m.role === 'assistant' && m.metadata?.prompt_sections);
     const latestUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    if (!latestAssistant || !latestUserMessage) return;
+    if (!latestAssistant || !latestUserMessage) {return;}
     const ps = latestAssistant.metadata!.prompt_sections!;
     const breakdown: PromptBreakdown = {
       sections: {
@@ -74,7 +74,7 @@ export const PromptInspectorPanel: React.FC<PromptInspectorPanelProps> = ({
   };
 
   const copyFullPrompt = (): void => {
-    if (!promptBreakdown) return;
+    if (!promptBreakdown) {return;}
 
     const fullPrompt = [
       promptBreakdown.sections.system,

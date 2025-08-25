@@ -1,41 +1,44 @@
 /**
- * Simple logging utility for the CAS project
+ * Simple logging utility for the CAS project.
+ * Converted from static class to object literal to satisfy no-extraneous-class.
  */
-export class Logger {
-  private static levels = {
-    debug: 0,
-    info: 1,
-    warn: 2,
-    error: 3
-  };
+const levels = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3
+} as const;
 
-  private static currentLevel = Logger.levels.info;
+let currentLevel: number = levels.info;
 
-  static setLevel(level: keyof typeof Logger.levels): void {
-    Logger.currentLevel = Logger.levels[level];
-  }
-
-  static debug(message: string, ...args: unknown[]): void {
-    if (Logger.currentLevel <= Logger.levels.debug) {
+export const logger = {
+  setLevel(level: keyof typeof levels): void {
+    currentLevel = levels[level];
+  },
+  debug(message: string, ...args: Array<unknown>): void {
+    if (currentLevel <= levels.debug) {
+      // eslint-disable-next-line no-console
       console.debug(`[DEBUG] ${message}`, ...args);
     }
-  }
-
-  static info(message: string, ...args: unknown[]): void {
-    if (Logger.currentLevel <= Logger.levels.info) {
+  },
+  info(message: string, ...args: Array<unknown>): void {
+    if (currentLevel <= levels.info) {
+      // eslint-disable-next-line no-console
       console.info(`[INFO] ${message}`, ...args);
     }
-  }
-
-  static warn(message: string, ...args: unknown[]): void {
-    if (Logger.currentLevel <= Logger.levels.warn) {
+  },
+  warn(message: string, ...args: Array<unknown>): void {
+    if (currentLevel <= levels.warn) {
+      // eslint-disable-next-line no-console
       console.warn(`[WARN] ${message}`, ...args);
     }
-  }
-
-  static error(message: string, ...args: unknown[]): void {
-    if (Logger.currentLevel <= Logger.levels.error) {
+  },
+  error(message: string, ...args: Array<unknown>): void {
+    if (currentLevel <= levels.error) {
+      // eslint-disable-next-line no-console
       console.error(`[ERROR] ${message}`, ...args);
     }
   }
-}
+} as const;
+
+export type Logger = typeof logger;

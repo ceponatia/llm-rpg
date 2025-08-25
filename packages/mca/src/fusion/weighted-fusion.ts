@@ -1,4 +1,4 @@
-import { 
+import type { 
   L1RetrievalResult, 
   L2RetrievalResult, 
   L3RetrievalResult, 
@@ -12,12 +12,12 @@ import {
  * Formula: FinalScore = (w_L1 * R_L1 + w_L2 * R_L2 + w_L3 * R_L3) * Importance * Decay
  */
 export class WeightedMemoryFusion {
-  constructor(private config: MCAConfig) {}
+  public constructor(private readonly config: MCAConfig) {}
 
   /**
    * Combine retrieval results from all memory layers using weighted fusion
    */
-  combineResults(
+  public combineResults(
     l1Result: L1RetrievalResult,
     l2Result: L2RetrievalResult,
     l3Result: L3RetrievalResult,
@@ -51,7 +51,7 @@ export class WeightedMemoryFusion {
   /**
    * Estimate token cost for given fusion weights without actual retrieval
    */
-  estimateTokenCost(
+  public estimateTokenCost(
     sampleL1Count: number,
     sampleL2Count: number,
     sampleL3Count: number,
@@ -154,7 +154,7 @@ export class WeightedMemoryFusion {
   /**
    * Optimize fusion weights based on query type and historical performance
    */
-  optimizeWeights(queryType: 'recent' | 'factual' | 'semantic', baseWeights: FusionWeights): FusionWeights {
+  public optimizeWeights(queryType: 'recent' | 'factual' | 'semantic', baseWeights: FusionWeights): FusionWeights {
     switch (queryType) {
       case 'recent':
         // Emphasize working memory for recent conversations
@@ -188,7 +188,7 @@ export class WeightedMemoryFusion {
   /**
    * Analyze query to determine optimal strategy
    */
-  analyzeQuery(queryText: string): 'recent' | 'factual' | 'semantic' {
+  public analyzeQuery(queryText: string): 'recent' | 'factual' | 'semantic' {
     const lowerQuery = queryText.toLowerCase();
     
     // Keywords that suggest recent conversation context

@@ -3,14 +3,22 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import neo4j from 'neo4j-driver';
 import { config } from '../config.js';
-import { CharacterProfile, CharacterAttribute } from '@rpg/types';
+import type { CharacterProfile, CharacterAttribute } from '@rpg/types';
+import { logger } from '../../../utils/src/logger.ts';
 
+interface ScalarWrapper { value: string | number | boolean }
+function isScalarWrapper(v: unknown): v is ScalarWrapper {
+  return typeof v === 'object' && v !== null && 'value' in v;
+}
 function extractAttributeValue(attr: CharacterAttribute['value']): string | number | boolean {
-  if (typeof attr === 'object' && attr !== null && 'value' in attr) {
-    const scalar = attr as { value: string | number | boolean };
-    return scalar.value;
-  }
-  return attr as string | number | boolean;
+  return isScalarWrapper(attr) ? attr.value : (attr as string | number | boolean);
+}
+function isCharacterProfile(value: unknown): value is CharacterProfile {
+  if (typeof value !== 'object' || value === null) { return false; }
+  const v = value as Record<string, unknown>;
+  if (typeof v.id !== 'string' || typeof v.name !== 'string') { return false; }
+  if (v.id.length === 0 || v.name.length === 0) { return false; }
+  return true;
 }
 
 async function run(): Promise<void> {
@@ -28,12 +36,12 @@ async function run(): Promise<void> {
 
   try {
     for (const file of files) {
-      const raw = readFileSync(path.join(dataDir, file), 'utf-8');
-      const profile: CharacterProfile = JSON.parse(raw);
-      if (!profile.id || !profile.name) continue;
-
-      const baseline = profile.baseline_vad || { valence: 0, arousal: 0, dominance: 0 };
-      const attributes = (profile.attributes || []).map(a => `${a.key}:${extractAttributeValue(a.value)}`);
+  const raw = readFileSync(path.join(dataDir, file), 'utf-8');
+  const parsed: unknown = JSON.parse(raw);
+  if (!isCharacterProfile(parsed)) { continue; }
+  const profile = parsed; // narrowed
+  const baseline = profile.baseline_vad ?? { valence: 0, arousal: 0, dominance: 0 };
+  const attributes = (profile.attributes ?? []).map(a => `${a.key}:${extractAttributeValue(a.value)}`);
 
       await session.run(
         `MERGE (c:Character {id: $id})
@@ -49,10 +57,10 @@ async function run(): Promise<void> {
           attributes: attributes
         }
       );
-      console.log(`Upserted character ${profile.id}`);
+      logger.info(`Upserted character ${profile.id}`);
     }
-  } catch (e) {
-    console.error('Seeding failed', e);
+  } catch (e: unknown) {
+    logger.error('Seeding failed', e);
   } finally {
     await session.close();
     await driver.close();

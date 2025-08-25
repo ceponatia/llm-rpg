@@ -1,29 +1,40 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
-export async function memoryRoutes(fastify: FastifyInstance): Promise<void> {
+export function memoryRoutes(fastify: FastifyInstance): void {
   // Helper guard
   const ensureMCA = (): void => {
-    if (!fastify.hasDecorator('mca') || !fastify.mca) {
+    const maybe = (fastify as { mca?: unknown }).mca;
+    if (maybe == null) { // runtime guard even if type says present
       throw new Error('MCA not available');
     }
   };
   
   // Pre-handler for admin-only endpoints
-  const adminPreHandler = async (request: any, reply: any) => {
-    if ((fastify as any).verifyAdmin) {
-      await (fastify as any).verifyAdmin(request, reply);
+  const adminPreHandler = (request: unknown, reply: unknown, done: (err?: Error) => void): void => {
+    const maybeVerify: unknown = (fastify as unknown).verifyAdmin;
+    if (typeof maybeVerify === 'function') {
+      try {
+        const result = (maybeVerify as (req: unknown, rep: unknown) => Promise<void> | void)(request, reply);
+        if (result instanceof Promise) {
+          result.then(() => done()).catch(err => done(err as Error));
+          return;
+        }
+      } catch (err) {
+        done(err as Error); return;
+      }
     }
+    done();
   };
 
   // Inspect current memory state
-  fastify.get('/inspect', { preHandler: adminPreHandler }, async (request, reply): Promise<unknown> => {
+  fastify.get('/inspect', { preHandler: adminPreHandler }, async (_request, reply): Promise<unknown> => {
     try {
       ensureMCA();
       const memoryState = await fastify.mca.inspectMemoryState();
       return memoryState;
     } catch (error: unknown) {
-      fastify.log.error(error);
-      reply.status( fastify.mca ? 500 : 503 ).send({
+  fastify.log.error(error);
+  reply.status(500).send({
         error: 'Failed to inspect memory',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -39,14 +50,14 @@ export async function memoryRoutes(fastify: FastifyInstance): Promise<void> {
       const results = await fastify.mca.searchMemory(query, { limit });
       return results;
     } catch (error: unknown) {
-      fastify.log.error(error);
-      reply.status(fastify.mca ? 500 : 503).send({ error: 'Memory search failed', message: error instanceof Error ? error.message : 'Unknown error' });
+  fastify.log.error(error);
+  reply.status(500).send({ error: 'Memory search failed', message: error instanceof Error ? error.message : 'Unknown error' });
       return undefined;
     }
   });
 
   // Get character emotional states
-  fastify.get('/characters', { preHandler: adminPreHandler }, async (request, reply): Promise<unknown> => {
+  fastify.get('/characters', { preHandler: adminPreHandler }, async (_request, reply): Promise<unknown> => {
     try {
       ensureMCA();
       const characters = await fastify.mca.getAllCharacters();
@@ -70,8 +81,8 @@ export async function memoryRoutes(fastify: FastifyInstance): Promise<void> {
       const emotionalHistory = await fastify.mca.getCharacterEmotionalHistory();
       return { character_id: characterId, emotional_history: emotionalHistory };
     } catch (error: unknown) {
-      fastify.log.error(error);
-      reply.status(fastify.mca ? 500 : 503).send({ error: 'Failed to fetch emotional history', message: error instanceof Error ? error.message : 'Unknown error' });
+  fastify.log.error(error);
+  reply.status(500).send({ error: 'Failed to fetch emotional history', message: error instanceof Error ? error.message : 'Unknown error' });
       return undefined;
     }
   });
@@ -83,7 +94,7 @@ export async function memoryRoutes(fastify: FastifyInstance): Promise<void> {
       const { factId } = request.params;
       const fact = await fastify.mca.getFactWithHistory(factId);
       
-      if (!fact) {
+  if (fact == null) {
         return reply.status(404).send({ error: 'Fact not found' });
       }
       
@@ -99,7 +110,7 @@ export async function memoryRoutes(fastify: FastifyInstance): Promise<void> {
   });
 
   // Manual memory management
-  fastify.post('/prune', { preHandler: adminPreHandler }, async (request, reply): Promise<unknown> => {
+  fastify.post('/prune', { preHandler: adminPreHandler }, async (_request, reply): Promise<unknown> => {
     try {
       ensureMCA();
       const pruningResult = await fastify.mca.pruneMemory();
@@ -118,7 +129,7 @@ export async function memoryRoutes(fastify: FastifyInstance): Promise<void> {
   });
 
   // Get memory statistics
-  fastify.get('/stats', { preHandler: adminPreHandler }, async (request, reply): Promise<unknown> => {
+  fastify.get('/stats', { preHandler: adminPreHandler }, async (_request, reply): Promise<unknown> => {
     try {
       ensureMCA();
       const stats = await fastify.mca.getMemoryStatistics();

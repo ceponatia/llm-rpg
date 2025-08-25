@@ -1,9 +1,9 @@
 import type { EmotionConfig, EmotionState, VADState } from './types.js';
 
-export interface TraitCapResult { adjusted: VADState; notes: string[]; }
+export interface TraitCapResult { adjusted: VADState; notes: Array<string>; }
 
 export function applyTraitCaps(state: EmotionState, proposed: VADState, config: EmotionConfig): TraitCapResult {
-  const notes: string[] = [];
+  const notes: Array<string> = [];
   const valence: number = proposed.valence;
   let arousal: number = proposed.arousal;
   let dominance: number = proposed.dominance;

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, TrendingUp, Crown, RefreshCw } from 'lucide-react';
+import type {
+  ChartOptions
+} from 'chart.js';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,11 +11,10 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  ChartOptions
+  Legend
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { Character, VADState } from '@rpg/types';
+import type { Character, VADState } from '@rpg/types';
 
 ChartJS.register(
   CategoryScale,
@@ -35,9 +37,9 @@ interface EmotionalStateVisualizerProps {
 }
 
 export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> = ({ className }) => {
-  const [characters, setCharacters] = useState<Character[]>([]);
+  const [characters, setCharacters] = useState<Array<Character>>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string>('');
-  const [emotionalHistory, setEmotionalHistory] = useState<EmotionalHistory[]>([]);
+  const [emotionalHistory, setEmotionalHistory] = useState<Array<EmotionalHistory>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const chartRef = useRef(null);
 
@@ -59,7 +61,7 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
   };
 
   const fetchEmotionalHistory = async (characterId: string): Promise<void> => {
-    if (!characterId) return;
+    if (!characterId) {return;}
     
     setIsLoading(true);
     try {
@@ -110,7 +112,7 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
         },
         grid: {
           color: (context) => {
-            if (context.tick.value === 0) return 'rgba(0, 0, 0, 0.3)';
+            if (context.tick.value === 0) {return 'rgba(0, 0, 0, 0.3)';}
             return 'rgba(0, 0, 0, 0.1)';
           }
         }
@@ -174,16 +176,16 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
 
   const formatVADValue = (value: number, dimension: 'valence' | 'arousal' | 'dominance'): string => {
     if (dimension === 'valence') {
-      if (value > 0.3) return 'Positive';
-      if (value < -0.3) return 'Negative';
+      if (value > 0.3) {return 'Positive';}
+      if (value < -0.3) {return 'Negative';}
       return 'Neutral';
     } else if (dimension === 'arousal') {
-      if (value > 0.7) return 'Excited';
-      if (value > 0.3) return 'Active';
+      if (value > 0.7) {return 'Excited';}
+      if (value > 0.3) {return 'Active';}
       return 'Calm';
     } else { // dominance
-      if (value > 0.7) return 'Dominant';
-      if (value > 0.3) return 'Assertive';
+      if (value > 0.7) {return 'Dominant';}
+      if (value > 0.3) {return 'Assertive';}
       return 'Submissive';
     }
   };

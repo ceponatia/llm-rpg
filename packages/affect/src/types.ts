@@ -91,7 +91,7 @@ export interface UpdateResult {
   state: EmotionState;
   delta: VADState; // raw proposed delta after discrete affects + signals
   applied: VADState; // final applied delta post gates & clamping
-  notes: string[];
+  notes: Array<string>;
   modeTransition?: {
     from: Mode;
     to: Mode;

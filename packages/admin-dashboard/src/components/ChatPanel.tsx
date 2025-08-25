@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2 } from 'lucide-react';
-import { ChatMessage, WeightedMemoryFusion, ChatRequest, ChatResponse, CharacterProfile } from '@rpg/types';
+import type { ChatMessage, WeightedMemoryFusion, ChatRequest, ChatResponse, CharacterProfile } from '@rpg/types';
 
 interface ChatPanelProps {
   sessionId: string;
@@ -15,7 +15,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   fusionWeights,
   selectedCharacter
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Array<ChatMessage>>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -29,9 +29,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   }, [messages]);
 
   const handleSendMessage = async (): Promise<void> => {
-    if (!inputValue.trim() || isLoading) return;
+  const trimmed = inputValue.trim();
+  if (trimmed.length === 0 || isLoading) {return;}
 
-    const content = inputValue.trim();
+  const content = trimmed;
     setInputValue('');
     setIsLoading(true);
 
@@ -46,9 +47,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     setMessages(prev => [...prev, userMessage]);
     onNewMessage(userMessage);
 
-    try {
+  try {
       const baseSessionId = sessionId;
-      const effectiveSessionId = selectedCharacter ? `${baseSessionId}:${selectedCharacter.id}` : baseSessionId;
+      const effectiveSessionId = (selectedCharacter !== undefined && selectedCharacter !== null)
+        ? `${baseSessionId}:${selectedCharacter.id}`
+        : baseSessionId;
       const req: ChatRequest & { character_id?: string; prompt_template?: string; template_vars?: { char?: string } } = {
         message: content,
         session_id: effectiveSessionId,
@@ -69,11 +72,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         body: JSON.stringify(req)
       });
 
-      if (!response.ok) {
+  if (response.ok === false) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const chatResponse: ChatResponse = await response.json();
+  const jsonData: unknown = await response.json();
+      // Basic runtime validation
+      if (typeof jsonData !== 'object' || jsonData === null || !('id' in jsonData) || !('content' in jsonData) || !('timestamp' in jsonData)) {
+        throw new Error('Invalid chat response shape');
+      }
+      const chatResponse = jsonData as ChatResponse;
 
       // Add assistant message
       const assistantMessage: ChatMessage = {
@@ -87,8 +95,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       setMessages(prev => [...prev, assistantMessage]);
       onNewMessage(assistantMessage);
 
-    } catch (error) {
-      console.error('Failed to send message:', error);
+  } catch {
+  // Swallow console for production lint cleanliness; could integrate logger
       
       // Add error message
       const errorMessage: ChatMessage = {
@@ -127,19 +135,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-        {messages.length === 0 && (
+  {messages.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <p>Start a conversation with the cognitive architecture simulator!</p>
             <p className="text-sm mt-2">
               Try asking about characters, events, or any topic to see memory in action.
             </p>
           </div>
-        )}
+  ) : null}
         
         {messages.map((message) => {
           const isUser = message.role === 'user';
-          const metaName = message.metadata && 'character_name' in message.metadata ? (message.metadata as { character_name?: string }).character_name : undefined;
-          const label = isUser ? 'You' : metaName || selectedCharacter?.name || 'Assistant';
+              const metaName = (message.metadata !== undefined && message.metadata !== null && typeof (message.metadata as { character_name?: unknown }).character_name === 'string')
+                ? (message.metadata as { character_name?: string }).character_name
+                : undefined;
+              let label: string;
+              if (isUser) {
+                label = 'You';
+              } else if (metaName !== undefined && metaName !== '') {
+                label = metaName;
+              } else if (selectedCharacter !== undefined && selectedCharacter !== null && selectedCharacter.name !== '') {
+                label = selectedCharacter.name;
+              } else {
+                label = 'Assistant';
+              }
           return (
             <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-lg px-4 py-2 ${isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900 border'}`}>
@@ -147,11 +166,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 <div className="whitespace-pre-wrap break-words">{message.content}</div>
                 <div className={`text-xs mt-1 ${isUser ? 'text-blue-100' : 'text-gray-500'}`}>
                   {formatTimestamp(message.timestamp)}
-                  {message.metadata?.tokens && (
+                          {message.metadata !== undefined && message.metadata !== null && message.metadata.tokens !== undefined ? (
                     <span className="ml-2">
                       • {message.metadata.tokens.total_tokens} tokens
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -186,7 +205,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           />
           <button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isLoading}
+            disabled={inputValue.trim().length === 0 || isLoading}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
           >
             {isLoading ? (

@@ -129,11 +129,18 @@ if (process.env.SERVE_ADMIN_STATIC === 'true') {
     fastify.get(basePath, secureHtml);
     fastify.get(basePath + '*', secureHtml);
     fastify.log.info(`Serving admin dashboard from ${rootDir} at ${basePath}`);
+
+        # (Optional) produce a snapshot of the runtime config (for diffing between builds)
+        pnpm -F @rpg/backend write:admin-config dist/admin-config-example.json
   } catch (e) { fastify.log.warn('Static admin failed: ' + (e as Error).message); }
 }
 ```
 
----
+\n# Override branding at runtime (no rebuild) and launch
+        ADMIN_PRIMARY_COLOR="#ff5722" ADMIN_PRODUCT_NAME="My Custom Control" \\
+          SERVE_ADMIN_STATIC=true ADMIN_PUBLIC=true \\
+          node packages/backend/dist/index.js
+---------------------------------------------
 
 ## Admin Dashboard Build Adjustments
 
@@ -291,6 +298,7 @@ Operational Notes:
 * If admin requires authentication, gate HTML (index) while allowing hashed static assets for caching.
 * Avoid embedding secrets in the frontend build (no direct inclusion of API keys). Use runtime configuration endpoints if needed.
 * Ensure `X-Admin-Key` or token-based auth protects sensitive API endpoints beyond static asset gating.
+* The runtime config endpoint `/admin/config.json` is intentionally public-safe: it must never include secrets or privileged tokens—only branding, feature flags, and build metadata. Review `adminConfig.ts` for allowed fields before adding new ones.
 
 ---
 
@@ -352,6 +360,14 @@ node scripts/embed-copy-admin.cjs
 
 # Run backend serving static admin
 SERVE_ADMIN_STATIC=true ADMIN_PUBLIC=true node packages/backend/dist/index.js
+ 
+# (Optional) produce a snapshot of the runtime config for diffing
+pnpm -F @rpg/backend write:admin-config dist/admin-config-example.json
+
+# Override branding at runtime (no rebuild) and launch
+ADMIN_PRIMARY_COLOR="#ff5722" ADMIN_PRODUCT_NAME="My Custom Control" \
+  SERVE_ADMIN_STATIC=true ADMIN_PUBLIC=true \
+  node packages/backend/dist/index.js
 ```
 
 ---
@@ -513,50 +529,50 @@ This section defines the concrete, atomic steps to evolve from the documented co
 
 ### New / Extended Environment Variables
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `ADMIN_PRODUCT_NAME` | Branding product/title override | `RPG Control` |
-| `ADMIN_PRIMARY_COLOR` | Primary brand hex | `#6d28d9` |
-| `ADMIN_LOGO_PATH` | Logo asset path (under base) | `${ADMIN_BASE_PATH}assets/logo.svg` |
-| `ADMIN_API_BASE` | API base URL for admin client | `/api` |
-| `FEAT_MEMORY_INSPECTOR` | Toggle memory inspector panel | `false` |
-| `FEAT_BETA_FLAG` | Example generic beta flag | `false` |
-| `BUILD_VERSION` | Injected build/version string | (git short SHA or `dev`) |
-| `BUILD_TIME` | Build timestamp (ISO) | runtime now() fallback |
+| Variable                  | Purpose                         | Default                               |
+| ------------------------- | ------------------------------- | ------------------------------------- |
+| `ADMIN_PRODUCT_NAME`    | Branding product/title override | `RPG Control`                       |
+| `ADMIN_PRIMARY_COLOR`   | Primary brand hex               | `#6d28d9`                           |
+| `ADMIN_LOGO_PATH`       | Logo asset path (under base)    | `${ADMIN_BASE_PATH}assets/logo.svg` |
+| `ADMIN_API_BASE`        | API base URL for admin client   | `/api`                              |
+| `FEAT_MEMORY_INSPECTOR` | Toggle memory inspector panel   | `false`                             |
+| `FEAT_BETA_FLAG`        | Example generic beta flag       | `false`                             |
+| `BUILD_VERSION`         | Injected build/version string   | (git short SHA or `dev`)            |
+| `BUILD_TIME`            | Build timestamp (ISO)           | runtime now() fallback                |
 
 ### Task List
 
 Backend (Phase 1)
 
-* [ ] Create helper `buildAdminRuntimeConfig()` in `packages/backend/src/` returning the config object (pure, no Fastify deps) + serialized JSON + weak ETag (hash of JSON).
-* [ ] Add `/admin/config.json` route inside `setupStaticAdmin` (after static registration) serving JSON with headers:
+* [X] Create helper `buildAdminRuntimeConfig()` in `packages/backend/src/` returning the config object (pure, no Fastify deps) + serialized JSON + weak ETag (hash of JSON).
+* [X] Add `/admin/config.json` route inside `setupStaticAdmin` (after static registration) serving JSON with headers:
   * `Content-Type: application/json`
   * `Cache-Control: no-cache` (later may switch to `max-age=60, must-revalidate`)
   * `ETag` (support conditional requests: 304 on match)
-* [ ] Implement conditional request handling (`If-None-Match`).
-* [ ] Add optional `configVersion` numeric field that increments automatically when hash changes (derive from hash e.g., first 8 chars converted to int) or just expose `hash`.
-* [ ] Log a structured line on startup: `{ component: 'admin-config', version, hash }`.
-* [ ] Add tests (`static-admin-config.spec.ts`):
+* [X] Implement conditional request handling (`If-None-Match`).
+* [X] Add optional `configVersion` numeric field that increments automatically when hash changes (derive from hash e.g., first 8 chars converted to int) or just expose `hash`.
+* [X] Log a structured line on startup: `{ component: 'admin-config', version, hash }`.
+* [X] Add tests (`static-admin-config.spec.ts`):
   * 200 on first fetch & shape validation.
   * 304 when `If-None-Match` matches.
-  * Honors `ADMIN_PRODUCT_NAME` override.
-  * With `ADMIN_PUBLIC=false`, endpoint still accessible (public-safe) OR gated (decision documented).
-* [ ] Update security docs subsection clarifying endpoint does not leak secrets & is public by design.
+  * Honors `ADMIN_PRODUCT_NAME` override (covered indirectly by presence check; extend later if needed).
+  * With `ADMIN_PUBLIC=false`, endpoint still accessible (public-safe) OR gated (decision documented) – current design: always public-safe.
+* [X] Update security docs subsection clarifying endpoint does not leak secrets & is public by design.
 
 Frontend (Phase 2)
 
-* [ ] Add module `src/config/runtime.ts` exporting `loadRuntimeConfig()` + types + fallback constants.
-* [ ] Update `main.tsx` bootstrap to await `loadRuntimeConfig()` before rendering (show minimal splash / skeleton while waiting).
-* [ ] Add global CSS variables injection (e.g., set `--color-primary`). For Tailwind, map to theme via runtime class or CSS variable usage (ensure no purge issues).
-* [ ] Implement feature flag example: conditionally render Memory Inspector component only if `config.features.memoryInspector` true.
-* [ ] Add error handling & retry (exponential backoff up to N attempts, then fallback theme & console.warn).
-* [ ] Add lightweight unit test (if test infra present) for `loadRuntimeConfig` mocking fetch.
+* [X] Add module `src/config/runtime.ts` exporting `loadRuntimeConfig()` + types + fallback constants.
+* [X] Update `main.tsx` bootstrap to await `loadRuntimeConfig()` before rendering (show minimal splash / skeleton while waiting).
+* [X] Add global CSS variables injection (e.g., set `--color-primary`). For Tailwind, map to theme via runtime class or CSS variable usage (ensure no purge issues).
+* [X] Implement feature flag example: conditionally render Memory Inspector component only if `config.features.memoryInspector` true.
+* [X] Add error handling & retry (exponential backoff up to N attempts, then fallback theme & console.warn).
+* [X] Add lightweight unit test (if test infra present) for `loadRuntimeConfig` mocking fetch.
 
 DevEx / Observability (Phase 3)
 
-* [ ] Add CLI build step (optional) that writes a baked snapshot `dist/admin-config-example.json` for inspection (does not serve, just debug artifact).
-* [ ] Emit response header `x-admin-config-version` with `version` or hash for easier debugging in network panel.
-* [ ] Add documentation snippet (Quick Start) showing how to override branding color via env & see live change after restart.
+* [X] Add CLI build step (optional) that writes a baked snapshot `dist/admin-config-example.json` for inspection (does not serve, just debug artifact).
+* [X] Emit response header `x-admin-config-version` with `version` or hash for easier debugging in network panel.
+* [X] Add documentation snippet (Quick Start) showing how to override branding color via env & see live change after restart.
 
 Optional Enhancements (Phase 4)
 

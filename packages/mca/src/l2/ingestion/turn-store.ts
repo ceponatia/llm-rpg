@@ -1,6 +1,6 @@
 // Handles conversation turn storage in Neo4j graph
-import { ManagedTransaction } from 'neo4j-driver';
-import { WorkingMemoryTurn } from '@rpg/types';
+import type { ManagedTransaction } from 'neo4j-driver';
+import type { WorkingMemoryTurn } from '@rpg/types';
 
 export async function storeTurn(
   tx: ManagedTransaction, 

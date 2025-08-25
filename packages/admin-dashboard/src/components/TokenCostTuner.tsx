@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sliders, DollarSign, Zap } from 'lucide-react';
-import { WeightedMemoryFusion, TokenCost } from '@rpg/types';
+import type { WeightedMemoryFusion, TokenCost } from '@rpg/types';
 
 interface TokenCostTunerProps {
   fusionWeights: WeightedMemoryFusion;

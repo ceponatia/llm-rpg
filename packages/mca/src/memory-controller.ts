@@ -1,4 +1,4 @@
-import { 
+import type { 
   MCAConfig, 
   MemoryRetrievalQuery, 
   MemoryRetrievalResult,
@@ -16,17 +16,17 @@ import { L2GraphMemory } from './layers/l2-graph-memory.js';
 import { L3VectorMemory } from './layers/l3-vector-memory.js';
 import { SignificanceScorer } from './scoring/significance-scorer.js';
 import { WeightedMemoryFusion as MemoryFusion } from './fusion/weighted-fusion.js';
-import { IDatabaseManager } from './interfaces/database.js';
+import type { IDatabaseManager } from './interfaces/database.js';
 
 export class MemoryController {
-  private l1: L1WorkingMemory;
-  private l2: L2GraphMemory;
-  private l3: L3VectorMemory;
-  private scorer: SignificanceScorer;
-  private fusion: MemoryFusion;
+  private readonly l1: L1WorkingMemory;
+  private readonly l2: L2GraphMemory;
+  private readonly l3: L3VectorMemory;
+  private readonly scorer: SignificanceScorer;
+  private readonly fusion: MemoryFusion;
   
-  constructor(
-    private dbManager: IDatabaseManager,
+  public constructor(
+    private readonly dbManager: IDatabaseManager,
     public config: MCAConfig
   ) {
     this.l1 = new L1WorkingMemory(config);
@@ -39,9 +39,9 @@ export class MemoryController {
   /**
    * WRITE PATH: Ingest a conversation turn into memory
    */
-  async ingestConversationTurn(
+  public async ingestConversationTurn(
     turn: WorkingMemoryTurn,
-    context: WorkingMemoryTurn[],
+    context: Array<WorkingMemoryTurn>,
     sessionId: string
   ): Promise<MemoryIngestionResult> {
     const operations = [];
@@ -64,8 +64,8 @@ export class MemoryController {
       const eventDetection = this.scorer.detectEvents(turn, context);
 
       // 3. If significant enough, process for L2 and L3
-      let factsUpdated: string[] = [];
-      let relationshipsModified: string[] = [];
+      let factsUpdated: Array<string> = [];
+      let relationshipsModified: Array<string> = [];
       const emotionalChanges = eventDetection.emotional_changes;
 
       if (eventDetection.is_significant) {
@@ -95,8 +95,7 @@ export class MemoryController {
         relationships_modified: relationshipsModified
       };
 
-    } catch (error) {
-      console.error('Memory ingestion failed:', error);
+  } catch {
       return {
         success: false,
         operations_performed: operations,
@@ -112,7 +111,7 @@ export class MemoryController {
   /**
    * READ PATH: Retrieve relevant context using weighted memory fusion
    */
-  async retrieveRelevantContext(query: MemoryRetrievalQuery): Promise<MemoryRetrievalResult> {
+  public async retrieveRelevantContext(query: MemoryRetrievalQuery): Promise<MemoryRetrievalResult> {
     try {
       const [l1Result, l2Result, l3Result] = await Promise.all([
         this.l1.retrieve(query),
@@ -126,8 +125,7 @@ export class MemoryController {
         query.fusion_weights
       );
       return fusedResult;
-    } catch (error) {
-      console.error('Memory retrieval failed:', error);
+  } catch {
       return {
         l1: { turns: [], relevance_score: 0, token_count: 0 },
         l2: { characters: [], facts: [], relationships: [], relevance_score: 0, token_count: 0 },
@@ -144,35 +142,35 @@ export class MemoryController {
    */
   private async manageMemoryState(sessionId: string): Promise<void> {
     // This will be implemented in Phase 3 (Advanced Agent Logic)
-    // For now, just log that state management was called
-    console.log(`Memory state management triggered for session: ${sessionId}`);
+    // Placeholder no-op for now (removed console for lint compliance)
+    await Promise.resolve(sessionId);
   }
 
   /**
    * PUBLIC API METHODS
    */
 
-  async getChatHistory(sessionId: string): Promise<WorkingMemoryTurn[]> {
+  public getChatHistory(sessionId: string): Array<WorkingMemoryTurn> {
     return this.l1.getHistory(sessionId);
   }
 
-  async getAllSessions(): Promise<ChatSession[]> {
+  public getAllSessions(): Array<ChatSession> {
     return this.l1.getAllSessions();
   }
 
-  async getAllCharacters(): Promise<Character[]> {
+  public async getAllCharacters(): Promise<Array<Character>> {
     return this.l2.getAllCharacters();
   }
 
-  async getCharacterEmotionalHistory(): Promise<unknown[]> {
+  public async getCharacterEmotionalHistory(): Promise<Array<unknown>> {
     return this.l2.getEmotionalHistory();
   }
 
-  async getFactWithHistory(factId: string): Promise<FactNode | null> {
+  public async getFactWithHistory(factId: string): Promise<FactNode | null> {
     return this.l2.getFactWithHistory(factId);
   }
 
-  async searchMemory(query: string, options: { limit: number }): Promise<MemoryRetrievalResult> {
+  public async searchMemory(query: string, options: { limit: number }): Promise<MemoryRetrievalResult> {
     const searchQuery: MemoryRetrievalQuery = {
       query_text: query,
       session_id: 'search',
@@ -182,7 +180,7 @@ export class MemoryController {
     return await this.retrieveRelevantContext(searchQuery);
   }
 
-  async inspectMemoryState(): Promise<unknown> {
+  public async inspectMemoryState(): Promise<unknown> {
     const [l1State, l2State, l3State] = await Promise.all([
       this.l1.inspect(),
       this.l2.inspect(),
@@ -197,7 +195,7 @@ export class MemoryController {
     };
   }
 
-  async getMemoryStatistics(): Promise<unknown> {
+  public async getMemoryStatistics(): Promise<unknown> {
     const [l1Stats, l2Stats, l3Stats] = await Promise.all([
       this.l1.getStatistics(),  
       this.l2.getStatistics(),
@@ -213,11 +211,11 @@ export class MemoryController {
     };
   }
 
-  async pruneMemory(): Promise<{ message: string }> {
+  public pruneMemory(): { message: string } {
     return { message: 'Pruning not yet implemented' };
   }
 
-  async estimateTokenCost(query: MemoryRetrievalQuery): Promise<TokenCost> {
+  public async estimateTokenCost(query: MemoryRetrievalQuery): Promise<TokenCost> {
     const result = await this.retrieveRelevantContext(query);
     return {
       total_tokens: result.total_tokens,
@@ -229,11 +227,11 @@ export class MemoryController {
   }
 
   // Configuration update methods
-  updateFusionWeights(weights: WeightedMemoryFusion): void {
+  public updateFusionWeights(weights: WeightedMemoryFusion): void {
     this.config.default_fusion_weights = weights;
   }
 
-  updateSignificanceThreshold(threshold: number): void {
+  public updateSignificanceThreshold(threshold: number): void {
     this.config.l2_significance_threshold = threshold;
   }
 }

@@ -1,22 +1,16 @@
 /**
- * Text processing utilities for memory operations
+ * Text processing utilities for memory operations (converted from static class to functions)
  */
-export class TextUtils {
-  /**
-   * Clean and normalize text for processing
-   */
-  static cleanText(text: string): string {
-    return text
-      .trim()
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .replace(/[^\w\s.,!?;:'"()-]/g, '') // Remove unusual characters
-      .toLowerCase();
-  }
 
-  /**
-   * Extract keywords from text
-   */
-  static extractKeywords(text: string, minLength: number = 3): string[] {
+export function cleanText(text: string): string {
+  return text
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s.,!?;:'"()-]/g, '')
+    .toLowerCase();
+}
+
+export function extractKeywords(text: string, minLength = 3): Array<string> {
     const stopWords = new Set([
       'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
       'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
@@ -28,7 +22,7 @@ export class TextUtils {
       'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can'
     ]);
 
-    const words = this.cleanText(text)
+  const words = cleanText(text)
       .split(/\s+/)
       .filter(word => 
         word.length >= minLength && 
@@ -38,33 +32,29 @@ export class TextUtils {
 
     // Count word frequencies
     const wordCounts = new Map<string, number>();
-    words.forEach(word => {
-      wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
-    });
+      words.forEach(word => {
+        const current = wordCounts.get(word);
+        wordCounts.set(word, (current ?? 0) + 1);
+      });
 
     // Return words sorted by frequency (most common first)
-    return Array.from(wordCounts.entries())
+  return Array.from(wordCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([word]) => word);
+}
+
+  export function calculateSimilarity(text1: string, text2: string): number {
+    const words1 = new Set(extractKeywords(text1));
+    const words2 = new Set(extractKeywords(text2));
+
+      const intersection = new Set([...words1].filter(word => words2.has(word)));
+      const union = new Set([...words1, ...words2]);
+
+    if (union.size === 0) { return 0; }
+    return intersection.size / union.size;
   }
 
-  /**
-   * Calculate text similarity using simple Jaccard coefficient
-   */
-  static calculateSimilarity(text1: string, text2: string): number {
-    const words1 = new Set(this.extractKeywords(text1));
-    const words2 = new Set(this.extractKeywords(text2));
-
-    const intersection = new Set([...words1].filter(word => words2.has(word)));
-    const union = new Set([...words1, ...words2]);
-
-    return union.size > 0 ? intersection.size / union.size : 0;
-  }
-
-  /**
-   * Generate a summary of text (simple truncation with sentence boundary detection)
-   */
-  static generateSummary(text: string, maxLength: number = 200): string {
+export function generateSummary(text: string, maxLength = 200): string {
     if (text.length <= maxLength) {
       return text;
     }
@@ -97,13 +87,10 @@ export class TextUtils {
       summary = wordSummary.trim() + '...';
     }
 
-    return summary.trim();
-  }
+  return summary.trim();
+}
 
-  /**
-   * Detect the sentiment/tone of text (simple keyword-based)
-   */
-  static detectSentiment(text: string): { polarity: number; confidence: number } {
+export function detectSentiment(text: string): { polarity: number; confidence: number } {
     const positiveWords = [
       'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love',
       'like', 'enjoy', 'happy', 'pleased', 'satisfied', 'perfect', 'awesome'
@@ -114,15 +101,15 @@ export class TextUtils {
       'frustrated', 'disappointed', 'sad', 'upset', 'annoyed', 'disgusted'
     ];
 
-    const cleanedText = this.cleanText(text);
+  const cleanedText = cleanText(text);
     const words = cleanedText.split(/\s+/);
     
     let positiveCount = 0;
     let negativeCount = 0;
 
     words.forEach(word => {
-      if (positiveWords.includes(word)) positiveCount++;
-      if (negativeWords.includes(word)) negativeCount++;
+      if (positiveWords.includes(word)) {positiveCount++;}
+      if (negativeWords.includes(word)) {negativeCount++;}
     });
 
     const totalSentimentWords = positiveCount + negativeCount;
@@ -134,15 +121,13 @@ export class TextUtils {
     const polarity = (positiveCount - negativeCount) / totalSentimentWords;
     const confidence = totalSentimentWords / words.length;
 
-    return { polarity, confidence };
-  }
+  return { polarity, confidence };
+}
 
-  /**
-   * Extract potential character names from text
-   */
-  static extractPotentialNames(text: string): string[] {
-    // Look for capitalized words that could be names
-    const capitalizedWords = text.match(/\b[A-Z][a-z]+\b/g) || [];
+  export function extractPotentialNames(text: string): Array<string> {
+      // Look for capitalized words that could be names
+      const capitalizedWordsMatch = text.match(/\b[A-Z][a-z]+\b/g);
+  const capitalizedWords = capitalizedWordsMatch ?? [];
     
     // Filter out common words that start with capitals
     const commonCapitalized = new Set([
@@ -153,34 +138,35 @@ export class TextUtils {
       'August', 'September', 'October', 'November', 'December'
     ]);
 
-    return capitalizedWords
+  return capitalizedWords
       .filter(word => !commonCapitalized.has(word))
       .filter((word, index, array) => array.indexOf(word) === index); // Remove duplicates
-  }
-
-  /**
-   * Check if text contains a question
-   */
-  static containsQuestion(text: string): boolean {
-    return /\?/.test(text) || /^(what|who|when|where|why|how|is|are|do|does|did|can|could|would|will|should)/i.test(text.trim());
-  }
-
-  /**
-   * Check if text expresses strong emotion
-   */
-  static hasStrongEmotion(text: string): boolean {
-    // Check for multiple exclamation marks, all caps words, or emotional punctuation
-    return /!{2,}/.test(text) || /\b[A-Z]{3,}\b/.test(text) || /[!?]{3,}/.test(text);
-  }
-
-  /**
-   * Normalize entity names for consistent storage
-   */
-  static normalizeEntityName(name: string): string {
-    return name
-      .trim()
-      .toLowerCase()
-      .replace(/[^\w\s]/g, '') // Remove punctuation
-      .replace(/\s+/g, '_'); // Replace spaces with underscores
-  }
 }
+
+export function containsQuestion(text: string): boolean {
+  return /\?/.test(text) || /^(what|who|when|where|why|how|is|are|do|does|did|can|could|would|will|should)/i.test(text.trim());
+}
+
+export function hasStrongEmotion(text: string): boolean {
+  return /!{2,}/.test(text) || /\b[A-Z]{3,}\b/.test(text) || /[!?]{3,}/.test(text);
+}
+export function normalizeEntityName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, '_');
+}
+
+// Backwards compatibility namespace-like export
+export const TextUtils = {
+  cleanText,
+  extractKeywords,
+  calculateSimilarity,
+  generateSummary,
+  detectSentiment,
+  extractPotentialNames,
+  containsQuestion,
+  hasStrongEmotion,
+  normalizeEntityName
+} as const;

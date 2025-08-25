@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { IntentDetector } from '../src/intentDetector.js';
 import type { IntentDetectionRule } from '../../types/src/zod/contextModifier.zod.js';
 
-const rules: IntentDetectionRule[] = [
+const rules: Array<IntentDetectionRule> = [
   { intent: 'romantic', keywords: ['love','dear'], patterns: ['heart'], confidence_threshold: 0.3, priority: 1 },
   { intent: 'conflict', keywords: ['angry','fight'], patterns: ['annoy(ed)?'], confidence_threshold: 0.3, priority: 1 },
   { intent: 'sad', keywords: ['sad','unhappy'], patterns: ['cry(ing)?'], confidence_threshold: 0.3, priority: 2 },

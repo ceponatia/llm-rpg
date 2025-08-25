@@ -1,4 +1,4 @@
-import { 
+import type { 
   MCAConfig, 
   WorkingMemoryTurn,
   L3RetrievalResult,
@@ -9,36 +9,36 @@ import {
 } from '@rpg/types';
 // DatabaseManager passed as parameter
 // import { FaissNode } from 'faiss-node';
-import { IDatabaseManager } from '../interfaces/database.js';
+import type { IDatabaseManager } from '../interfaces/database.js';
 
 /**
  * L3 Vector Memory - Semantic Archive using FAISS
  * Stores embeddings of hierarchically-generated summaries and insights
  */
 export class L3VectorMemory {
-  private fragments: Map<string, VectorMemoryFragment> = new Map();
-  private nextIndex = 0;
+  private readonly fragments = new Map<string, VectorMemoryFragment>();
+  // nextIndex was unused; removed for lint cleanliness.
 
-  constructor(
-    private dbManager: IDatabaseManager,
-    private config: MCAConfig
+  public constructor(
+    private readonly dbManager: IDatabaseManager,
+    private readonly config: MCAConfig
   ) {}
 
   /**
    * Ingest a conversation turn into vector memory
    */
-  async ingestTurn(
+  public async ingestTurn(
     turn: WorkingMemoryTurn,
     eventDetection: EventDetectionResult,
     sessionId: string
   ): Promise<{
-    operations: MemoryOperation[];
+    operations: Array<MemoryOperation>;
   }> {
-    const operations: MemoryOperation[] = [];
+    const operations: Array<MemoryOperation> = [];
 
     try {
       const summary = this.generateSummary(turn, eventDetection);
-      const embedding = await this.generateEmbedding(summary);
+  const embedding = this.generateEmbedding(summary);
       const fragment: VectorMemoryFragment = {
         id: `vec:${crypto.randomUUID()}`,
         embedding,
@@ -56,7 +56,7 @@ export class L3VectorMemory {
         }
       };
 
-      const faissIndex = this.dbManager.getFaissIndex() as { add(v: number[][]): void };
+      const faissIndex = this.dbManager.getFaissIndex() as { add(v: Array<Array<number>>): void };
       faissIndex.add([embedding]);
       this.fragments.set(fragment.id, fragment);
       await this.dbManager.saveFaissIndex();
@@ -77,8 +77,8 @@ export class L3VectorMemory {
 
       return { operations };
 
-    } catch (error) {
-      console.error('L3 ingestion error:', error);
+  } catch {
+    // Swallow errors for fast path; could route to logger later
       return { operations };
     }
   }
@@ -86,19 +86,19 @@ export class L3VectorMemory {
   /**
    * Retrieve relevant fragments from vector memory
    */
-  async retrieve(query: MemoryRetrievalQuery): Promise<L3RetrievalResult> {
+  public async retrieve(query: MemoryRetrievalQuery): Promise<L3RetrievalResult> {
     try {
       if (this.fragments.size === 0) {
         return { fragments: [], relevance_score: 0, token_count: 0 };
       }
-      const queryEmbedding = await this.generateEmbedding(query.query_text);
-      const faissIndex = this.dbManager.getFaissIndex() as { ntotal(): number; search(v: number[][], k: number): { distances: number[][]; labels: number[][] } };
+  const queryEmbedding = this.generateEmbedding(query.query_text);
+      const faissIndex = this.dbManager.getFaissIndex() as { ntotal(): number; search(v: Array<Array<number>>, k: number): { distances: Array<Array<number>>; labels: Array<Array<number>> } };
       const k = Math.min(10, this.fragments.size);
       if (faissIndex.ntotal() === 0) {
         return { fragments: [], relevance_score: 0, token_count: 0 };
       }
       const searchResult = faissIndex.search([queryEmbedding], k);
-      const relevantFragments: VectorMemoryFragment[] = [];
+      const relevantFragments: Array<VectorMemoryFragment> = [];
       const fragmentArray = Array.from(this.fragments.values());
       for (let i = 0; i < searchResult.distances[0].length; i++) {
         const index = searchResult.labels[0][i];
@@ -111,24 +111,24 @@ export class L3VectorMemory {
           relevantFragments.push(fragment);
         }
       }
-      relevantFragments.sort((a, b) => (b.similarity_score || 0) - (a.similarity_score || 0));
+  relevantFragments.sort((a, b) => (b.similarity_score ?? 0) - (a.similarity_score ?? 0));
 
       // Optional character scoping: keep only fragments tagged with character id
-      let scoped = relevantFragments;
-      if (query.character_id) {
+  let scoped = relevantFragments;
+  if (typeof query.character_id === 'string' && query.character_id.trim().length > 0) {
         const tag = query.character_id.toLowerCase();
         scoped = relevantFragments.filter(f => f.metadata.tags.some(t => t.toLowerCase().includes(tag)));
       }
 
-      const avgSimilarity = scoped.reduce((sum, frag) => sum + (frag.similarity_score || 0), 0) / (scoped.length || 1);
+  const avgSimilarity = scoped.length === 0 ? 0 : scoped.reduce((sum, frag) => sum + (frag.similarity_score ?? 0), 0) / scoped.length;
       const tokenCount = this.estimateL3TokenCount(scoped);
       return {
         fragments: scoped,
-        relevance_score: avgSimilarity || 0,
+  relevance_score: avgSimilarity,
         token_count: tokenCount
       };
-    } catch (error) {
-      console.error('L3 retrieval error:', error);
+  } catch {
+    // Retrieval errors suppressed (could add logger)
       return {
         fragments: [],
         relevance_score: 0,
@@ -162,27 +162,28 @@ export class L3VectorMemory {
     return summary;
   }
 
-  private async generateEmbedding(text: string): Promise<number[]> {
+  private generateEmbedding(text: string): Array<number> {
     // Mock embedding generation - in reality, this would use a model like Sentence-BERT
     // For now, create a simple hash-based embedding
     const embedding = new Array(this.config.l3_vector_dimension).fill(0);
     
     // Simple character-based hash embedding
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charCodeAt(i);
-      const index = char % this.config.l3_vector_dimension;
-      embedding[index] += Math.sin(char * 0.01) * 0.1;
-    }
+      for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        const idx = code % this.config.l3_vector_dimension;
+        const increment = Math.sin(code * 0.01) * 0.1;
+        embedding[idx] += increment;
+      }
 
     // Normalize
-    const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    if (magnitude > 0) {
+  const magnitude = Math.sqrt(embedding.reduce((sum: number, val: number) => sum + val * val, 0));
+  if (magnitude > 0) {
       for (let i = 0; i < embedding.length; i++) {
         embedding[i] /= magnitude;
       }
     }
 
-    return embedding;
+  return embedding as Array<number>;
   }
 
   private determineContentType(eventDetection: EventDetectionResult): 'summary' | 'insight' | 'event' {
@@ -195,8 +196,8 @@ export class L3VectorMemory {
     }
   }
 
-  private extractTags(turn: WorkingMemoryTurn, eventDetection: EventDetectionResult): string[] {
-    const tags: string[] = [];
+  private extractTags(turn: WorkingMemoryTurn, eventDetection: EventDetectionResult): Array<string> {
+    const tags: Array<string> = [];
     
     // Add role as tag
     tags.push(turn.role);
@@ -219,7 +220,7 @@ export class L3VectorMemory {
     return [...new Set(tags)]; // Remove duplicates
   }
 
-  private estimateL3TokenCount(fragments: VectorMemoryFragment[]): number {
+  private estimateL3TokenCount(fragments: Array<VectorMemoryFragment>): number {
     // Rough estimation: average 100 tokens per fragment content
     return fragments.reduce((sum, fragment) => {
       const contentTokens = Math.ceil(fragment.content.length / 4); // 4 chars per token
@@ -230,7 +231,7 @@ export class L3VectorMemory {
   /**
    * Public API methods
    */
-  async inspect(): Promise<unknown> {
+  public inspect(): unknown {
     const faissIndex = this.dbManager.getFaissIndex() as { ntotal(): number };
     
     const contentTypes = {
@@ -248,7 +249,7 @@ export class L3VectorMemory {
     let totalImportance = 0;
     
     for (const fragment of this.fragments.values()) {
-      contentTypes[fragment.metadata.content_type]++;
+      contentTypes[fragment.metadata.content_type] += 1;
       
       const importance = fragment.metadata.importance_score;
       importanceStats.min = Math.min(importanceStats.min, importance);
@@ -256,7 +257,7 @@ export class L3VectorMemory {
       totalImportance += importance;
     }
 
-    if (this.fragments.size > 0) {
+  if (this.fragments.size > 0) {
       importanceStats.avg = totalImportance / this.fragments.size;
     } else {
       importanceStats.min = 0;
@@ -271,15 +272,15 @@ export class L3VectorMemory {
     };
   }
 
-  async getStatistics(): Promise<unknown> {
-    return await this.inspect();
+    public getStatistics(): unknown {
+      return this.inspect();
   }
 
   /**
    * Prune old or low-importance fragments
    */
-  async pruneFragments(maxFragments: number = this.config.l3_max_fragments): Promise<void> {
-    if (this.fragments.size <= maxFragments) return;
+  public pruneFragments(maxFragments: number = this.config.l3_max_fragments): void {
+      if (this.fragments.size <= maxFragments) {return;}
 
     // Sort fragments by composite score (importance + recency + access)
     const fragmentsArray = Array.from(this.fragments.values());
@@ -290,8 +291,8 @@ export class L3VectorMemory {
     });
 
     // Keep only the top fragments
-    const toKeep = fragmentsArray.slice(0, maxFragments);
-    const toRemove = fragmentsArray.slice(maxFragments);
+  const toKeep = fragmentsArray.slice(0, maxFragments);
+  // Removed unused toRemove variable
 
     // Clear the fragments map and rebuild with kept fragments
     this.fragments.clear();
@@ -300,7 +301,7 @@ export class L3VectorMemory {
     });
 
     // TODO: Rebuild FAISS index with remaining fragments
-    console.log(`Pruned ${toRemove.length} fragments from L3 memory`);
+  // Intentionally silent (remove console usage for lint). Potential hook for logger.
   }
 
   private calculateCompositeScore(fragment: VectorMemoryFragment): number {

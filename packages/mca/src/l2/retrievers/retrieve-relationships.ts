@@ -1,6 +1,6 @@
 // Retrieves relevant relationships from Neo4j graph based on query
-import { ManagedTransaction } from 'neo4j-driver';
-import { RelationshipEdge, MemoryRetrievalQuery } from '@rpg/types';
+import type { ManagedTransaction } from 'neo4j-driver';
+import type { RelationshipEdge, MemoryRetrievalQuery } from '@rpg/types';
 import { mapRecordToRelationship } from '../mapping/relationship.js';
 
 interface Neo4jRecordLike { get(key: string): unknown }
@@ -8,7 +8,7 @@ interface Neo4jRecordLike { get(key: string): unknown }
 export async function retrieveRelevantRelationships(
   tx: ManagedTransaction, 
   query: MemoryRetrievalQuery
-): Promise<RelationshipEdge[]> {
+): Promise<Array<RelationshipEdge>> {
   const cypherQuery = `
     MATCH (from)-[r:RELATIONSHIP]->(to)
     WHERE toLower(r.relationship_type) CONTAINS toLower($queryText)

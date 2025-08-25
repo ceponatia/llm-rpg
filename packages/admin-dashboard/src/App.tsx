@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { UnderTheHoodPanel } from './components/UnderTheHoodPanel';
 import { MemoryInspectorPanel } from './components/MemoryInspectorPanel';
+import { FeatureGate } from './components/FeatureGate';
 import { PromptInspectorPanel } from './components/PromptInspectorPanel';
 import { TokenCostTuner } from './components/TokenCostTuner';
 import { WebSocketProvider } from './contexts/WebSocketContext';
-import { WeightedMemoryFusion, ChatMessage, MemoryOperation, CharacterProfile } from '@rpg/types';
+import type { WeightedMemoryFusion, ChatMessage, MemoryOperation, CharacterProfile } from '@rpg/types';
 import { CharacterSelector } from './components/CharacterSelector';
 
 function App(): JSX.Element {
@@ -15,10 +16,10 @@ function App(): JSX.Element {
     w_L3: 0.2
   });
   
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [memoryOperations, setMemoryOperations] = useState<MemoryOperation[]>([]);
+  const [messages, setMessages] = useState<Array<ChatMessage>>([]);
+  const [memoryOperations, setMemoryOperations] = useState<Array<MemoryOperation>>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
-  const [characters, setCharacters] = useState<CharacterProfile[]>([]);
+  const [characters, setCharacters] = useState<Array<CharacterProfile>>([]);
   const [charactersLoading, setCharactersLoading] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterProfile | null>(null);
 
@@ -114,10 +115,12 @@ function App(): JSX.Element {
               <UnderTheHoodPanel operations={memoryOperations} />
             </div>
 
-            {/* Bottom Left: Memory Inspector Panel */}
-            <div className="bg-white rounded-lg shadow">
-              <MemoryInspectorPanel sessionId={currentSessionId} />
-            </div>
+            {/* Bottom Left: Memory Inspector Panel (feature gated) */}
+            <FeatureGate flag="memoryInspector" fallback={<div className="bg-white rounded-lg shadow p-4 text-sm text-gray-500">Memory Inspector disabled.</div>}>
+              <div className="bg-white rounded-lg shadow">
+                <MemoryInspectorPanel sessionId={currentSessionId} />
+              </div>
+            </FeatureGate>
 
             {/* Bottom Right: Prompt Inspector Panel */}
             <div className="bg-white rounded-lg shadow">
