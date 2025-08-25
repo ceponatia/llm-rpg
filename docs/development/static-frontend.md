@@ -29,19 +29,19 @@ This document captures what is required to finish (and harden) the static embedd
 
 ## Gap Analysis & Required Work
 
-| Area | Gap | Action |
-|------|-----|--------|
-| Path Resolution | Hard-coded `../../frontend/dist` | Replace with configurable env `ADMIN_STATIC_DIR` defaulting to resolved `../../admin-dashboard/dist` then fallback to old path for backward compatibility. |
-| Package Naming | Mixed `frontend` vs `admin-dashboard` | Decide canonical name (`admin-dashboard`). Add deprecation note if keeping old folder temporarily. |
-| Build Script | Missing `build:admin:embed` | Add root script: `pnpm -F @rpg/admin-dashboard build && pnpm -F @rpg/backend build` + copy (if needed). |
-| Asset Copy | Not copying; backend serves from admin package folder | Either: (A) Serve directly from `../admin-dashboard/dist`; (B) Copy into backend `dist/admin`. Option B isolates deploy artifact. Pick one (see trade-offs below). |
-| Base Path | Vite default base `/` may produce absolute asset URLs | Set `base: '/admin/'` in admin dashboard `vite.config.(ts)` when `EMBED_ADMIN=true`. |
-| Cache Headers | None specified | Configure `@fastify/static` with `maxAge` and optionally add ETag / compression plugin. |
-| Compression | None | Register `@fastify/compress` for gzip/brotli. |
-| Security | Static assets always public if enabled | Add guard: if `ADMIN_PUBLIC !== 'true'`, require header `X-Admin-Key` for `GET /admin/*` HTML (allow hashed static assets directly). |
-| CI/CD Integration | Not defined | Document pipeline steps (build admin, build backend, deploy single artifact). |
-| Sourcemaps | Might leak internal code | Optionally disable or gate with `EMBED_ADMIN_SOURCEMAPS=true`. |
-| Type Safety / Scripts | No shared types consumed at runtime | Confirm that runtime does not need TS artifacts—only static assets. Ensure `admin-dashboard` build outputs deterministic. |
+| Area                  | Gap                                                     | Action                                                                                                                                                                 |
+| --------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Path Resolution       | Hard-coded `../../frontend/dist`                      | Replace with configurable env `ADMIN_STATIC_DIR` defaulting to resolved `../../admin-dashboard/dist` then fallback to old path for backward compatibility.         |
+| Package Naming        | Mixed `frontend` vs `admin-dashboard`               | Decide canonical name (`admin-dashboard`). Add deprecation note if keeping old folder temporarily.                                                                   |
+| Build Script          | Missing `build:admin:embed`                           | Add root script:`pnpm -F @rpg/admin-dashboard build && pnpm -F @rpg/backend build` + copy (if needed).                                                               |
+| Asset Copy            | Not copying; backend serves from admin package folder   | Either: (A) Serve directly from `../admin-dashboard/dist`; (B) Copy into backend `dist/admin`. Option B isolates deploy artifact. Pick one (see trade-offs below). |
+| Base Path             | Vite default base `/` may produce absolute asset URLs | Set `base: '/admin/'` in admin dashboard `vite.config.(ts)` when `EMBED_ADMIN=true`.                                                                             |
+| Cache Headers         | None specified                                          | Configure `@fastify/static` with `maxAge` and optionally add ETag / compression plugin.                                                                            |
+| Compression           | None                                                    | Register `@fastify/compress` for gzip/brotli.                                                                                                                        |
+| Security              | Static assets always public if enabled                  | Add guard: if `ADMIN_PUBLIC !== 'true'`, require header `X-Admin-Key` for `GET /admin/*` HTML (allow hashed static assets directly).                             |
+| CI/CD Integration     | Not defined                                             | Document pipeline steps (build admin, build backend, deploy single artifact).                                                                                          |
+| Sourcemaps            | Might leak internal code                                | Optionally disable or gate with `EMBED_ADMIN_SOURCEMAPS=true`.                                                                                                       |
+| Type Safety / Scripts | No shared types consumed at runtime                     | Confirm that runtime does not need TS artifacts—only static assets. Ensure `admin-dashboard` build outputs deterministic.                                           |
 
 ---
 
@@ -66,16 +66,16 @@ Recommended: **Option B for production**, Option A can be used in dev if desired
 
 ## Proposed Environment Variables
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `SERVE_ADMIN_STATIC` | Enable static serving | `false` |
-| `ADMIN_STATIC_DIR` | Absolute/relative path to built assets (Option A) | `../../admin-dashboard/dist` |
-| `ADMIN_EMBED_MODE` | `package` (A) or `dist` (B) | `dist` |
-| `ADMIN_PUBLIC` | If `true`, serve HTML without key | `true` |
-| `ADMIN_BASE_PATH` | Public URL base (must end with `/`) | `/admin/` |
-| `ADMIN_BUILD_BASE` | Vite base override during build | `/admin/` |
-| `ADMIN_API_KEY` | Existing key for gated access | (unset) |
-| `EMBED_ADMIN_SOURCEMAPS` | Include sourcemaps in static embed | `false` |
+| Variable                   | Purpose                                           | Default                        |
+| -------------------------- | ------------------------------------------------- | ------------------------------ |
+| `SERVE_ADMIN_STATIC`     | Enable static serving                             | `false`                      |
+| `ADMIN_STATIC_DIR`       | Absolute/relative path to built assets (Option A) | `../../admin-dashboard/dist` |
+| `ADMIN_EMBED_MODE`       | `package` (A) or `dist` (B)                   | `dist`                       |
+| `ADMIN_PUBLIC`           | If `true`, serve HTML without key               | `true`                       |
+| `ADMIN_BASE_PATH`        | Public URL base (must end with `/`)             | `/admin/`                    |
+| `ADMIN_BUILD_BASE`       | Vite base override during build                   | `/admin/`                    |
+| `ADMIN_API_KEY`          | Existing key for gated access                     | (unset)                        |
+| `EMBED_ADMIN_SOURCEMAPS` | Include sourcemaps in static embed                | `false`                      |
 
 ---
 
@@ -265,6 +265,7 @@ CMD ["node", "packages/backend/dist/index.js"]
 Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers only render task text with ordered or dash lists; switching to ordered format for compatibility.
 
 <!-- markdownlint-disable MD029 MD004 -->
+
 1. [ ] Align naming (`admin-dashboard`) – Rename any residual `frontend` directory references in docs/scripts; ensure backend static path defaults to `../../admin-dashboard/dist`; update `package.json` name if needed.
 2. [ ] Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Introduce variables, document defaults, and update backend static serve block to resolve candidates in priority order.
 3. [ ] Refactor backend static serve code – Replace current inline block with resilient function: path resolution, existence checks, logging structure, error fallback (no crash if assets missing).
@@ -275,6 +276,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 8. [ ] Write embed-copy script – Implement file copy (clean + recreate) with robust error handling & log output; support relative path overrides.
 9. [ ] Document Docker example (doc section present) – Finalize Dockerfile snippet reflecting chosen Option B and updated scripts; ensure env vars enumerated in README/ops docs.
 10. [ ] Add tests (optional but recommended) – Add integration test asserting static HTML + asset served; negative test when assets missing; header gating test.
+
 <!-- markdownlint-enable MD029 MD004 -->
 
 ---
