@@ -65,23 +65,51 @@ if (process.env.SERVE_ADMIN_STATIC === 'true') {
   try {
     const staticMod = await import('@fastify/static');
     const { fileURLToPath } = await import('url');
-    const { dirname, join } = await import('path');
+    const { dirname, join, resolve, isAbsolute } = await import('path');
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-  // Updated (Task 1): align naming to admin-dashboard (legacy was ../../frontend/dist)
-  const adminDist = join(__dirname, '../../admin-dashboard/dist');
-    await fastify.register(staticMod.default, { root: adminDist, prefix: '/admin/' });
-    fastify.get('/admin/*', async (req, reply) => {
-      if (typeof (reply as any).sendFile === 'function') {
-        (reply as any).sendFile('index.html');
-      } else {
-        // fallback manual read
-        const { readFile } = await import('fs/promises');
-        const html = await readFile(join(adminDist, 'index.html'), 'utf-8');
-        reply.type('text/html').send(html);
-      }
-    });
-    fastify.log.info('Serving admin dashboard statically from ' + adminDist);
+    // Task 2: environment variable handling for ADMIN_STATIC_DIR & ADMIN_BASE_PATH with fallback
+    const rawBase = process.env.ADMIN_BASE_PATH || '/admin/';
+    const ensureBasePath = (p: string) => {
+      let out = p.startsWith('/') ? p : '/' + p;
+      if (!out.endsWith('/')) out += '/';
+      return out;
+    };
+    const basePath = ensureBasePath(rawBase);
+
+    const explicitDir = process.env.ADMIN_STATIC_DIR;
+    const candidates: string[] = [];
+    if (explicitDir) candidates.push(explicitDir);
+    // canonical package dist
+    candidates.push('../../admin-dashboard/dist');
+    // legacy path for backward compatibility
+    candidates.push('../../frontend/dist');
+
+    const fs = await import('fs/promises');
+    let chosen: string | null = null;
+    for (const c of candidates) {
+      const abs = isAbsolute(c) ? c : resolve(__dirname, c);
+      try {
+        await fs.access(abs);
+        chosen = abs;
+        break;
+      } catch { /* continue */ }
+    }
+    if (!chosen) {
+      fastify.log.warn('Admin static assets not found. Checked: ' + candidates.join(', '));
+    } else {
+      await fastify.register(staticMod.default, { root: chosen, prefix: basePath });
+      fastify.get(basePath + '*', async (req, reply) => {
+        if (typeof (reply as any).sendFile === 'function') {
+          (reply as any).sendFile('index.html');
+        } else {
+          // fallback manual read
+          const html = await fs.readFile(join(chosen!, 'index.html'), 'utf-8');
+          reply.type('text/html').send(html);
+        }
+      });
+      fastify.log.info(`Serving admin dashboard statically from ${chosen} at ${basePath}`);
+    }
   } catch (e) {
     fastify.log.warn('SERVE_ADMIN_STATIC enabled but static serve failed: ' + (e as Error).message);
   }
