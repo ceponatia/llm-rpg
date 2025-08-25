@@ -260,15 +260,15 @@ docker run --rm -p 3001:3001 -e ADMIN_API_KEY=dev-secret rpg-backend:embed
 
 Environment variables summary for runtime image:
 
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| NODE_ENV | yes | Production logging / behavior |
-| SERVE_ADMIN_STATIC | yes | Enable static embed serving |
-| ADMIN_STATIC_DIR | yes (Option B) | Points to copied `./admin` directory inside backend dist |
-| ADMIN_BASE_PATH | optional | Public path prefix (`/admin/`) |
-| ADMIN_PUBLIC | optional | If `true`, HTML not gated; else require key |
-| ADMIN_API_KEY | required if ADMIN_PUBLIC!=true | Key checked in `X-Admin-Key` header for HTML routes |
-| ADMIN_EMBED_MODE | optional | Future switch (not currently required) |
+| Variable           | Required                       | Purpose                                                    |
+| ------------------ | ------------------------------ | ---------------------------------------------------------- |
+| NODE_ENV           | yes                            | Production logging / behavior                              |
+| SERVE_ADMIN_STATIC | yes                            | Enable static embed serving                                |
+| ADMIN_STATIC_DIR   | yes (Option B)                 | Points to copied `./admin` directory inside backend dist |
+| ADMIN_BASE_PATH    | optional                       | Public path prefix (`/admin/`)                           |
+| ADMIN_PUBLIC       | optional                       | If `true`, HTML not gated; else require key              |
+| ADMIN_API_KEY      | required if ADMIN_PUBLIC!=true | Key checked in `X-Admin-Key` header for HTML routes      |
+| ADMIN_EMBED_MODE   | optional                       | Future switch (not currently required)                     |
 
 CI/CD Pipeline Sketch:
 
@@ -327,16 +327,16 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 
 <!-- markdownlint-disable MD029 MD004 -->
 
-1. [x] Align naming (`admin-dashboard`) – Updated backend static path to `../../admin-dashboard/dist`; retained documentation of legacy path for awareness.
-2. [x] Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Implemented fallback candidate resolution (explicit -> admin-dashboard -> legacy frontend) and normalized base path.
-3. [x] Refactor backend static serve code – Extracted logic into `packages/backend/src/staticAdmin.ts::setupStaticAdmin` handling resolution, fallbacks, logging, and graceful failure.
-4. [x] Add Vite base toggle (`EMBED_ADMIN`) – Added embed mode logic & sourcemap gating in `packages/admin-dashboard/vite.config.ts` using `EMBED_ADMIN`, `ADMIN_BUILD_BASE`, `EMBED_ADMIN_SOURCEMAPS`.
-5. [x] Introduce build scripts + copy script (Option B) – Added root scripts (`build:admin`, `build:backend`, `build:embed`, `embed:copy`) and `scripts/embed-copy-admin.cjs` to copy admin dist into backend artifact.
-6. [x] Add compression + cache headers – Registered `@fastify/compress` globally and added cache-control logic (immutable for hashed assets, no-cache for HTML) in `staticAdmin`.
-7. [x] Add security gating logic for HTML – Implemented in `staticAdmin` (checks `ADMIN_PUBLIC` & `ADMIN_API_KEY`, returns 401 for HTML when key missing; assets pass through).
-8. [x] Write embed-copy script – Enhanced `scripts/embed-copy-admin.cjs` with flags (--src, --dest, --dry-run, --clean=false), stats & checksum logging, error handling.
-9. [x] Document Docker example (doc section present) – Finalized Option B Dockerfile, env var table, CI/CD sketch, operational notes.
-10. [x] Add tests (optional but recommended) – Added vitest integration tests (`packages/backend/tests/static-admin.spec.ts`) covering public serve, gating, and asset caching header.
+1. [X] Align naming (`admin-dashboard`) – Updated backend static path to `../../admin-dashboard/dist`; retained documentation of legacy path for awareness.
+2. [X] Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Implemented fallback candidate resolution (explicit -> admin-dashboard -> legacy frontend) and normalized base path.
+3. [X] Refactor backend static serve code – Extracted logic into `packages/backend/src/staticAdmin.ts::setupStaticAdmin` handling resolution, fallbacks, logging, and graceful failure.
+4. [X] Add Vite base toggle (`EMBED_ADMIN`) – Added embed mode logic & sourcemap gating in `packages/admin-dashboard/vite.config.ts` using `EMBED_ADMIN`, `ADMIN_BUILD_BASE`, `EMBED_ADMIN_SOURCEMAPS`.
+5. [X] Introduce build scripts + copy script (Option B) – Added root scripts (`build:admin`, `build:backend`, `build:embed`, `embed:copy`) and `scripts/embed-copy-admin.cjs` to copy admin dist into backend artifact.
+6. [X] Add compression + cache headers – Registered `@fastify/compress` globally and added cache-control logic (immutable for hashed assets, no-cache for HTML) in `staticAdmin`.
+7. [X] Add security gating logic for HTML – Implemented in `staticAdmin` (checks `ADMIN_PUBLIC` & `ADMIN_API_KEY`, returns 401 for HTML when key missing; assets pass through).
+8. [X] Write embed-copy script – Enhanced `scripts/embed-copy-admin.cjs` with flags (--src, --dest, --dry-run, --clean=false), stats & checksum logging, error handling.
+9. [X] Document Docker example (doc section present) – Finalized Option B Dockerfile, env var table, CI/CD sketch, operational notes.
+1. [X] Add tests (optional but recommended) – Added vitest integration tests (`packages/backend/tests/static-admin.spec.ts`) covering public serve, gating, and asset caching header.
 
 <!-- markdownlint-enable MD029 MD004 -->
 
@@ -369,11 +369,11 @@ A runtime configuration layer lets you change non-code concerns (branding, featu
 
 #### Approaches
 
-| Approach | How | Pros | Cons |
-|----------|-----|------|------|
-| JSON endpoint (recommended) | Serve `/admin/config.json` generated at startup | Simple, cacheable, easy to version, no HTML parsing | One extra network request (can be parallelized) |
-| Inline `<script>` injection | Backend rewrites `index.html` replacing a token with a `<script>window.__ADMIN_CONFIG__=...</script>` | Zero extra request | Requires HTML templating / string replace each request; harder to cache HTML |
-| Placeholder token replacement (build-time) | Replace tokens during container build | No runtime code | Requires rebuild for each change (defeats purpose) |
+| Approach                                   | How                                                                                                       | Pros                                                | Cons                                                                         |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| JSON endpoint (recommended)                | Serve `/admin/config.json` generated at startup                                                         | Simple, cacheable, easy to version, no HTML parsing | One extra network request (can be parallelized)                              |
+| Inline `<script>` injection              | Backend rewrites `index.html` replacing a token with a `<script>window.__ADMIN_CONFIG__=...</script>` | Zero extra request                                  | Requires HTML templating / string replace each request; harder to cache HTML |
+| Placeholder token replacement (build-time) | Replace tokens during container build                                                                     | No runtime code                                     | Requires rebuild for each change (defeats purpose)                           |
 
 We choose the **JSON endpoint** for flexibility + caching.
 
@@ -496,6 +496,113 @@ If values only change at build time (static brand for all environments) and ther
 * Do we need runtime theming/injected config? (Answered above.)
 * Should sourcemaps be shipped to production error monitoring? (Default no.)
 * Will admin ever need a different base path per deployment (multi-tenant)? If yes, adjust build to use relative asset paths (`base: './'`) and rely on reverse proxy path prefix rewriting.
+
+---
+
+## Refactor: Runtime Theming / Injected Config Implementation Plan
+
+This section defines the concrete, atomic steps to evolve from the documented concept to a production implementation of runtime theming & injected config. Each task is intentionally small, independently reviewable, and provides incremental value.
+
+### Guiding Principles
+
+* Zero breaking changes to existing embed behavior until feature is explicitly enabled.
+* Keep the runtime config payload small (<2KB) and public-safe (no secrets).
+* Strong cache & validation semantics (ETag + `no-cache` or short `max-age`).
+* Frontend must gracefully degrade if config fetch fails (fallback theme + retry).
+* Feature flags opt-in; absence == false.
+
+### New / Extended Environment Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `ADMIN_PRODUCT_NAME` | Branding product/title override | `RPG Control` |
+| `ADMIN_PRIMARY_COLOR` | Primary brand hex | `#6d28d9` |
+| `ADMIN_LOGO_PATH` | Logo asset path (under base) | `${ADMIN_BASE_PATH}assets/logo.svg` |
+| `ADMIN_API_BASE` | API base URL for admin client | `/api` |
+| `FEAT_MEMORY_INSPECTOR` | Toggle memory inspector panel | `false` |
+| `FEAT_BETA_FLAG` | Example generic beta flag | `false` |
+| `BUILD_VERSION` | Injected build/version string | (git short SHA or `dev`) |
+| `BUILD_TIME` | Build timestamp (ISO) | runtime now() fallback |
+
+### Task List
+
+Backend (Phase 1)
+
+* [ ] Create helper `buildAdminRuntimeConfig()` in `packages/backend/src/` returning the config object (pure, no Fastify deps) + serialized JSON + weak ETag (hash of JSON).
+* [ ] Add `/admin/config.json` route inside `setupStaticAdmin` (after static registration) serving JSON with headers:
+  * `Content-Type: application/json`
+  * `Cache-Control: no-cache` (later may switch to `max-age=60, must-revalidate`)
+  * `ETag` (support conditional requests: 304 on match)
+* [ ] Implement conditional request handling (`If-None-Match`).
+* [ ] Add optional `configVersion` numeric field that increments automatically when hash changes (derive from hash e.g., first 8 chars converted to int) or just expose `hash`.
+* [ ] Log a structured line on startup: `{ component: 'admin-config', version, hash }`.
+* [ ] Add tests (`static-admin-config.spec.ts`):
+  * 200 on first fetch & shape validation.
+  * 304 when `If-None-Match` matches.
+  * Honors `ADMIN_PRODUCT_NAME` override.
+  * With `ADMIN_PUBLIC=false`, endpoint still accessible (public-safe) OR gated (decision documented).
+* [ ] Update security docs subsection clarifying endpoint does not leak secrets & is public by design.
+
+Frontend (Phase 2)
+
+* [ ] Add module `src/config/runtime.ts` exporting `loadRuntimeConfig()` + types + fallback constants.
+* [ ] Update `main.tsx` bootstrap to await `loadRuntimeConfig()` before rendering (show minimal splash / skeleton while waiting).
+* [ ] Add global CSS variables injection (e.g., set `--color-primary`). For Tailwind, map to theme via runtime class or CSS variable usage (ensure no purge issues).
+* [ ] Implement feature flag example: conditionally render Memory Inspector component only if `config.features.memoryInspector` true.
+* [ ] Add error handling & retry (exponential backoff up to N attempts, then fallback theme & console.warn).
+* [ ] Add lightweight unit test (if test infra present) for `loadRuntimeConfig` mocking fetch.
+
+DevEx / Observability (Phase 3)
+
+* [ ] Add CLI build step (optional) that writes a baked snapshot `dist/admin-config-example.json` for inspection (does not serve, just debug artifact).
+* [ ] Emit response header `x-admin-config-version` with `version` or hash for easier debugging in network panel.
+* [ ] Add documentation snippet (Quick Start) showing how to override branding color via env & see live change after restart.
+
+Optional Enhancements (Phase 4)
+
+* [ ] Switch caching to `Cache-Control: max-age=60, stale-while-revalidate=300` once stability confirmed.
+* [ ] Support `ADMIN_SECONDARY_COLOR` & arbitrary `ADMIN_BRAND_JSON` (JSON blob) merging into `branding.extra`.
+* [ ] Provide `/admin/health` combining build hash + config hash for monitoring.
+* [ ] Add schema validation (zod) for env-driven config before serving (fail fast on invalid hex color).
+* [ ] Implement hot-reload in dev: watch environment/config file & update in-memory config (only in NODE_ENV=development).
+
+### Rollout Strategy
+
+1. Implement backend tasks 1–6; release (no frontend usage yet, endpoint benign).
+2. Implement frontend tasks 8–11; release (users start benefiting from runtime overrides).
+3. Layer in tests & observability tasks (12–16) for robustness.
+4. Consider optional enhancements based on need; avoid premature complexity.
+
+### Acceptance Criteria
+
+* Backend returns stable JSON at `/admin/config.json` with documented shape and appropriate headers.
+* 304 responses function when `If-None-Match` provided.
+* Frontend renders correctly even if config fetch fails (uses fallback constants).
+* Branding color change via `ADMIN_PRIMARY_COLOR` is visible after restart without rebuild.
+* Memory Inspector (example gated feature) only mounts when flag true.
+
+### Risks & Mitigations
+
+| Risk                                       | Mitigation                                                                                                                                |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Payload accidentally includes secret       | Centralize config builder; lint rule / review checklist; never read secret envs inside builder.                                           |
+| Frontend flash of un-themed content (FOUT) | Minimal inline base theme; apply overrides immediately after fetch before first paint (or early fetch + root element hidden until ready). |
+| Cache staleness                            | Use `no-cache` initially; add ETag to support efficient validation.                                                                     |
+| Large future expansion                     | Keep schema versioned; add `schemaVersion` now for forward compatibility.                                                               |
+
+### Minimal JSON Schema (v1)
+
+```json
+{
+  "schemaVersion": 1,
+  "branding": { "productName": "string", "primaryColor": "#RRGGBB", "logoPath": "string", "extra": { "?": "any" } },
+  "features": { "memoryInspector": "boolean", "betaFlag": "boolean" },
+  "api": { "baseUrl": "string" },
+  "auth": { "public": "boolean", "gatedHtml": "boolean" },
+  "build": { "version": "string", "timestamp": "ISO-8601" },
+  "configVersion": "string|hash"
+}
+```
 
 ---
 
