@@ -272,7 +272,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 5. [x] Introduce build scripts + copy script (Option B) – Added root scripts (`build:admin`, `build:backend`, `build:embed`, `embed:copy`) and `scripts/embed-copy-admin.cjs` to copy admin dist into backend artifact.
 6. [x] Add compression + cache headers – Registered `@fastify/compress` globally and added cache-control logic (immutable for hashed assets, no-cache for HTML) in `staticAdmin`.
 7. [x] Add security gating logic for HTML – Implemented in `staticAdmin` (checks `ADMIN_PUBLIC` & `ADMIN_API_KEY`, returns 401 for HTML when key missing; assets pass through).
-8. [ ] Write embed-copy script – Implement file copy (clean + recreate) with robust error handling & log output; support relative path overrides.
+8. [x] Write embed-copy script – Enhanced `scripts/embed-copy-admin.cjs` with flags (--src, --dest, --dry-run, --clean=false), stats & checksum logging, error handling.
 9. [ ] Document Docker example (doc section present) – Finalize Dockerfile snippet reflecting chosen Option B and updated scripts; ensure env vars enumerated in README/ops docs.
 10. [ ] Add tests (optional but recommended) – Add integration test asserting static HTML + asset served; negative test when assets missing; header gating test.
 
