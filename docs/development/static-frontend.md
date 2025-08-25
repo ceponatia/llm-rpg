@@ -267,7 +267,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 
 1. [x] Align naming (`admin-dashboard`) – Updated backend static path to `../../admin-dashboard/dist`; retained documentation of legacy path for awareness.
 2. [x] Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Implemented fallback candidate resolution (explicit -> admin-dashboard -> legacy frontend) and normalized base path.
-3. [ ] Refactor backend static serve code – Replace current inline block with resilient function: path resolution, existence checks, logging structure, error fallback (no crash if assets missing).
+3. [x] Refactor backend static serve code – Extracted logic into `packages/backend/src/staticAdmin.ts::setupStaticAdmin` handling resolution, fallbacks, logging, and graceful failure.
 4. [ ] Add Vite base toggle (`EMBED_ADMIN`) – Modify `packages/admin-dashboard/vite.config.ts` to switch `base` dynamically and disable sourcemaps unless opted in.
 5. [ ] Introduce build scripts + copy script (Option B) – Root scripts: `build:admin`, `build:backend`, `build:embed`, plus `scripts/embed-copy-admin.cjs` copying dist into backend.
 6. [ ] Add compression + cache headers – Register `@fastify/compress`; set long cache for hashed assets, `no-cache` for HTML, verify via response headers.
