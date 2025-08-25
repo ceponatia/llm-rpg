@@ -37,6 +37,7 @@ pnpm-debug.log*
 .idea/
 .vscode/
 .github/
+!.github/copilot-instructions.md
 .DS_Store
 
 # Misc
