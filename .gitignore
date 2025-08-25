@@ -2,12 +2,24 @@
 node_modules/
 .pnpm-store/
 
-# Build outputs
-/dist/
-/build/
+# Monorepo package build outputs (nested)
+**/dist/
+**/build/
+coverage/
+
+# Ignore generated JS & maps inside build output folders only (retain source JS if intentionally committed)
+**/dist/**/*.js
+**/dist/**/*.cjs
+**/dist/**/*.mjs
+**/dist/**/*.js.map
+**/build/**/*.js
+**/build/**/*.cjs
+**/build/**/*.mjs
+**/build/**/*.js.map
+
+# Framework specific build outputs
 /.next/
 /out/
-coverage/
 
 # Env & secrets
 .env
@@ -21,9 +33,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Editor
+# Editor & project meta
 .idea/
 .vscode/
+.github/
 .DS_Store
 
 # Misc
@@ -38,3 +51,6 @@ pnpm-debug.log*
 
 # Generated
 **/generated/
+
+# Type declaration maps (often large / reproducible)
+**/*.d.ts.map
