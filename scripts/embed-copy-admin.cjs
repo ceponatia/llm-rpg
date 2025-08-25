@@ -5,8 +5,8 @@
 //  - Verifies source exists, prints file count & aggregate size
 //  - Generates simple checksum (count + total bytes) for traceability
 //  - Honors ADMIN_STATIC_DIR=./admin guidance
-import { cpSync, rmSync, existsSync, mkdirSync, statSync, readdirSync } from 'fs';
-import { resolve, join } from 'path';
+const { cpSync, rmSync, existsSync, mkdirSync, statSync, readdirSync } = require('fs');
+const { resolve, join } = require('path');
 
 function log(msg){ console.log(`[embed-copy-admin] ${msg}`); }
 function fail(msg){ console.error(`[embed-copy-admin] ERROR: ${msg}`); process.exit(1); }
