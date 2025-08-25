@@ -336,7 +336,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 7. [x] Add security gating logic for HTML – Implemented in `staticAdmin` (checks `ADMIN_PUBLIC` & `ADMIN_API_KEY`, returns 401 for HTML when key missing; assets pass through).
 8. [x] Write embed-copy script – Enhanced `scripts/embed-copy-admin.cjs` with flags (--src, --dest, --dry-run, --clean=false), stats & checksum logging, error handling.
 9. [x] Document Docker example (doc section present) – Finalized Option B Dockerfile, env var table, CI/CD sketch, operational notes.
-10. [ ] Add tests (optional but recommended) – Add integration test asserting static HTML + asset served; negative test when assets missing; header gating test.
+10. [x] Add tests (optional but recommended) – Added vitest integration tests (`packages/backend/tests/static-admin.spec.ts`) covering public serve, gating, and asset caching header.
 
 <!-- markdownlint-enable MD029 MD004 -->
 
