@@ -358,7 +358,142 @@ SERVE_ADMIN_STATIC=true ADMIN_PUBLIC=true node packages/backend/dist/index.js
 
 ## Open Questions
 
-* Do we need runtime theming/injected config? If yes, add a `/admin/config.json` endpoint generated at startup.
+### Runtime Theming / Injected Config (Answered)
+
+A runtime configuration layer lets you change non-code concerns (branding, feature flags, environment endpoints) **without rebuilding** the admin bundle. This is valuable when:
+
+* You deploy the same image to multiple environments (dev/stage/prod) with different branding or feature toggles.
+* You want to enable/disable experimental UI panels (e.g., memory inspector) via env.
+* You need to surface build metadata (git SHA, build time) for debugging.
+* You might later support multi-tenant / white‑label scenarios.
+
+#### Approaches
+
+| Approach | How | Pros | Cons |
+|----------|-----|------|------|
+| JSON endpoint (recommended) | Serve `/admin/config.json` generated at startup | Simple, cacheable, easy to version, no HTML parsing | One extra network request (can be parallelized) |
+| Inline `<script>` injection | Backend rewrites `index.html` replacing a token with a `<script>window.__ADMIN_CONFIG__=...</script>` | Zero extra request | Requires HTML templating / string replace each request; harder to cache HTML |
+| Placeholder token replacement (build-time) | Replace tokens during container build | No runtime code | Requires rebuild for each change (defeats purpose) |
+
+We choose the **JSON endpoint** for flexibility + caching.
+
+#### Example Config Shape (`/admin/config.json`)
+
+```json
+{
+  "branding": {
+    "productName": "RPG Control",
+    "primaryColor": "#6d28d9",
+    "logoPath": "/admin/assets/logo.svg"
+  },
+  "features": {
+    "memoryInspector": true,
+    "betaFlag": false
+  },
+  "api": {
+    "baseUrl": "/api"
+  },
+  "auth": {
+    "public": true,
+    "gatedHtml": false
+  },
+  "build": {
+    "version": "${GIT_SHA}",
+    "timestamp": "2025-08-25T12:34:56Z"
+  }
+}
+```
+
+Values derive from environment variables (e.g., `ADMIN_LOGO_PATH`, `ADMIN_PRIMARY_COLOR`, feature env flags). Never include secrets (API keys, credentials) – treat it as public.
+
+#### Backend Implementation Sketch
+
+Inside `setupStaticAdmin` (or adjacent helper) after successful static registration:
+
+```ts
+// pseudo-addition after static setup
+fastify.get(basePath + 'config.json', async (req, reply) => {
+  const cfg = {
+    branding: {
+      productName: process.env.ADMIN_PRODUCT_NAME || 'RPG Control',
+      primaryColor: process.env.ADMIN_PRIMARY_COLOR || '#6d28d9',
+      logoPath: process.env.ADMIN_LOGO_PATH || basePath + 'assets/logo.svg'
+    },
+    features: {
+      memoryInspector: process.env.FEAT_MEMORY_INSPECTOR === 'true',
+      betaFlag: process.env.FEAT_BETA_FLAG === 'true'
+    },
+    api: { baseUrl: process.env.ADMIN_API_BASE || '/api' },
+    auth: {
+      public: process.env.ADMIN_PUBLIC === 'true',
+      gatedHtml: process.env.ADMIN_PUBLIC !== 'true'
+    },
+    build: {
+      version: process.env.GIT_SHA || process.env.BUILD_VERSION || 'dev',
+      timestamp: process.env.BUILD_TIME || new Date().toISOString()
+    }
+  };
+  const body = JSON.stringify(cfg);
+  reply.header('Cache-Control', 'no-cache');
+  reply.type('application/json').send(body);
+});
+```
+
+Optional: add an ETag (`reply.header('ETag', 'W/"'+hash+'"')`) where `hash` is a short digest of `body` for conditional requests.
+
+#### Frontend Consumption Pattern
+
+Create a tiny bootstrap module (e.g., `src/config/runtime.ts`):
+
+```ts
+export interface RuntimeConfig { branding: { productName: string; primaryColor: string; logoPath: string }; features: Record<string, boolean>; api: { baseUrl: string }; build: { version: string; timestamp: string }; }
+
+let cached: RuntimeConfig | null = null;
+export async function loadRuntimeConfig(): Promise<RuntimeConfig> {
+  if (cached) return cached;
+  const res = await fetch('/admin/config.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to load runtime config');
+  cached = await res.json();
+  // Apply theming via CSS variables
+  const root = document.documentElement;
+  root.style.setProperty('--color-primary', cached.branding.primaryColor);
+  return cached;
+}
+```
+
+Then in `main.tsx`:
+
+```ts
+import { loadRuntimeConfig } from '@/config/runtime';
+loadRuntimeConfig().then(() => {
+  // safe to render app
+  createRoot(document.getElementById('root')!).render(<App />);
+});
+```
+
+#### Theming Application
+
+Expose CSS variables in a global stylesheet and reference them in Tailwind (via `:root{ --color-primary: #6d28d9; }`). Optionally generate a `<style>` tag dynamically on load.
+
+#### Caching & Performance
+
+`config.json` is small (<< 1KB). Use `no-cache` so changes propagate quickly; if values are stable per deploy you can instead use `Cache-Control: max-age=60` with ETag support for revalidation.
+
+#### Failure Handling
+
+If the request fails (offline, 500), show a minimal fallback theme and retry later (exponential backoff). Avoid blocking critical error views.
+
+#### Security Considerations (Runtime Config)
+
+Do not place secrets in this payload. Treat it as public metadata + flags. If you need privileged data, fetch it from authenticated APIs after user auth.
+
+#### When NOT to Use Runtime Config
+
+If values only change at build time (static brand for all environments) and there is no need for dynamic toggles, the complexity may not pay off—stick with compile-time constants.
+
+---
+
+* Do we need runtime theming/injected config? (Answered above.)
 * Should sourcemaps be shipped to production error monitoring? (Default no.)
 * Will admin ever need a different base path per deployment (multi-tenant)? If yes, adjust build to use relative asset paths (`base: './'`) and rely on reverse proxy path prefix rewriting.
 
