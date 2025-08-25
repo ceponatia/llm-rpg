@@ -1,0 +1,32 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+  "outDir": "./dist",
+  "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "noEmit": false,
+    "baseUrl": "../../",
+    "paths": {
+  "@rpg/types": ["packages/types/src"],
+  "@rpg/types/*": ["packages/types/src/*"],
+  "@rpg/utils": ["packages/utils/src"],
+  "@rpg/utils/*": ["packages/utils/src/*"]
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["dist", "node_modules"],
+  "references": [
+    { "path": "../types" }
+  ]
+}

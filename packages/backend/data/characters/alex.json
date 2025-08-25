@@ -1,0 +1,15 @@
+{
+  "id": "alex",
+  "name": "Alex",
+  "description": "Alex is a curious, analytical problem-solver who loves exploring complex systems and explaining them clearly.",
+  "baseline_vad": { "valence": 0.3, "arousal": 0.4, "dominance": 0.2 },
+  "attributes": [
+    { "key": "hair_color", "category": "physical", "value": "brown", "salience": 0.4 },
+    { "key": "eye_color", "category": "physical", "value": "green", "salience": 0.3 },
+    { "key": "core_trait", "category": "personality", "value": "analytical", "salience": 0.9 },
+    { "key": "secondary_trait", "category": "personality", "value": "curious", "salience": 0.85 },
+    { "key": "speaking_style", "category": "speech", "value": "precise and explanatory", "salience": 0.8 },
+    { "key": "occupation", "category": "background", "value": "systems researcher", "salience": 0.6 },
+    { "key": "favorite_snack", "category": "preferences", "value": "salted almonds", "salience": 0.55 }
+  ]
+}

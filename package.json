@@ -1,0 +1,24 @@
+{
+	"name": "rpg-consolidated",
+	"version": "0.0.0",
+	"private": true,
+	"description": "RPG consolidated workspace (memory backend + admin dashboard + story frontend)",
+	"type": "module",
+	"scripts": {
+		"build": "pnpm -r build",
+		"build:all": "pnpm -r build",
+		"dev:backend": "pnpm --filter @rpg/backend dev",
+		"dev:admin": "pnpm --filter @rpg/admin-dashboard dev",
+		"dev:frontend": "pnpm --filter @rpg/frontend dev",
+		"dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\" \"pnpm dev:admin\"",
+		"typecheck": "pnpm exec tsc -p tsconfig.base.json --noEmit"
+	},
+	"workspaces": [
+		"packages/*"
+	],
+	"devDependencies": {
+		"@types/node": "^24.3.0",
+		"concurrently": "^8.2.2",
+		"typescript": "^5.9.2"
+	}
+}

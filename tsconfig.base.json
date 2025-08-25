@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+  "@rpg/types": ["./packages/types/src"],
+  "@rpg/types/*": ["./packages/types/src/*"],
+  "@rpg/backend": ["./packages/backend/src"],
+  "@rpg/backend/*": ["./packages/backend/src/*"],
+  "@rpg/admin-dashboard": ["./packages/admin-dashboard/src"],
+  "@rpg/admin-dashboard/*": ["./packages/admin-dashboard/src/*"],
+  "@rpg/frontend": ["./packages/frontend/src"],
+  "@rpg/frontend/*": ["./packages/frontend/src/*"]
+    }
+  },
+  "references": [],
+  "include": [],
+  "exclude": ["node_modules", "dist", "build"]
+}

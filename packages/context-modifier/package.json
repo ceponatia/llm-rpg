@@ -1,0 +1,26 @@
+{
+  "name": "@rpg/context-modifier",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+  "@rpg/types": "workspace:*",
+  "@rpg/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+  "@types/node": "^20.11.24",
+  "vitest": "^1.6.0"
+  }
+}

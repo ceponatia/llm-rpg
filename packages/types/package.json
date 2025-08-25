@@ -1,0 +1,28 @@
+{
+  "name": "@rpg/types",
+  "version": "1.0.0",
+  "type": "module",
+    "main": "dist/src/index.js",
+    "module": "dist/src/index.js",
+    "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "build": "pnpm run generate:zod && pnpm run patch-zod && tsc",
+    "dev": "tsc --watch",
+    "generate:zod": "ts-to-zod --all --skipValidation",
+    "dev:zod": "ts-to-zod --all --watch --skipValidation",
+    "patch-zod": "node ./scripts/patch-zod.js"
+  },
+  "devDependencies": {
+    "ts-to-zod": "^3.15.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "zod": "^4.0.14"
+  }
+}

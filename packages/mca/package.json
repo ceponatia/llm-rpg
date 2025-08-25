@@ -1,0 +1,32 @@
+{
+  "name": "@rpg/mca",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./layers/l2-graph-memory": {
+      "types": "./dist/layers/l2-graph-memory.d.ts",
+      "import": "./dist/layers/l2-graph-memory.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+  "@rpg/types": "workspace:*",
+  "@rpg/utils": "workspace:*",
+    "neo4j-driver": "^5.19.0",
+    "faiss-node": "^0.5.1",
+    "tiktoken": "^1.0.15"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.11.24"
+  }
+}
