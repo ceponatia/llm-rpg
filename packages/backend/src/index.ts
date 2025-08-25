@@ -68,7 +68,8 @@ if (process.env.SERVE_ADMIN_STATIC === 'true') {
     const { dirname, join } = await import('path');
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    const adminDist = join(__dirname, '../../frontend/dist');
+  // Updated (Task 1): align naming to admin-dashboard (legacy was ../../frontend/dist)
+  const adminDist = join(__dirname, '../../admin-dashboard/dist');
     await fastify.register(staticMod.default, { root: adminDist, prefix: '/admin/' });
     fastify.get('/admin/*', async (req, reply) => {
       if (typeof (reply as any).sendFile === 'function') {

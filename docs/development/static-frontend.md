@@ -7,8 +7,7 @@ This document captures what is required to finish (and harden) the static embedd
 ## Current State (Observed)
 
 * Backend conditionally serves static files when `SERVE_ADMIN_STATIC === 'true'` (see `packages/backend/src/index.ts`).
-* Code path hard‑codes `../../frontend/dist` as the source directory:
-  * This still references the old package name `frontend` rather than the renamed / intended `admin-dashboard`.
+* Code path now points to `../../admin-dashboard/dist` (legacy was `../../frontend/dist`).
 * No build script exists named `build:admin:embed` (mentioned aspirationally in integration doc).
 * No environment variable exists to override the admin build output path.
 * History fallback for client‑side routing is approximated by serving `index.html` for `/admin/*` but only if `fastify-static` exposes `sendFile`.
@@ -266,7 +265,7 @@ Use GitHub task list checkboxes below (clickable in GitHub UI). Some viewers onl
 
 <!-- markdownlint-disable MD029 MD004 -->
 
-1. [ ] Align naming (`admin-dashboard`) – Rename any residual `frontend` directory references in docs/scripts; ensure backend static path defaults to `../../admin-dashboard/dist`; update `package.json` name if needed.
+1. [x] Align naming (`admin-dashboard`) – Updated backend static path to `../../admin-dashboard/dist`; retained documentation of legacy path for awareness.
 2. [ ] Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) – Introduce variables, document defaults, and update backend static serve block to resolve candidates in priority order.
 3. [ ] Refactor backend static serve code – Replace current inline block with resilient function: path resolution, existence checks, logging structure, error fallback (no crash if assets missing).
 4. [ ] Add Vite base toggle (`EMBED_ADMIN`) – Modify `packages/admin-dashboard/vite.config.ts` to switch `base` dynamically and disable sourcemaps unless opted in.
