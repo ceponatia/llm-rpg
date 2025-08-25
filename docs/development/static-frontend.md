@@ -262,18 +262,18 @@ CMD ["node", "packages/backend/dist/index.js"]
 
 ## Incremental Implementation Checklist
 
-| Step | Action | Status |
-|------|--------|--------|
-| 1 | Align naming (`admin-dashboard`) | ☐ |
-| 2 | Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`) | ☐ |
-| 3 | Refactor backend static serve code | ☐ |
-| 4 | Add Vite base toggle (`EMBED_ADMIN`) | ☐ |
-| 5 | Introduce build scripts + copy script (Option B) | ☐ |
-| 6 | Add compression + cache headers | ☐ |
-| 7 | Add security gating logic for HTML | ☐ |
-| 8 | Write embed-copy script | ☐ |
-| 9 | Document Docker example | ☐ (Doc in place) |
-| 10 | Add tests (optional but recommended) | ☐ |
+Use GitHub task list checkboxes below (clickable in GitHub UI):
+
+* [ ] 1. Align naming (`admin-dashboard`)
+* [ ] 2. Add env var handling (`ADMIN_STATIC_DIR`, `ADMIN_BASE_PATH`)
+* [ ] 3. Refactor backend static serve code
+* [ ] 4. Add Vite base toggle (`EMBED_ADMIN`)
+* [ ] 5. Introduce build scripts + copy script (Option B)
+* [ ] 6. Add compression + cache headers
+* [ ] 7. Add security gating logic for HTML
+* [ ] 8. Write embed-copy script
+* [ ] 9. Document Docker example (doc section present)
+* [ ] 10. Add tests (optional but recommended)
 
 ---
 
