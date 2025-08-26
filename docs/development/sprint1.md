@@ -49,7 +49,7 @@ Non‑goals (explicitly deferred):
 
 ## Backend tasks
 
-* [ ] Add Zod schemas (`ChatRequestSchema`, `ChatResponseSchema`) local to `routes/chat.ts` (or new `schemas/chat.ts`).
+* [x] Add Zod schemas (`ChatRequestSchema`, `ChatResponseSchema`) local to `routes/chat.ts` (or new `schemas/chat.ts`).
 * [x] Implement `/api/chat/message` route:
   * Validate body `{ message: string; sessionId?: string; personaId?: string }`.
   * Generate/assign sessionId (UUID) if missing.
@@ -70,7 +70,7 @@ Non‑goals (explicitly deferred):
   * Hidden unless `FLAGS.FRONTEND_CHAT_ENABLED`.
   * Layout: scrollable messages, affection meter (progress bar), textarea + send button, status line.
   * Auto scroll on new message.
-* [ ] Integrate `ChatPanel` into Dashboard (dedicated section below LibraryPanel).
+* [x] Integrate `ChatPanel` into Dashboard (dedicated section below LibraryPanel).
 * [x] Intent detection: import `IntentDetector`, instantiate with sample rules (subset already in tests) inside `chatStore.send` after user send / after assistant reply (choose one consistent pass). 
 * [x] Display last detected intent subtly (e.g., tooltip or small badge). 
 * [x] Update feature flag docs / .env.example keys. 
@@ -128,7 +128,7 @@ Route + store are additive. To rollback: remove ChatPanel import, delete `chatSt
 ## Acceptance checklist
 
 * [x] `ENABLE_CHAT_API` off => route 501; UI hides ChatPanel if frontend flag off. 
-* [ ] With both flags on, messages round‑trip and appear in ChatPanel. 
+* [x] With both flags on, messages round‑trip and appear in ChatPanel. 
 * [x] Affection changes on at least two distinct intents. 
 * [ ] No TypeScript errors or failing existing tests. 
 * [ ] Lint clean (Markdown + TS). 

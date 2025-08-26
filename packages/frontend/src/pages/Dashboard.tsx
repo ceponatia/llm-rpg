@@ -1,5 +1,5 @@
 import { useSessionStore } from '../state/sessionStore';
-import { LibraryPanel, AdminPanel } from '../components/panels';
+import { LibraryPanel, AdminPanel, ChatPanel } from '../components/panels';
 import { useWSStore } from '../state/wsStore';
 import type { FC } from 'react';
 
@@ -22,6 +22,7 @@ export const Dashboard: FC = () => {
       <main className="flex-1 grid md:grid-cols-3 gap-6 p-6">
         <section className="md:col-span-2 space-y-6">
           <LibraryPanel />
+          <ChatPanel />
           <div className="rounded border border-twilight-700 p-3 text-xs bg-twilight-900/60 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="font-medium">Memory Stream</span>

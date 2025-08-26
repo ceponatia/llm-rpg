@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 import type { ChatRequest, ChatResponse } from '@rpg/types';
 import { OllamaService } from '../services/ollama.js';
 import { randomUUID } from 'crypto';
@@ -11,6 +12,18 @@ type ChatBody = ChatRequest & {
 };
 
 export function chatRoutes(fastify: FastifyInstance): void {
+  const ChatRequestSchema = z.object({
+    message: z.string().min(1),
+    sessionId: z.string().uuid().optional(),
+    session_id: z.string().uuid().optional(), // accept snake alias
+    personaId: z.string().optional(),
+    persona_id: z.string().optional(),
+    fusion_weights: z.object({ w_L1: z.number(), w_L2: z.number(), w_L3: z.number() }).partial().optional()
+  });
+  const ChatResponseSchema = z.object({
+    sessionId: z.string(),
+    reply: z.string()
+  }).passthrough();
   const ollama = new OllamaService();
   const characterRegistry = CharacterRegistry.getInstance();
 
@@ -21,6 +34,11 @@ export function chatRoutes(fastify: FastifyInstance): void {
       return reply.status(501).send({ error: 'Chat API disabled (set ENABLE_CHAT_API=true to enable)' });
     }
     const body: ChatBody = request.body;
+    // Validate minimal schema (ignore extra advanced fields for now)
+    const parsed = ChatRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid body', issues: parsed.error.issues });
+    }
     const { message, session_id, fusion_weights, prompt_template, template_vars, character_id } = body;
   if (message === '') {
       reply.status(400).send({ error: 'Message text required' });

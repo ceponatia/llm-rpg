@@ -2,10 +2,11 @@
 // Reads boolean-like environment variables exposed by Vite (prefixed with VITE_)
 // Only currently supported/active flag is FRONTEND_CHAT_ENABLED. Others are placeholders.
 
-const raw = import.meta.env;
+const raw = (typeof import.meta !== 'undefined' ? (import.meta as any).env : {}) || {};
+const proc = (typeof process !== 'undefined' ? (process as any).env : {}) || {};
 
 function bool(name: string, defaultValue = false): boolean {
-  const v = (raw as any)[name];
+  const v = (raw as any)[name] ?? proc[name];
   if (v == null) return defaultValue;
   const s = String(v).toLowerCase().trim();
   return ['1', 'true', 'yes', 'on'].includes(s);
