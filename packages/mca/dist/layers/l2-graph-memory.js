@@ -104,7 +104,7 @@ export class L2GraphMemory {
                 let scopedCharacters = characters;
                 let scopedFacts = facts;
                 let scopedRelationships = relationships;
-                if (query.character_id) {
+                if (query.character_id != null && query.character_id.trim().length > 0) {
                     // Simple filter heuristic: keep items mentioning character id or name
                     const cid = query.character_id.toLowerCase();
                     scopedCharacters = characters.filter(c => c.id.toLowerCase().includes(cid) || c.name.toLowerCase().includes(cid));
@@ -144,17 +144,18 @@ export class L2GraphMemory {
             await session.close();
         }
     }
-    async getEmotionalHistory() {
+    getEmotionalHistory() {
         // TODO: Implement emotional history tracking
-        return [];
+        return Promise.resolve([]);
     }
     async getFactWithHistory(factId) {
         const session = this.driver.session();
         try {
             return await session.executeRead(async (tx) => {
                 const result = await tx.run('MATCH (f:Fact {id: $factId}) RETURN f', { factId });
-                if (result.records.length === 0)
+                if (result.records.length === 0) {
                     return null;
+                }
                 const node = result.records[0].get('f');
                 return mapNodeToFact(node);
             });
@@ -164,11 +165,9 @@ export class L2GraphMemory {
         }
     }
     async inspect() {
-        if (!this.driver) {
-            throw new Error('Neo4j driver not initialized in L2GraphMemory');
-        }
         const session = this.driver.session();
         try {
+            const toNum = (val) => val.toNumber();
             return await session.executeRead(async (tx) => {
                 const [charResult, factResult, relResult, turnResult] = await Promise.all([
                     tx.run('MATCH (c:Character) RETURN count(c) as count'),
@@ -176,12 +175,11 @@ export class L2GraphMemory {
                     tx.run('MATCH ()-[r:RELATIONSHIP]->() RETURN count(r) as count'),
                     tx.run('MATCH (t:Turn) RETURN count(t) as count')
                 ]);
-                return {
-                    characters: charResult.records[0].get('count').toNumber(),
-                    facts: factResult.records[0].get('count').toNumber(),
-                    relationships: relResult.records[0].get('count').toNumber(),
-                    conversation_turns: turnResult.records[0].get('count').toNumber()
-                };
+                const characters = toNum(charResult.records[0].get('count'));
+                const facts = toNum(factResult.records[0].get('count'));
+                const relationships = toNum(relResult.records[0].get('count'));
+                const conversation_turns = toNum(turnResult.records[0].get('count'));
+                return { characters, facts, relationships, conversation_turns };
             });
         }
         finally {

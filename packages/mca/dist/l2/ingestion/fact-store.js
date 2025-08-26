@@ -20,7 +20,7 @@ export async function processFact(tx, event, turn, sessionId) {
   `;
     await tx.run(query, {
         factId,
-        entity: event.entities_involved[0] || 'unknown',
+        entity: (event.entities_involved[0] ?? 'unknown'),
         attribute: 'description',
         value: event.description,
         importance: event.confidence * 10,

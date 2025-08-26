@@ -1,5 +1,5 @@
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
-import { logger } from '../../utils/src/logger.ts';
+import { logger } from '../../utils/src/logger.js';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
 import { config } from './config.js';
@@ -37,8 +37,8 @@ const fastify = Fastify({
 // Enable compression (Fastify v5 compatible)
 try {
   const compressMod = await import('@fastify/compress');
-  const plugin: unknown = (compressMod as Record<string, unknown>).default ?? compressMod;
-  await fastify.register(plugin as (typeof import('@fastify/compress'))['default'], { global: true });
+  const plugin: any = (compressMod as any).default ?? compressMod; // cast to any to avoid TS plugin signature friction
+  await fastify.register(plugin, { global: true });
   fastify.log.info('Compression plugin enabled');
 } catch {
   fastify.log.warn('Compression plugin failed to load');

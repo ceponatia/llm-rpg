@@ -1,4 +1,4 @@
-import { RelationshipEdge } from '@rpg/types';
+import type { RelationshipEdge } from '@rpg/types';
 interface Neo4jRecordLike {
     get(key: string): unknown;
 }

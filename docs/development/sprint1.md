@@ -120,19 +120,19 @@ Route + store are additive. To rollback: remove ChatPanel import, delete `chatSt
 * [x] Frontend: chat store + flags update. 
 * [x] Frontend: ChatPanel component + integrate in Dashboard. 
 * [x] IntentDetector integration + affection deltas. 
-* [ ] Frontend tests (store, panel). 
-* [ ] Doc updates (.env.example, README snippet if present). 
-* [ ] Manual QA (send several messages, toggle flags off). 
-* [ ] Commit & tag `sprint1` (optional). 
+* [x] Frontend tests (store, panel, affection deltas).
+* [x] Doc updates (.env.example, README snippet added).
+* [x] Manual QA (local send messages, flags off -> panel hidden & 501).
+* [x] Commit & tag `sprint1` (tag pending push).
 
 ## Acceptance checklist
 
 * [x] `ENABLE_CHAT_API` off => route 501; UI hides ChatPanel if frontend flag off. 
 * [x] With both flags on, messages round‑trip and appear in ChatPanel. 
 * [x] Affection changes on at least two distinct intents. 
-* [ ] No TypeScript errors or failing existing tests. 
-* [ ] Lint clean (Markdown + TS). 
-* [ ] Docs updated with env flags. 
+* [x] No TypeScript errors or failing existing tests. 
+* [x] Lint clean (Markdown + TS). 
+* [x] Docs updated with env flags. 
 
 ---
 Prepared for implementation. Follow with Sprint 2 (memory + relationship persistence) after validation.

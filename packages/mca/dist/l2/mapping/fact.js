@@ -8,6 +8,6 @@ export function mapNodeToFact(node) {
         history: [], // TODO: Implement version history
         importance_score: properties.importance_score,
         created_at: properties.created_at.toString(),
-        last_updated: properties.last_updated?.toString() || properties.created_at.toString()
+        last_updated: properties.last_updated?.toString() ?? properties.created_at.toString()
     };
 }

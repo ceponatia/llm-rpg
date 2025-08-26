@@ -1,18 +1,18 @@
-import { MCAConfig, MemoryRetrievalQuery, MemoryRetrievalResult, MemoryIngestionResult, WorkingMemoryTurn, WeightedMemoryFusion, ChatSession, Character, FactNode, TokenCost } from '@rpg/types';
-import { IDatabaseManager } from './interfaces/database.js';
+import type { MCAConfig, MemoryRetrievalQuery, MemoryRetrievalResult, MemoryIngestionResult, WorkingMemoryTurn, WeightedMemoryFusion, ChatSession, Character, FactNode, TokenCost } from '@rpg/types';
+import type { IDatabaseManager } from './interfaces/database.js';
 export declare class MemoryController {
-    private dbManager;
+    private readonly dbManager;
     config: MCAConfig;
-    private l1;
-    private l2;
-    private l3;
-    private scorer;
-    private fusion;
+    private readonly l1;
+    private readonly l2;
+    private readonly l3;
+    private readonly scorer;
+    private readonly fusion;
     constructor(dbManager: IDatabaseManager, config: MCAConfig);
     /**
      * WRITE PATH: Ingest a conversation turn into memory
      */
-    ingestConversationTurn(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[], sessionId: string): Promise<MemoryIngestionResult>;
+    ingestConversationTurn(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>, sessionId: string): Promise<MemoryIngestionResult>;
     /**
      * READ PATH: Retrieve relevant context using weighted memory fusion
      */
@@ -24,19 +24,19 @@ export declare class MemoryController {
     /**
      * PUBLIC API METHODS
      */
-    getChatHistory(sessionId: string): Promise<WorkingMemoryTurn[]>;
-    getAllSessions(): Promise<ChatSession[]>;
-    getAllCharacters(): Promise<Character[]>;
-    getCharacterEmotionalHistory(): Promise<unknown[]>;
+    getChatHistory(sessionId: string): Array<WorkingMemoryTurn>;
+    getAllSessions(): Array<ChatSession>;
+    getAllCharacters(): Promise<Array<Character>>;
+    getCharacterEmotionalHistory(): Promise<Array<unknown>>;
     getFactWithHistory(factId: string): Promise<FactNode | null>;
     searchMemory(query: string, options: {
         limit: number;
     }): Promise<MemoryRetrievalResult>;
     inspectMemoryState(): Promise<unknown>;
     getMemoryStatistics(): Promise<unknown>;
-    pruneMemory(): Promise<{
+    pruneMemory(): {
         message: string;
-    }>;
+    };
     estimateTokenCost(query: MemoryRetrievalQuery): Promise<TokenCost>;
     updateFusionWeights(weights: WeightedMemoryFusion): void;
     updateSignificanceThreshold(threshold: number): void;

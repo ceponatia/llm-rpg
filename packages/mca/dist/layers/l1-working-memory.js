@@ -13,7 +13,7 @@ export class L1WorkingMemory {
      */
     addTurn(sessionId, turn) {
         let session = this.sessions.get(sessionId);
-        if (!session) {
+        if (session === undefined) {
             session = {
                 turns: [],
                 max_turns: this.config.l1_max_turns,
@@ -27,14 +27,14 @@ export class L1WorkingMemory {
         // Enforce max turns limit (FIFO)
         while (session.turns.length > session.max_turns) {
             const removedTurn = session.turns.shift();
-            if (removedTurn) {
+            if (removedTurn !== undefined) {
                 session.total_tokens -= removedTurn.tokens;
             }
         }
         // Enforce max tokens limit
         while (session.total_tokens > this.config.l1_max_tokens && session.turns.length > 1) {
             const removedTurn = session.turns.shift();
-            if (removedTurn) {
+            if (removedTurn !== undefined) {
                 session.total_tokens -= removedTurn.tokens;
             }
         }
@@ -43,8 +43,9 @@ export class L1WorkingMemory {
      * Retrieve relevant turns from working memory
      */
     async retrieve(query) {
+        await Promise.resolve();
         const session = this.sessions.get(query.session_id);
-        if (!session || session.turns.length === 0) {
+        if (session === undefined || session.turns.length === 0) {
             return {
                 turns: [],
                 relevance_score: 0,
@@ -66,8 +67,9 @@ export class L1WorkingMemory {
      * Calculate relevance score for working memory turns
      */
     calculateRelevanceScore(turns, query) {
-        if (turns.length === 0)
+        if (turns.length === 0) {
             return 0;
+        }
         // Simple keyword matching for now
         const queryWords = query.toLowerCase().split(/\s+/);
         let totalRelevance = 0;
@@ -93,7 +95,7 @@ export class L1WorkingMemory {
      */
     getHistory(sessionId) {
         const session = this.sessions.get(sessionId);
-        return session ? [...session.turns] : [];
+        return session !== undefined ? [...session.turns] : [];
     }
     /**
      * Get all active sessions
@@ -145,6 +147,7 @@ export class L1WorkingMemory {
      * Inspect current state
      */
     async inspect() {
+        await Promise.resolve();
         const sessionData = [];
         for (const [sessionId, memory] of this.sessions) {
             sessionData.push({
@@ -168,6 +171,7 @@ export class L1WorkingMemory {
      * Get statistics
      */
     async getStatistics() {
+        await Promise.resolve();
         let totalTurns = 0;
         let totalTokens = 0;
         for (const memory of this.sessions.values()) {

@@ -1,4 +1,4 @@
-import { FactNode } from '@rpg/types';
+import type { FactNode } from '@rpg/types';
 export declare function mapNodeToFact(node: {
     properties: {
         id: string;

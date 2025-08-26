@@ -1,12 +1,11 @@
-import { ManagedTransaction } from 'neo4j-driver';
-import { WorkingMemoryTurn } from '@rpg/types';
-import { MemoryOperation } from '@rpg/types';
+import type { ManagedTransaction } from 'neo4j-driver';
+import type { WorkingMemoryTurn, MemoryOperation } from '@rpg/types';
 export interface FactWriteResult {
-    operations: MemoryOperation[];
-    fact_ids: string[];
+    operations: Array<MemoryOperation>;
+    fact_ids: Array<string>;
 }
 export declare function processFact(tx: ManagedTransaction, event: {
-    entities_involved: string[];
+    entities_involved: Array<string>;
     description: string;
     confidence: number;
 }, turn: WorkingMemoryTurn, sessionId: string): Promise<FactWriteResult>;

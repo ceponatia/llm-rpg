@@ -1,21 +1,21 @@
-import { MCAConfig, WorkingMemoryTurn, EventDetectionResult, VADState } from '@rpg/types';
+import type { MCAConfig, WorkingMemoryTurn, EventDetectionResult, VADState } from '@rpg/types';
 /**
  * SignificanceScorer - Determines which conversation turns are worth remembering
  * Uses VAD deltas, keyword flags, and named entity detection
  */
 export declare class SignificanceScorer {
-    private config;
-    private emotionalKeywords;
-    private significantEvents;
+    private readonly config;
+    private readonly emotionalKeywords;
+    private readonly significantEvents;
     constructor(config: MCAConfig);
     /**
      * Score a conversation turn for significance (0-10 scale)
      */
-    scoreConversationTurn(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): number;
+    scoreConversationTurn(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): number;
     /**
      * Detect significant events in a conversation turn
      */
-    detectEvents(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): EventDetectionResult;
+    detectEvents(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): EventDetectionResult;
     /**
      * Calculate magnitude of VAD state change
      */

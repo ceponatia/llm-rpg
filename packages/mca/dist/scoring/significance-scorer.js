@@ -35,8 +35,10 @@ export class SignificanceScorer {
         // Emotional intensity scoring
         score += this.scoreEmotionalIntensity(turn.content);
         // Question/exclamation scoring
-        const questionCount = (turn.content.match(/\?/g) || []).length;
-        const exclamationCount = (turn.content.match(/!/g) || []).length;
+        const questionMatches = turn.content.match(/\?/g);
+        const exclamationMatches = turn.content.match(/!/g);
+        const questionCount = questionMatches !== null ? questionMatches.length : 0;
+        const exclamationCount = exclamationMatches !== null ? exclamationMatches.length : 0;
         score += Math.min(1, (questionCount + exclamationCount) * 0.3);
         // Context-based scoring (response to significant previous turn)
         if (context.length > 0) {
@@ -77,28 +79,33 @@ export class SignificanceScorer {
         let score = 0;
         // Check for emotional keywords
         Object.values(this.emotionalKeywords).forEach(keywords => {
-            keywords.forEach(keyword => { if (lowerContent.includes(keyword))
-                score += 0.5; });
+            keywords.forEach(keyword => { if (lowerContent.includes(keyword)) {
+                score += 0.5;
+            } });
         });
         // Check for significant event keywords
         Object.values(this.significantEvents).forEach(keywords => {
-            keywords.forEach(keyword => { if (lowerContent.includes(keyword))
-                score += 0.8; });
+            keywords.forEach(keyword => { if (lowerContent.includes(keyword)) {
+                score += 0.8;
+            } });
         });
         return Math.min(3, score);
     }
     scoreEmotionalIntensity(content) {
         let intensity = 0;
         // All caps words (shouting)
-        const capsWords = content.match(/\b[A-Z]{2,}\b/g) || [];
-        intensity += Math.min(1, capsWords.length * 0.3);
+        const capsWords = content.match(/\b[A-Z]{2,}\b/g);
+        const capsCount = capsWords !== null ? capsWords.length : 0;
+        intensity += Math.min(1, capsCount * 0.3);
         // Repeated punctuation
-        const repeatedPunct = content.match(/[!?]{2,}|\.{3,}/g) || [];
-        intensity += Math.min(1, repeatedPunct.length * 0.4);
+        const repeatedPunct = content.match(/[!?]{2,}|\.{3,}/g);
+        const repeatCount = repeatedPunct !== null ? repeatedPunct.length : 0;
+        intensity += Math.min(1, repeatCount * 0.4);
         // Extreme adjectives
         const extremeWords = ['absolutely', 'completely', 'totally', 'extremely', 'incredibly', 'unbelievably'];
-        extremeWords.forEach(word => { if (content.toLowerCase().includes(word))
-            intensity += 0.3; });
+        extremeWords.forEach(word => { if (content.toLowerCase().includes(word)) {
+            intensity += 0.3;
+        } });
         return Math.min(2, intensity);
     }
     extractEvents(content) {
@@ -126,7 +133,7 @@ export class SignificanceScorer {
         // For each detected person, estimate their emotional state
         entities.filter(e => e.type === 'PERSON').forEach(entity => {
             const currentVAD = this.estimateVADFromContent(content);
-            const previousVAD = this.findPreviousVAD(entity.text, context) || { valence: 0, arousal: 0, dominance: 0 }; // Neutral default
+            const previousVAD = this.findPreviousVAD(entity.text, context) ?? { valence: 0, arousal: 0, dominance: 0 }; // Neutral default
             const delta = this.calculateVADDelta(currentVAD, previousVAD);
             if (delta >= this.config.l2_emotional_delta_threshold) {
                 changes.push({
@@ -144,18 +151,28 @@ export class SignificanceScorer {
         const entities = [];
         // Simple pattern-based NER (in reality, would use a proper NER model)
         // Detect proper nouns (capitalized words)
-        const properNouns = content.match(/\b[A-Z][a-z]+\b/g) || [];
-        properNouns.forEach((noun) => {
-            const startPos = content.indexOf(noun);
-            entities.push({ text: noun, type: this.classifyEntity(noun, content), confidence: 0.8, start_pos: startPos, end_pos: startPos + noun.length });
-        });
+        const properNouns = content.match(/\b[A-Z][a-z]+\b/g);
+        if (properNouns !== null && properNouns.length > 0) {
+            for (const noun of properNouns) {
+                const startPos = content.indexOf(noun);
+                entities.push({
+                    text: noun,
+                    type: this.classifyEntity(noun, content),
+                    confidence: 0.8,
+                    start_pos: startPos,
+                    end_pos: startPos + noun.length
+                });
+            }
+        }
         // Detect quoted strings (might be objects or concepts)
-        const quotedStrings = content.match(/"([^"]+)"/g) || [];
-        quotedStrings.forEach(quoted => {
-            const text = quoted.slice(1, -1); // Remove quotes
-            const startPos = content.indexOf(quoted);
-            entities.push({ text, type: 'OBJECT', confidence: 0.6, start_pos: startPos, end_pos: startPos + quoted.length });
-        });
+        const quotedStrings = content.match(/"([^"]+)"/g);
+        if (quotedStrings !== null && quotedStrings.length > 0) {
+            quotedStrings.forEach(quoted => {
+                const text = quoted.slice(1, -1); // Remove quotes
+                const startPos = content.indexOf(quoted);
+                entities.push({ text, type: 'OBJECT', confidence: 0.6, start_pos: startPos, end_pos: startPos + quoted.length });
+            });
+        }
         return entities;
     }
     classifyEntity(entity, context) {
@@ -177,13 +194,17 @@ export class SignificanceScorer {
     findNearbyEntities(content, keyword) {
         // Find proper nouns within 50 characters of the keyword
         const keywordIndex = content.toLowerCase().indexOf(keyword.toLowerCase());
-        if (keywordIndex === -1)
+        if (keywordIndex === -1) {
             return [];
+        }
         const start = Math.max(0, keywordIndex - 50);
         const end = Math.min(content.length, keywordIndex + keyword.length + 50);
         const nearby = content.substring(start, end);
-        const properNouns = nearby.match(/\b[A-Z][a-z]+\b/g) || [];
-        return [...new Set(properNouns)]; // Remove duplicates
+        const properNouns = nearby.match(/\b[A-Z][a-z]+\b/g);
+        if (properNouns === null || properNouns.length === 0) {
+            return [];
+        }
+        return [...new Set(properNouns)];
     }
     estimateVADFromContent(content) {
         const lowerContent = content.toLowerCase();
@@ -191,14 +212,18 @@ export class SignificanceScorer {
         let arousal = 0;
         let dominance = 0;
         // Analyze emotional keywords in context
-        this.emotionalKeywords.high_valence.forEach(word => { if (lowerContent.includes(word))
-            valence += 0.3; });
-        this.emotionalKeywords.low_valence.forEach(word => { if (lowerContent.includes(word))
-            valence -= 0.3; });
-        this.emotionalKeywords.high_arousal.forEach(word => { if (lowerContent.includes(word))
-            arousal += 0.3; });
-        this.emotionalKeywords.high_dominance.forEach(word => { if (lowerContent.includes(word))
-            dominance += 0.3; });
+        this.emotionalKeywords.high_valence.forEach(word => { if (lowerContent.includes(word)) {
+            valence += 0.3;
+        } });
+        this.emotionalKeywords.low_valence.forEach(word => { if (lowerContent.includes(word)) {
+            valence -= 0.3;
+        } });
+        this.emotionalKeywords.high_arousal.forEach(word => { if (lowerContent.includes(word)) {
+            arousal += 0.3;
+        } });
+        this.emotionalKeywords.high_dominance.forEach(word => { if (lowerContent.includes(word)) {
+            dominance += 0.3;
+        } });
         // Clamp values to valid ranges
         return { valence: Math.max(-1, Math.min(1, valence)), arousal: Math.max(0, Math.min(1, arousal)), dominance: Math.max(0, Math.min(1, dominance)) };
     }

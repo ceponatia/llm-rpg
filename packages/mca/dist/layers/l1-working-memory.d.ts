@@ -1,11 +1,11 @@
-import { MCAConfig, WorkingMemoryTurn, L1RetrievalResult, MemoryRetrievalQuery, ChatSession } from '@rpg/types';
+import type { MCAConfig, WorkingMemoryTurn, L1RetrievalResult, MemoryRetrievalQuery, ChatSession } from '@rpg/types';
 /**
  * L1 Working Memory - Ephemeral session-based buffer
  * Holds the last N conversational turns for immediate context
  */
 export declare class L1WorkingMemory {
-    private config;
-    private sessions;
+    private readonly config;
+    private readonly sessions;
     constructor(config: MCAConfig);
     /**
      * Add a new turn to the working memory buffer
@@ -22,11 +22,11 @@ export declare class L1WorkingMemory {
     /**
      * Get chat history for a session
      */
-    getHistory(sessionId: string): WorkingMemoryTurn[];
+    getHistory(sessionId: string): Array<WorkingMemoryTurn>;
     /**
      * Get all active sessions
      */
-    getAllSessions(): ChatSession[];
+    getAllSessions(): Array<ChatSession>;
     /**
      * Clear old sessions to free memory
      */

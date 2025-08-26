@@ -1,7 +1,8 @@
 export function calculateL2RelevanceScore(characters, facts, relationships) {
     const totalItems = characters.length + facts.length + relationships.length;
-    if (totalItems === 0)
+    if (totalItems === 0) {
         return 0;
+    }
     // Simple relevance calculation based on matches
     return Math.min(1.0, totalItems / 10); // Normalized to max of 1.0
 }

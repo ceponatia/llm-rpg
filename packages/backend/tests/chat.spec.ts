@@ -10,12 +10,14 @@ async function build(opts: { enable: boolean; echo: boolean }): Promise<FastifyI
   process.env.CHAT_ECHO_MODE = opts.echo ? 'true' : 'false';
   const fastify: FastifyInstance = Fastify({ logger: false });
   // minimal stubs for properties accessed in chat route when echo mode true (skips heavy calls)
-  fastify.decorate('mca', {
+  const mcaStub: any = {
     config: { default_fusion_weights: { w_L1: 0.4, w_L2: 0.4, w_L3: 0.2 } },
-    retrieveRelevantContext: async () => ({ l1: { token_count: 0 }, l2: { token_count: 0 }, l3: { token_count: 0 } }),
-    ingestConversationTurn: async () => ({ operations_performed: [], emotional_changes: [] })
-  });
-  fastify.decorate('db', { getNeo4jSession: () => ({ executeWrite: async () => {}, close: async () => {} }) });
+    retrieveRelevantContext: async () => ({ l1: { token_count: 0 }, l2: { token_count: 0 }, l3: { token_count: 0 }, fusion_weights: { w_L1: 0, w_L2: 0, w_L3: 0 }, final_score: 0, total_tokens: 0 }),
+    ingestConversationTurn: async () => ({ success: true, significance_score: 0, operations_performed: [], emotional_changes: [], events_detected: [], facts_updated: 0, relationships_modified: 0 })
+  };
+  fastify.decorate('mca', mcaStub);
+  const dbStub: any = { getNeo4jSession: () => ({ executeWrite: async () => undefined, close: async () => {} }) };
+  fastify.decorate('db', dbStub);
   await setupRoutes(fastify);
   await fastify.ready();
   return fastify;

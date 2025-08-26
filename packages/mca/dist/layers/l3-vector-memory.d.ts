@@ -1,25 +1,24 @@
-import { MCAConfig, WorkingMemoryTurn, L3RetrievalResult, MemoryRetrievalQuery, EventDetectionResult, MemoryOperation } from '@rpg/types';
-import { IDatabaseManager } from '../interfaces/database.js';
+import type { MCAConfig, WorkingMemoryTurn, L3RetrievalResult, MemoryRetrievalQuery, EventDetectionResult, MemoryOperation } from '@rpg/types';
+import type { IDatabaseManager } from '../interfaces/database.js';
 /**
  * L3 Vector Memory - Semantic Archive using FAISS
  * Stores embeddings of hierarchically-generated summaries and insights
  */
 export declare class L3VectorMemory {
-    private dbManager;
-    private config;
-    private fragments;
-    private nextIndex;
+    private readonly dbManager;
+    private readonly config;
+    private readonly fragments;
     constructor(dbManager: IDatabaseManager, config: MCAConfig);
     /**
      * Ingest a conversation turn into vector memory
      */
     ingestTurn(turn: WorkingMemoryTurn, eventDetection: EventDetectionResult, sessionId: string): Promise<{
-        operations: MemoryOperation[];
+        operations: Array<MemoryOperation>;
     }>;
     /**
      * Retrieve relevant fragments from vector memory
      */
-    retrieve(query: MemoryRetrievalQuery): Promise<L3RetrievalResult>;
+    retrieve(query: MemoryRetrievalQuery): L3RetrievalResult;
     private generateSummary;
     private generateEmbedding;
     private determineContentType;
@@ -28,11 +27,11 @@ export declare class L3VectorMemory {
     /**
      * Public API methods
      */
-    inspect(): Promise<unknown>;
-    getStatistics(): Promise<unknown>;
+    inspect(): unknown;
+    getStatistics(): unknown;
     /**
      * Prune old or low-importance fragments
      */
-    pruneFragments(maxFragments?: number): Promise<void>;
+    pruneFragments(maxFragments?: number): void;
     private calculateCompositeScore;
 }

@@ -1,4 +1,4 @@
-import { Character } from '@rpg/types';
+import type { Character } from '@rpg/types';
 export declare function mapNodeToCharacter(node: {
     properties: {
         id: string;

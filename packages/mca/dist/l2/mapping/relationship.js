@@ -10,6 +10,6 @@ export function mapRecordToRelationship(record) {
         relationship_type: rel.relationship_type,
         strength: rel.strength,
         created_at: rel.created_at.toString(),
-        last_updated: rel.last_updated?.toString() || rel.created_at.toString()
+        last_updated: rel.last_updated?.toString() ?? rel.created_at.toString()
     };
 }
