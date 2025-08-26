@@ -1,0 +1,2 @@
+# Exclude build tool configs from type-aware linting (no semantic rules needed)
+packages/*/vite.config.ts

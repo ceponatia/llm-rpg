@@ -36,11 +36,13 @@ export const PromptInspectorPanel: React.FC<PromptInspectorPanelProps> = ({
 
   // Mock prompt construction (in a real implementation, this would come from the backend)
   useEffect(() => {
-    if (messages.length === 0) {return;}
-    const latestAssistant = [...messages].reverse().find(m => m.role === 'assistant' && m.metadata?.prompt_sections);
-    const latestUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    if (!latestAssistant || !latestUserMessage) {return;}
-    const ps = latestAssistant.metadata!.prompt_sections!;
+  if (messages.length === 0) { return; }
+  const reversed = [...messages].reverse();
+  const latestAssistant = reversed.find(m => m.role === 'assistant' && m.metadata?.prompt_sections !== undefined);
+  const latestUserMessage = reversed.find(m => m.role === 'user');
+  if (latestAssistant === undefined || latestUserMessage === undefined) { return; }
+  const ps = latestAssistant.metadata?.prompt_sections;
+  if (ps === undefined) { return; }
     const breakdown: PromptBreakdown = {
       sections: {
         system: ps.system,
@@ -74,7 +76,7 @@ export const PromptInspectorPanel: React.FC<PromptInspectorPanelProps> = ({
   };
 
   const copyFullPrompt = (): void => {
-    if (!promptBreakdown) {return;}
+    if (promptBreakdown === null) { return; }
 
     const fullPrompt = [
       promptBreakdown.sections.system,
@@ -174,7 +176,7 @@ export const PromptInspectorPanel: React.FC<PromptInspectorPanelProps> = ({
             <span>Prompt Inspector</span>
           </h2>
           <div className="flex items-center space-x-2">
-            {promptBreakdown && (
+            {promptBreakdown !== null && (
               <>
                 <div className="text-sm text-gray-600 flex items-center space-x-1">
                   <Zap className="w-4 h-4" />
@@ -197,7 +199,7 @@ export const PromptInspectorPanel: React.FC<PromptInspectorPanelProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-        {!promptBreakdown ? (
+  {promptBreakdown === null ? (
           <div className="text-center text-gray-500 py-8">
             <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No messages yet</p>

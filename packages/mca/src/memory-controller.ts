@@ -116,7 +116,7 @@ export class MemoryController {
       const [l1Result, l2Result, l3Result] = await Promise.all([
         this.l1.retrieve(query),
         this.l2.retrieve(query),
-        this.l3.retrieve(query)
+        Promise.resolve(this.l3.retrieve(query))
       ]);
       const fusedResult = this.fusion.combineResults(
         l1Result,

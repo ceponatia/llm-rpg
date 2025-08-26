@@ -10,7 +10,13 @@ module.exports = {
     '**/.vite/**',
     '**/coverage/**',
     '**/node_modules/**',
-    '**/*.d.ts'
+  '**/*.d.ts',
+  // Ignore compiled duplicate JS outputs of TS sources (types package emits .js alongside .ts)
+  'packages/types/src/**/*.js',
+  // Ignore JS config files (typed via JSDoc instead of TS parser)
+  'packages/**/postcss.config.js',
+  'packages/**/tailwind.config.js',
+  'packages/**/vite.config.js'
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -66,5 +72,57 @@ module.exports = {
     'prefer-const': 'error',
     // React hooks already handled by plugin:react-hooks/recommended
     'react-hooks/exhaustive-deps': 'warn'
-  }
+  },
+  overrides: [
+    // Allow console usage in centralized logger implementation only
+    {
+      files: ['packages/utils/src/logger.ts'],
+      rules: { 'no-console': 'off' }
+    },
+    // Plain Node/Build config JS files: use default parser (Espree) without TS project requirement
+    {
+      files: [
+        'postcss.config.js',
+        'tailwind.config.js',
+        'vite.config.js',
+        'packages/**/postcss.config.js',
+        'packages/**/tailwind.config.js',
+        'packages/**/vite.config.js'
+      ],
+      parser: 'espree',
+      parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+      env: { node: true, es2022: true },
+      rules: {
+        // Disable TS-specific rules for these plain JS config files
+  '@typescript-eslint/no-var-requires': 'off',
+  '@typescript-eslint/no-unsafe-assignment': 'off',
+  '@typescript-eslint/no-unsafe-member-access': 'off',
+  '@typescript-eslint/no-unsafe-call': 'off',
+  '@typescript-eslint/no-unsafe-return': 'off',
+  '@typescript-eslint/consistent-type-imports': 'off',
+  '@typescript-eslint/explicit-function-return-type': 'off',
+  '@typescript-eslint/strict-boolean-expressions': 'off'
+  , '@typescript-eslint/prefer-readonly': 'off'
+  , '@typescript-eslint/prefer-readonly-parameter-types': 'off'
+  , '@typescript-eslint/no-unnecessary-type-assertion': 'off'
+  , '@typescript-eslint/no-unnecessary-condition': 'off'
+      }
+    },
+    // Authored helper JS scripts (keep linting but not type-aware)
+    {
+      files: [
+        'packages/types/scripts/**/*.js'
+      ],
+      parser: 'espree',
+      parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+      env: { node: true, es2022: true },
+      rules: {
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off'
+      }
+    }
+  ]
 };

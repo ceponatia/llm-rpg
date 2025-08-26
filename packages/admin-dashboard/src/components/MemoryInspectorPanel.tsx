@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Database, Clock, Brain, RefreshCw, Users, FileText, GitBranch } from 'lucide-react';
 
 interface MemoryInspectorPanelProps {
@@ -42,33 +42,49 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'L1' | 'L2' | 'L3'>('L1');
 
-  const fetchMemoryState = async (): Promise<void> => {
+  // Narrow raw API response into strongly typed MemoryState
+  const isMemoryState = (value: unknown): value is MemoryState => {
+    if (value === null || typeof value !== 'object') { return false; }
+    const v = value as Record<string, unknown>;
+    return (
+      typeof v.l1_working_memory === 'object' && v.l1_working_memory !== null &&
+      typeof v.l2_graph_memory === 'object' && v.l2_graph_memory !== null &&
+      typeof v.l3_vector_memory === 'object' && v.l3_vector_memory !== null
+    );
+  };
+
+  const fetchMemoryState = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/memory/inspect');
-      if (response.ok) {
-        const data = await response.json();
-        setMemoryState(data);
-      } else {
+      if (!response.ok) {
         console.error('Failed to fetch memory state');
+        setMemoryState(null);
+        return;
+      }
+      const raw: unknown = await response.json();
+      if (isMemoryState(raw)) {
+        setMemoryState(raw);
+      } else {
+        console.error('Invalid memory state shape');
+        setMemoryState(null);
       }
     } catch (error) {
       console.error('Error fetching memory state:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // endpoint currently global; if session-specific later add [sessionId]
 
   useEffect(() => {
     void fetchMemoryState();
-    // Refresh every 5 seconds
     const interval = setInterval(() => { void fetchMemoryState(); }, 5000);
     return (): void => clearInterval(interval);
-  }, [sessionId]);
+  }, [fetchMemoryState, sessionId]);
 
   const renderL1Inspector = (): JSX.Element | null => {
-    const l1 = memoryState?.l1_working_memory;
-    if (!l1) {return null;}
+  const l1 = memoryState?.l1_working_memory;
+  if (l1 == null) { return null; }
 
     return (
       <div className="space-y-4">
@@ -114,7 +130,7 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
                     </div>
                   </div>
                   <div className="text-xs text-gray-500">
-                    {session.recent_activity && new Date(session.recent_activity).toLocaleTimeString()}
+                    {session.recent_activity !== '' ? new Date(session.recent_activity).toLocaleTimeString() : ''}
                   </div>
                 </div>
               </div>
@@ -126,8 +142,8 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
   };
 
   const renderL2Inspector = (): JSX.Element | null => {
-    const l2 = memoryState?.l2_graph_memory;
-    if (!l2) {return null;}
+  const l2 = memoryState?.l2_graph_memory;
+  if (l2 == null) { return null; }
 
     return (
       <div className="space-y-4">
@@ -174,8 +190,8 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
   };
 
   const renderL3Inspector = (): JSX.Element | null => {
-    const l3 = memoryState?.l3_vector_memory;
-    if (!l3) {return null;}
+  const l3 = memoryState?.l3_vector_memory;
+  if (l3 == null) { return null; }
 
     return (
       <div className="space-y-4">
@@ -319,7 +335,7 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
               <span>Loading memory state...</span>
             </div>
           </div>
-        ) : memoryState ? (
+  ) : (memoryState !== null) ? (
           <div>
             {activeTab === 'L1' && renderL1Inspector()}
             {activeTab === 'L2' && renderL2Inspector()}

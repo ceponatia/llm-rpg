@@ -13,8 +13,11 @@ export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations
 
   // Listen for real-time memory operations from WebSocket
   useEffect(() => {
-    if (lastMessage?.type === 'memory_operation') {
-      setAllOperations(prev => [...prev, lastMessage.data as MemoryOperation]);
+  if (lastMessage !== null && lastMessage.type === 'memory_operation') {
+      const data = lastMessage.data;
+      if (data !== null && typeof data === 'object') {
+        setAllOperations(prev => [...prev, data as MemoryOperation]);
+      }
     }
   }, [lastMessage]);
 
@@ -59,14 +62,30 @@ export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations
     switch (op) {
       case 'addTurn':
         return `Added conversation turn to working memory`;
-      case 'updateCharacterEmotion':
-        return `Updated ${details?.character_id} emotional state`;
-      case 'createFact':
-        return `Created new fact: ${details?.fact_id}`;
-      case 'createRelationship':
-        return `Created relationship: ${details?.relationship_id}`;
-      case 'addVectorFragment':
-        return `Added ${details?.content_type} to semantic archive`;
+      case 'updateCharacterEmotion': {
+  if (details == null) { return 'Updated character emotional state'; }
+  const id = (details as { character_id?: unknown }).character_id;
+        if (typeof id === 'string' && id.length > 0) { return `Updated ${id} emotional state`; }
+        return 'Updated character emotional state';
+      }
+      case 'createFact': {
+  if (details == null) { return 'Created new fact'; }
+  const fid = (details as { fact_id?: unknown }).fact_id;
+        if (typeof fid === 'string' && fid.length > 0) { return `Created new fact: ${fid}`; }
+        return 'Created new fact';
+      }
+      case 'createRelationship': {
+  if (details == null) { return 'Created relationship'; }
+  const rid = (details as { relationship_id?: unknown }).relationship_id;
+        if (typeof rid === 'string' && rid.length > 0) { return `Created relationship: ${rid}`; }
+        return 'Created relationship';
+      }
+      case 'addVectorFragment': {
+  if (details == null) { return 'Added item to semantic archive'; }
+  const ct = (details as { content_type?: unknown }).content_type;
+        if (typeof ct === 'string' && ct.length > 0) { return `Added ${ct} to semantic archive`; }
+        return 'Added item to semantic archive';
+      }
       case 'storeTurn':
         return `Stored conversation turn in graph memory`;
       default:
@@ -87,7 +106,7 @@ export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-        {allOperations.length === 0 ? (
+  {allOperations.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No memory operations yet</p>
@@ -97,9 +116,11 @@ export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations
           </div>
         ) : (
           <div className="space-y-3">
-            {allOperations.slice().reverse().map((operation, index) => (
+      {(() => {
+        const reversed = [...allOperations].reverse();
+        return reversed.map((operation, index) => (
               <div
-                key={operation.id || index}
+        key={(typeof operation.id === 'string' && operation.id !== '') ? operation.id : index}
                 className={`p-3 rounded-lg border ${getOperationColor(operation.layer)} transition-all duration-200`}
               >
                 <div className="flex items-start justify-between">
@@ -110,24 +131,26 @@ export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations
                         <span className={`text-xs font-medium px-2 py-1 rounded ${
                           operation.layer === 'L1' ? 'bg-blue-100 text-blue-800' :
                           operation.layer === 'L2' ? 'bg-green-100 text-green-800' :
-                          operation.layer === 'L3' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-purple-100 text-purple-800'
                         }`}>
                           {operation.layer}
                         </span>
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          operation.type === 'read' ? 'bg-blue-100 text-blue-700' :
-                          operation.type === 'write' ? 'bg-green-100 text-green-700' :
-                          operation.type === 'update' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {operation.type}
-                        </span>
+                        {(() => {
+                          const typeClass: Record<string,string> = {
+                            read: 'bg-blue-100 text-blue-700',
+                            write: 'bg-green-100 text-green-700',
+                            update: 'bg-yellow-100 text-yellow-700',
+                            delete: 'bg-red-100 text-red-700'
+                          };
+                          return (
+                            <span className={`text-xs px-2 py-1 rounded ${typeClass[operation.type]}`}>{operation.type}</span>
+                          );
+                        })()}
                       </div>
                       <p className="text-sm text-gray-900 mt-1">
                         {formatOperation(operation)}
                       </p>
-                      {operation.details && (
+                      {operation.details !== undefined && (
                         <div className="text-xs text-gray-600 mt-1 font-mono bg-gray-100 p-2 rounded">
                           {JSON.stringify(operation.details, null, 2)}
                         </div>
@@ -136,15 +159,12 @@ export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations
                   </div>
                   <div className="text-xs text-gray-500 ml-4 flex-shrink-0">
                     {formatTimestamp(operation.timestamp)}
-                    {operation.duration_ms !== undefined && (
-                      <div className="mt-1">
-                        {operation.duration_ms}ms
-                      </div>
-                    )}
+                    <div className="mt-1">{operation.duration_ms}ms</div>
                   </div>
                 </div>
               </div>
-            ))}
+    ));
+  })()}
           </div>
         )}
       </div>

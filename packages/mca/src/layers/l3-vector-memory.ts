@@ -86,7 +86,7 @@ export class L3VectorMemory {
   /**
    * Retrieve relevant fragments from vector memory
    */
-  public async retrieve(query: MemoryRetrievalQuery): Promise<L3RetrievalResult> {
+  public retrieve(query: MemoryRetrievalQuery): L3RetrievalResult {
     try {
       if (this.fragments.size === 0) {
         return { fragments: [], relevance_score: 0, token_count: 0 };
@@ -120,7 +120,7 @@ export class L3VectorMemory {
         scoped = relevantFragments.filter(f => f.metadata.tags.some(t => t.toLowerCase().includes(tag)));
       }
 
-  const avgSimilarity = scoped.length === 0 ? 0 : scoped.reduce((sum, frag) => sum + (frag.similarity_score ?? 0), 0) / scoped.length;
+  const avgSimilarity = scoped.length === 0 ? 0 : scoped.reduce((sum: number, frag) => sum + (frag.similarity_score ?? 0), 0) / scoped.length;
       const tokenCount = this.estimateL3TokenCount(scoped);
       return {
         fragments: scoped,
@@ -162,10 +162,10 @@ export class L3VectorMemory {
     return summary;
   }
 
-  private generateEmbedding(text: string): Array<number> {
-    // Mock embedding generation - in reality, this would use a model like Sentence-BERT
-    // For now, create a simple hash-based embedding
-    const embedding = new Array(this.config.l3_vector_dimension).fill(0);
+    private generateEmbedding(text: string): Array<number> {
+      // Mock embedding generation - in reality, this would use a model like Sentence-BERT
+      // For now, create a simple hash-based embedding
+      const embedding: Array<number> = Array.from({ length: this.config.l3_vector_dimension }, () => 0);
     
     // Simple character-based hash embedding
       for (let i = 0; i < text.length; i++) {
@@ -183,7 +183,7 @@ export class L3VectorMemory {
       }
     }
 
-  return embedding as Array<number>;
+  return embedding;
   }
 
   private determineContentType(eventDetection: EventDetectionResult): 'summary' | 'insight' | 'event' {

@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+
+/**
+ * Vite configuration
+ * @type {import('vite').UserConfigExport}
+ */
 export default defineConfig({
     plugins: [react()],
     resolve: {

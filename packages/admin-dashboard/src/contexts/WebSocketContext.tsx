@@ -1,5 +1,11 @@
-import type { ReactNode } from 'react';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode
+} from 'react';
+import { logger } from '@rpg/utils';
 
 interface WebSocketMessage {
   type: string;
@@ -25,33 +31,42 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
 
+  const isWebSocketMessage = (val: unknown): val is WebSocketMessage => {
+    if (val === null || typeof val !== 'object') { return false; }
+    const v = val as Record<string, unknown>;
+    return typeof v.type === 'string' && typeof v.timestamp === 'string';
+  };
+
   useEffect(() => {
     const wsUrl = `ws://${window.location.hostname}:3001/ws/updates`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = (): void => {
-      console.log('WebSocket connected');
+      logger.info('WebSocket connected');
       setIsConnected(true);
       setSocket(ws);
     };
 
-    ws.onmessage = (event): void => {
+  ws.onmessage = (event): void => {
       try {
-        const message = JSON.parse(event.data);
-        setLastMessage(message);
+        if (typeof event.data !== 'string') { return; }
+        const parsed: unknown = JSON.parse(event.data);
+        if (isWebSocketMessage(parsed)) {
+          setLastMessage(parsed);
+        }
       } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+    logger.warn('Failed to parse WebSocket message', error);
       }
     };
 
     ws.onclose = (): void => {
-      console.log('WebSocket disconnected');
+      logger.info('WebSocket disconnected');
       setIsConnected(false);
       setSocket(null);
     };
 
     ws.onerror = (error): void => {
-      console.error('WebSocket error:', error);
+      logger.error('WebSocket error', error);
     };
 
     // Cleanup on unmount
@@ -63,10 +78,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
   }, []);
 
   const sendMessage = (message: unknown): void => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(message));
+    if (socket !== null && socket.readyState === WebSocket.OPEN) {
+      try {
+        socket.send(JSON.stringify(message));
+      } catch (err) {
+        logger.error('Failed to send WebSocket message', err);
+      }
     } else {
-      console.warn('WebSocket is not connected');
+      logger.warn('WebSocket is not connected');
     }
   };
 
@@ -85,7 +104,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
 
 export const useWebSocket = (): WebSocketContextType => {
   const context = useContext(WebSocketContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useWebSocket must be used within a WebSocketProvider');
   }
   return context;

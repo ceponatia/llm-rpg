@@ -5,11 +5,12 @@ import './index.css';
 import { loadRuntimeConfig } from './config/runtime';
 
 const rootEl = document.getElementById('root');
-if (rootEl) {rootEl.style.visibility = 'hidden';}
+if (rootEl !== null) { rootEl.style.visibility = 'hidden'; }
 
-loadRuntimeConfig().finally(() => {
-  if (rootEl) {rootEl.style.visibility = 'visible';}
-  ReactDOM.createRoot(rootEl!).render(
+void loadRuntimeConfig().finally(() => {
+  if (rootEl === null) { return; }
+  rootEl.style.visibility = 'visible';
+  ReactDOM.createRoot(rootEl).render(
     <React.StrictMode>
       <App />
     </React.StrictMode>,

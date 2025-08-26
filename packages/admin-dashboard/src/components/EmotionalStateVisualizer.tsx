@@ -1,8 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, TrendingUp, Crown, RefreshCw } from 'lucide-react';
-import type {
-  ChartOptions
-} from 'chart.js';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,7 +8,8 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  type ChartOptions
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import type { Character, VADState } from '@rpg/types';
@@ -43,32 +41,46 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
   const [isLoading, setIsLoading] = useState(false);
   const chartRef = useRef(null);
 
-  const fetchCharacters = async (): Promise<void> => {
+  // Stable (mount-only) fetch: dependency array intentionally empty so default selection logic
+  // runs only on first successful load; subsequent selections are user-driven.
+  const fetchCharacters = useCallback(async (): Promise<void> => {
     try {
       const response = await fetch('/api/memory/characters');
-      if (response.ok) {
-        const data = await response.json();
-        setCharacters(data.characters || []);
-        
-        // Auto-select first character if none selected
-        if (data.characters.length > 0 && !selectedCharacter) {
-          setSelectedCharacter(data.characters[0].id);
+      if (!response.ok) { return; }
+      const json: unknown = await response.json();
+      if (json !== null && typeof json === 'object' && Array.isArray((json as { characters?: unknown }).characters)) {
+        const rawChars = (json as { characters: Array<unknown> }).characters;
+        const typed: Array<Character> = rawChars.filter((c): c is Character =>
+          c !== null && typeof c === 'object' && 'id' in c && typeof (c as { id?: unknown }).id === 'string'
+        );
+        setCharacters(typed);
+        if (typed.length > 0 && selectedCharacter === '') {
+          setSelectedCharacter(typed[0].id);
         }
+      } else {
+        setCharacters([]);
       }
     } catch (error) {
       console.error('Failed to fetch characters:', error);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally stable (mount-only)
+  }, []);
 
   const fetchEmotionalHistory = async (characterId: string): Promise<void> => {
-    if (!characterId) {return;}
-    
+    if (characterId === '') { return; }
     setIsLoading(true);
     try {
       const response = await fetch(`/api/memory/characters/${characterId}/emotions?limit=20`);
-      if (response.ok) {
-        const data = await response.json();
-        setEmotionalHistory(data.emotional_history || []);
+      if (!response.ok) { return; }
+      const json: unknown = await response.json();
+      if (json !== null && typeof json === 'object' && Array.isArray((json as { emotional_history?: unknown }).emotional_history)) {
+        const rawHist = (json as { emotional_history: Array<unknown> }).emotional_history;
+        const typed: Array<EmotionalHistory> = rawHist.filter((h): h is EmotionalHistory =>
+          h !== null && typeof h === 'object' && 'timestamp' in h && 'vad_state' in h
+        );
+        setEmotionalHistory(typed);
+      } else {
+        setEmotionalHistory([]);
       }
     } catch (error) {
       console.error('Failed to fetch emotional history:', error);
@@ -78,19 +90,17 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
     }
   };
 
-  useEffect(() => {
-    void fetchCharacters();
-  }, []);
+  useEffect(() => { void fetchCharacters(); }, [fetchCharacters]);
 
   useEffect(() => {
-    if (selectedCharacter) {
+    if (selectedCharacter !== '') {
       void fetchEmotionalHistory(selectedCharacter);
     }
   }, [selectedCharacter]);
 
   const getCurrentVAD = (): VADState => {
     const character = characters.find(c => c.id === selectedCharacter);
-    return character?.emotional_state || { valence: 0, arousal: 0, dominance: 0 };
+    return character?.emotional_state ?? { valence: 0, arousal: 0, dominance: 0 };
   };
 
   const chartOptions: ChartOptions<'line'> = {
@@ -130,11 +140,15 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
         mode: 'index',
         intersect: false,
         callbacks: {
-          afterBody: (tooltipItems) => {
-            const index = tooltipItems[0].dataIndex;
-            const historyItem = emotionalHistory[index];
-            return historyItem?.trigger ? [`Trigger: ${historyItem.trigger}`] : [];
-          }
+            afterBody: (tooltipItems) => {
+              const index = tooltipItems[0].dataIndex;
+              const historyItem = emotionalHistory[index];
+              const trig = historyItem.trigger;
+              if (typeof trig === 'string' && trig !== '') {
+                return [`Trigger: ${trig}`];
+              }
+              return [];
+            }
         }
       }
     },
@@ -203,7 +217,7 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
           <button
             onClick={() => {
               void fetchCharacters();
-              if (selectedCharacter) {
+              if (selectedCharacter !== '') {
                 void fetchEmotionalHistory(selectedCharacter);
               }
             }}
@@ -231,7 +245,7 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Select a character...</option>
-            {characters.map(character => (
+  {characters.map(character => (
               <option key={character.id} value={character.id}>
                 {character.name}
               </option>
@@ -239,7 +253,7 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
           </select>
         </div>
 
-        {selectedCharacter && (
+    {selectedCharacter !== '' && (
           <>
             {/* Current Emotional State */}
             <div className="grid grid-cols-3 gap-4">
@@ -321,7 +335,7 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
           </>
         )}
 
-        {characters.length === 0 && (
+  {characters.length === 0 && (
           <div className="text-center text-gray-500 py-8">
             <Heart className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No characters detected yet</p>

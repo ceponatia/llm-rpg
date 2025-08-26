@@ -34,27 +34,35 @@ function App(): JSX.Element {
       setCharactersLoading(true);
       try {
         const res = await fetch('/api/characters');
-        if (res.ok) {
-          const data = await res.json();
-          setCharacters(data.characters || []);
-        } else {
+        if (!res.ok) {
           console.warn('Failed to fetch characters');
+          return;
         }
+        const json: unknown = await res.json();
+        let list: Array<CharacterProfile> = [];
+        if (json !== null && typeof json === 'object' && Array.isArray((json as { characters?: unknown }).characters)) {
+          const raw = (json as { characters: Array<unknown> }).characters;
+            // Narrow each element minimally
+          list = raw.filter((c): c is CharacterProfile =>
+            c !== null && typeof c === 'object' && 'id' in c && typeof (c as { id?: unknown }).id === 'string' && 'name' in c && typeof (c as { name?: unknown }).name === 'string'
+          );
+        }
+        setCharacters(list);
       } catch (e) {
         console.error('Error fetching characters', e);
       } finally {
         setCharactersLoading(false);
       }
     };
-    fetchCharacters().catch(console.error);
+    fetchCharacters().catch((err) => console.error('fetchCharacters root error', err));
   }, []);
 
   const handleNewMessage = (message: ChatMessage): void => {
     setMessages(prev => [...prev, message]);
-    
-    // Add memory operations from message metadata
-    if (message.metadata?.memory_operations) {
-      setMemoryOperations(prev => [...prev, ...(message.metadata?.memory_operations || [])]);
+    // Add memory operations from message metadata (guard nullish & array type)
+    const ops = message.metadata?.memory_operations;
+    if (Array.isArray(ops) && ops.length > 0) {
+      setMemoryOperations(prev => [...prev, ...ops]);
     }
   };
 
@@ -73,7 +81,7 @@ function App(): JSX.Element {
                   Cognitive Architecture Simulator
                 </h1>
                 <div className="text-sm text-gray-500">
-                  Session: {currentSessionId.slice(0, 8)}...
+                  Session: {currentSessionId !== '' ? currentSessionId.slice(0, 8) : 'unknown'}...
                 </div>
               </div>
               <div className="flex items-center space-x-4">

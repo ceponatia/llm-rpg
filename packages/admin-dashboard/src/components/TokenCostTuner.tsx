@@ -17,6 +17,18 @@ export const TokenCostTuner: React.FC<TokenCostTunerProps> = ({
   const [tokenEstimate, setTokenEstimate] = useState<TokenCost | null>(null);
   const [isEstimating, setIsEstimating] = useState(false);
 
+  const isTokenCost = (val: unknown): val is TokenCost => {
+    if (val === null || typeof val !== 'object') { return false; }
+    const v = val as Record<string, unknown>;
+    return (
+      typeof v.total_tokens === 'number' &&
+      typeof v.l1_tokens === 'number' &&
+      typeof v.l2_tokens === 'number' &&
+      typeof v.l3_tokens === 'number' &&
+      typeof v.estimated_cost === 'number'
+    );
+  };
+
   // Update local weights when props change
   useEffect(() => {
     setLocalWeights(fusionWeights);
@@ -39,9 +51,12 @@ export const TokenCostTuner: React.FC<TokenCostTunerProps> = ({
           })
         });
 
-        if (response.ok) {
-          const estimate = await response.json();
-          setTokenEstimate(estimate);
+        if (!response.ok) { return; }
+        const raw: unknown = await response.json();
+        if (isTokenCost(raw)) {
+          setTokenEstimate(raw);
+        } else {
+          setTokenEstimate(null);
         }
       } catch (error) {
         console.error('Failed to estimate token cost:', error);
@@ -100,7 +115,7 @@ export const TokenCostTuner: React.FC<TokenCostTunerProps> = ({
           </h2>
         </div>
         
-        {tokenEstimate && (
+  {tokenEstimate !== null && (
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center space-x-1">
               <Zap className="w-4 h-4 text-yellow-500" />
@@ -161,7 +176,7 @@ export const TokenCostTuner: React.FC<TokenCostTunerProps> = ({
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>Recent conversations</span>
             <span>
-              {tokenEstimate && `${tokenEstimate.l1_tokens} tokens`}
+              {tokenEstimate !== null ? `${tokenEstimate.l1_tokens} tokens` : ''}
             </span>
           </div>
         </div>
@@ -188,7 +203,7 @@ export const TokenCostTuner: React.FC<TokenCostTunerProps> = ({
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>Characters, facts, relationships</span>
             <span>
-              {tokenEstimate && `${tokenEstimate.l2_tokens} tokens`}
+              {tokenEstimate !== null ? `${tokenEstimate.l2_tokens} tokens` : ''}
             </span>
           </div>
         </div>
@@ -215,7 +230,7 @@ export const TokenCostTuner: React.FC<TokenCostTunerProps> = ({
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>Summaries and insights</span>
             <span>
-              {tokenEstimate && `${tokenEstimate.l3_tokens} tokens`}
+              {tokenEstimate !== null ? `${tokenEstimate.l3_tokens} tokens` : ''}
             </span>
           </div>
         </div>

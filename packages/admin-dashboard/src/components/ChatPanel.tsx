@@ -21,7 +21,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = (): void => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = messagesEndRef.current;
+    if (el !== null) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
@@ -30,7 +33,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
   const handleSendMessage = async (): Promise<void> => {
   const trimmed = inputValue.trim();
-  if (trimmed.length === 0 || isLoading) {return;}
+  if (trimmed.length === 0 || isLoading) { return; }
 
   const content = trimmed;
     setInputValue('');
@@ -44,19 +47,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       timestamp: new Date().toISOString()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+  setMessages((prev) => [...prev, userMessage]);
     onNewMessage(userMessage);
 
   try {
-      const baseSessionId = sessionId;
-      const effectiveSessionId = (selectedCharacter !== undefined && selectedCharacter !== null)
-        ? `${baseSessionId}:${selectedCharacter.id}`
-        : baseSessionId;
+  const baseSessionId = sessionId;
+  const effectiveSessionId = (selectedCharacter != null) ? `${baseSessionId}:${selectedCharacter.id}` : baseSessionId;
       const req: ChatRequest & { character_id?: string; prompt_template?: string; template_vars?: { char?: string } } = {
         message: content,
         session_id: effectiveSessionId,
-        fusion_weights: fusionWeights,
-        ...(selectedCharacter ? {
+    fusion_weights: fusionWeights,
+  ...(selectedCharacter != null ? {
           character_id: selectedCharacter.id,
           prompt_template: 'roleplay',
           template_vars: { char: selectedCharacter.name }
@@ -69,7 +70,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(req)
+  body: JSON.stringify(req)
       });
 
   if (response.ok === false) {
@@ -92,7 +93,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         metadata: chatResponse.metadata
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+  setMessages((prev) => [...prev, assistantMessage]);
       onNewMessage(assistantMessage);
 
   } catch {
@@ -106,7 +107,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         timestamp: new Date().toISOString()
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+  setMessages((prev) => [...prev, errorMessage]);
       onNewMessage(errorMessage);
     } finally {
       setIsLoading(false);
@@ -114,7 +115,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent): void => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  if (e.key === 'Enter' && e.shiftKey === false) {
       e.preventDefault();
       void handleSendMessage();
     }
@@ -146,19 +147,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         
         {messages.map((message) => {
           const isUser = message.role === 'user';
-              const metaName = (message.metadata !== undefined && message.metadata !== null && typeof (message.metadata as { character_name?: unknown }).character_name === 'string')
-                ? (message.metadata as { character_name?: string }).character_name
-                : undefined;
-              let label: string;
-              if (isUser) {
-                label = 'You';
-              } else if (metaName !== undefined && metaName !== '') {
-                label = metaName;
-              } else if (selectedCharacter !== undefined && selectedCharacter !== null && selectedCharacter.name !== '') {
-                label = selectedCharacter.name;
-              } else {
-                label = 'Assistant';
-              }
+          const metadata = message.metadata;
+          let rawMetaName: string | undefined;
+          if (metadata !== undefined) {
+            const possible = (metadata as Record<string, unknown>)['character_name'];
+            if (typeof possible === 'string') { rawMetaName = possible; }
+          }
+          const hasMetaName = typeof rawMetaName === 'string' && rawMetaName.length > 0;
+          const metaName: string | undefined = hasMetaName ? rawMetaName : undefined;
+          const hasSelectedCharacter = selectedCharacter != null && selectedCharacter.name !== '';
+          let label: string;
+          if (isUser) {
+            label = 'You';
+          } else if (hasMetaName) {
+            // hasMetaName guarantees metaName is a non-empty string
+            label = metaName as string;
+          } else if (hasSelectedCharacter) {
+            label = selectedCharacter.name;
+          } else {
+            label = 'Assistant';
+          }
           return (
             <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-lg px-4 py-2 ${isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900 border'}`}>
@@ -166,11 +174,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 <div className="whitespace-pre-wrap break-words">{message.content}</div>
                 <div className={`text-xs mt-1 ${isUser ? 'text-blue-100' : 'text-gray-500'}`}>
                   {formatTimestamp(message.timestamp)}
-                          {message.metadata !== undefined && message.metadata !== null && message.metadata.tokens !== undefined ? (
-                    <span className="ml-2">
-                      • {message.metadata.tokens.total_tokens} tokens
-                    </span>
-                  ) : null}
+                          {(() => {
+                            const total = message.metadata?.tokens?.total_tokens;
+                            return (typeof total === 'number') ? (
+                              <span className="ml-2">• {total} tokens</span>
+                            ) : null;
+                          })()}
                 </div>
               </div>
             </div>

@@ -30,7 +30,7 @@ export function updateEmotion(state: EmotionState, signal: AffectSignal, cfg: Em
   // rawDominance *= cfg.vadScales.dominance; // removed
 
   // Negativity bias (amplify negative valence component)
-  if (rawValence < 0) {
+  if (rawValence < 0 && rawValence !== 0 && !Number.isNaN(rawValence)) {
     rawValence *= cfg.negativityBias;
     notes.push('negativity_bias');
   }
@@ -42,12 +42,12 @@ export function updateEmotion(state: EmotionState, signal: AffectSignal, cfg: Em
   rawValence *= saturationFactor * frictionFactor;
   rawArousal *= saturationFactor * frictionFactor;
   rawDominance *= saturationFactor * frictionFactor;
-  if (saturationFactor < 0.95) {notes.push('saturation');}
-  if (frictionFactor < 0.95) {notes.push('friction');}
+  if (saturationFactor < 0.95) { notes.push('saturation'); }
+  if (frictionFactor < 0.95) { notes.push('friction'); }
 
   // Trait caps (reserved)
   const traitAdjusted = applyTraitCaps(prevState, { valence: rawValence, arousal: rawArousal, dominance: rawDominance }, cfg);
-  if (traitAdjusted.notes.length) {notes.push(...traitAdjusted.notes);}
+  if (traitAdjusted.notes.length > 0) { notes.push(...traitAdjusted.notes); }
 
   // Apply max-step clamps BEFORE trust gate so clamp detection still recorded
   let valenceDelta: number = applyMaxStep(traitAdjusted.adjusted.valence, cfg.maxStep.valence);

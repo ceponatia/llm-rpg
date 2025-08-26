@@ -37,8 +37,10 @@ const FALLBACK_CONFIG: RuntimeConfig = {
 let cached: RuntimeConfig | null = null;
 
 export async function loadRuntimeConfig(retries = 3): Promise<RuntimeConfig> {
-  if (cached) {return cached;}
-  const url = (typeof window !== 'undefined' && (window as unknown).__ADMIN_CONFIG_URL__) || '/admin/config.json';
+  if (cached !== null) { return cached; }
+  const win: unknown = typeof window !== 'undefined' ? window : undefined;
+  // Use nullish coalescing so empty string is respected if intentionally provided
+  const url = (win as { __ADMIN_CONFIG_URL__?: string } | undefined)?.__ADMIN_CONFIG_URL__ ?? '/admin/config.json';
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, { cache: 'no-store' });
@@ -60,21 +62,22 @@ export async function loadRuntimeConfig(retries = 3): Promise<RuntimeConfig> {
   return FALLBACK_CONFIG; // safeguard
 }
 
-function applyBranding(branding: BrandingConfig) {
+function applyBranding(branding: BrandingConfig): void {
   if (typeof document === 'undefined') {return;} // SSR / test without DOM
   const root = document.documentElement;
-  if (branding.primaryColor) {
+  if (branding.primaryColor !== '') {
     root.style.setProperty('--color-primary', branding.primaryColor);
   }
-  if (branding.productName) {
+  if (branding.productName !== '') {
     try { document.title = branding.productName; } catch { /* ignore */ }
   }
 }
 
-// Test-only helper (tree-shaken in prod) – accessed via (globalThis as any).__resetRuntimeConfig?.()
+// Test-only helper (tree-shaken in prod) – accessed via (globalThis as GlobalRuntimeTest).__resetRuntimeConfig?.()
 // We intentionally don't export to avoid public API.
-;(globalThis as unknown).__resetRuntimeConfig = () => { cached = null; };
+interface GlobalRuntimeTest { __resetRuntimeConfig?: () => void }
+;(globalThis as GlobalRuntimeTest).__resetRuntimeConfig = () => { cached = null; };
 
 export function getRuntimeConfig(): RuntimeConfig {
-  return cached || FALLBACK_CONFIG;
+  return cached ?? FALLBACK_CONFIG;
 }

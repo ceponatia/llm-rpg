@@ -1,4 +1,7 @@
-/** @type {import('tailwindcss').Config} */
+/**
+ * Tailwind configuration
+ * @type {import('tailwindcss').Config}
+ */
 export default {
   content: [
     "./index.html",
@@ -36,4 +39,4 @@ export default {
     'border-blue-200', 'border-green-200', 'border-purple-200',
     'border-red-200', 'border-yellow-200', 'border-orange-200', 'border-gray-200'
   ]
-}
+};

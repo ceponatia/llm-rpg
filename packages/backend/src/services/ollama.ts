@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+// Strict boolean compliance: all collection length checks explicit; no eslint disables needed.
 import { Ollama } from 'ollama';
 import { config } from '../config.js';
 import type { MemoryRetrievalResult } from '@rpg/types';
@@ -20,6 +20,19 @@ export interface LLMResponse {
   eval_duration?: number;
 }
 
+/**
+ * Structured prompt section breakdown returned alongside generated full prompt.
+ * Each field captures a logical slice used for diagnostics / UI inspection.
+ */
+export interface PromptSections {
+  system: string; // Base system / template content (pre-memory injection)
+  working_memory: string; // Recent conversation turns (L1)
+  episodic_memory: string; // Character & facts portion (from L2)
+  semantic_archive: string; // Relevant semantic fragments (from L3)
+  user_query: string; // The raw user input driving this generation
+  full_prompt: string; // The fully assembled prompt passed to the model
+}
+
 export class OllamaService {
   private readonly ollama: Ollama;
   private readonly tokenizer: Tiktoken | null;
@@ -35,7 +48,11 @@ export class OllamaService {
     }
   }
 
-  public async generateResponse(userMessage: string, memoryContext: MemoryRetrievalResult, options?: { templateId?: PromptTemplateId; templateVars?: { char?: string; user?: string; scene?: string }; sessionId?: string }): Promise<LLMResponse & { prompt_sections: { system: string; working_memory: string; episodic_memory: string; semantic_archive: string; user_query: string; full_prompt: string } }> {
+  /**
+   * Generate an LLM response with rich prompt section metadata.
+   * Returns the raw model response fields plus a `prompt_sections` object for tracing.
+   */
+  public async generateResponse(userMessage: string, memoryContext: MemoryRetrievalResult, options?: { templateId?: PromptTemplateId; templateVars?: { char?: string; user?: string; scene?: string }; sessionId?: string }): Promise<LLMResponse & { prompt_sections: PromptSections }> {
     const { fullPrompt, sections } = this.constructPrompt(userMessage, memoryContext, { ...options });
     try {
       const response = await this.ollama.generate({
@@ -48,7 +65,11 @@ export class OllamaService {
   } catch (error) { throw new Error(`Failed to generate response: ${String(error)}`); }
   }
 
-  private constructPrompt(userMessage: string, memoryContext: MemoryRetrievalResult, options?: { templateId?: PromptTemplateId; templateVars?: { char?: string; user?: string; scene?: string }; sessionId?: string }): { fullPrompt: string; sections: { system: string; working_memory: string; episodic_memory: string; semantic_archive: string; user_query: string; full_prompt: string } } {
+  /**
+   * Construct the full prompt and decomposed sections for observability.
+   * Pure function: does not perform I/O nor mutate external state.
+   */
+  private constructPrompt(userMessage: string, memoryContext: MemoryRetrievalResult, options?: { templateId?: PromptTemplateId; templateVars?: { char?: string; user?: string; scene?: string }; sessionId?: string }): { fullPrompt: string; sections: PromptSections } {
     const { l1, l2, l3 } = memoryContext;
 
     // Build memory context block (existing behavior retained)
@@ -56,7 +77,6 @@ export class OllamaService {
       l1.turns.map(turn => `${turn.role}: ${turn.content}`).join('\n') +
       `\n\nEPISODIC MEMORY (Characters and facts):\n`;
 
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (l2.characters.length > 0) {
       memoryBlock += `Characters:\n`;
       l2.characters.forEach(char => {
@@ -64,7 +84,6 @@ export class OllamaService {
       });
     }
 
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (l2.facts.length > 0) {
       memoryBlock += `Facts:\n`;
       l2.facts.forEach(fact => {
@@ -72,7 +91,6 @@ export class OllamaService {
       });
     }
 
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (l2.relationships.length > 0) {
       memoryBlock += `Relationships:\n`;
       l2.relationships.forEach(rel => {
@@ -80,7 +98,6 @@ export class OllamaService {
       });
     }
 
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (l3.fragments.length > 0) {
       memoryBlock += `\nSEMANTIC ARCHIVE (Relevant insights):\n`;
       l3.fragments.forEach(fragment => {
@@ -102,10 +119,10 @@ export class OllamaService {
       memory: memoryContext,
       templateId
     });
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-  if (decision.inject === true) {
-      const frag = getConsistencyFragment(options?.templateVars?.char);
-      const reasonLine = decision.reason ? `((OOC: consistency reason: ${decision.reason}))\n` : '';
+      if (decision.inject === true) {
+        const frag = getConsistencyFragment(options?.templateVars?.char);
+        const hasReason = typeof decision.reason === 'string' && decision.reason.length > 0;
+        const reasonLine = hasReason ? `((OOC: consistency reason: ${decision.reason}))\n` : '';
       base = `${reasonLine}${frag}\n\n${base}`;
     }
 
