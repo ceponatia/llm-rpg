@@ -79,10 +79,10 @@ Non‑goals (explicitly deferred):
   * [x] Affection delta test.
   * [x] ChatPanel render test behind flag (flag on/off conditional).
 
-## Shared types / packages
+## Shared types / packages (Moved to Sprint 2)
 
-* [ ] Consider adding `chatTurnSchema` in `@rpg/types` if conversation turns diverge from panel turn shape; else reuse `panelConversationTurnSchema`. For Sprint 1 reuse existing to avoid churn. 
-* [ ] Export `ChatRequest` / `ChatResponse` TS types (even if defined in backend) through `@rpg/types` in future sprint—defer for now (keep local). 
+Moved to `sprint2.md` to focus Sprint 1 strictly on functional loop delivery.
+
 
 ## Prompt strategy (placeholder)
 
