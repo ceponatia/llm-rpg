@@ -11,6 +11,9 @@ type ChatBody = ChatRequest & {
   character_id?: string;
 };
 
+// Shared in-memory session store (bounded to last 50 turns each)
+export const inMemoryChatSessions = new Map<string, { turns: Array<{ id: string; role: string; content: string; timestamp: string; character_id?: string | null }> }>();
+
 export function chatRoutes(fastify: FastifyInstance): void {
   const ChatRequestSchema = z.object({
     message: z.string().min(1),
@@ -115,6 +118,15 @@ export function chatRoutes(fastify: FastifyInstance): void {
         tokens: echoMode ? response.response.length : await ollama.countTokens(response.response),
         character_id: character_id
       };
+
+      // Update in-memory session store (bounded to last 50 turns)
+      const pair = [userTurn, assistantTurn].map(t => ({ id: t.id, role: t.role, content: t.content, timestamp: t.timestamp, character_id: t.character_id }));
+  const existing = inMemoryChatSessions.get(sessionId) ?? { turns: [] };
+      existing.turns.push(...pair);
+      if (existing.turns.length > 50) {
+        existing.turns.splice(0, existing.turns.length - 50); // keep most recent 50
+      }
+  inMemoryChatSessions.set(sessionId, existing);
       
       // Ingest conversation turns into memory (skip in echo mode to avoid dependency on MCA)
       const ingestionResult = echoMode ? { operations_performed: [], emotional_changes: [] } : await fastify.mca.ingestConversationTurn(

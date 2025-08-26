@@ -56,7 +56,7 @@ Non‑goals (explicitly deferred):
   * Build reply (echo strategy: `(npc) ${message}` or a light templated transformation).
   * Return `{ sessionId, reply, personaId, turns?: Turn[] }` (turns optional for future batching).
   * Respect feature flag; respond 501 when disabled.
-* [ ] Introduce minimal in‑memory `sessions` map keyed by sessionId storing turns (bounded length, e.g. last 50).
+* [x] Introduce minimal in‑memory `sessions` map keyed by sessionId storing turns (bounded length, e.g. last 50).
 * [x] Add unit test `chat-route.spec.ts` verifying 200, uuid generation, 501 when disabled.
 * [x] Wire chat route registration in backend bootstrap.
 
