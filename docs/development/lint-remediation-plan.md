@@ -62,7 +62,7 @@ Each batch: (a) run targeted eslint with --fix, (b) manually adjust leftovers, (
 - [X] Step 7 Accessibility modifiers added
 - [X] Step 8 Boolean/nullish strictness complete (strict-boolean, prefer-nullish, and no-unnecessary-condition all cleared)
 - [X] Step 9 Unsafe any/calls eliminated or justified with safe wrappers
-- [ ] Step 10 Static utility class refactors
+- [X] Step 10 Static utility class refactors
 - [ ] Step 11 Final stylistic polish & warnings -> zero
 
 ## Package progress matrix
@@ -153,6 +153,19 @@ export const logger = { debug: (...args: ReadonlyArray<unknown>): void => { /* .
 ```
 
 Advantages: eliminates need for accessibility modifiers & `no-extraneous-class` issues.
+
+Audit (2025-08-26): Reviewed exported classes for static-only patterns. All current classes encapsulate instance state or hold configuration and therefore are not "extraneous":
+
+- CharacterRegistry – maintains loaded flag, dataDir, character Map, singleton lifecycle.
+- PromptBuilder – holds managers & mutable config; orchestrates async build workflow.
+- IntentDetector – maintains rule set, thresholds, id counter.
+- ModifierStateManager / ModifierManager / PersonaManager – manage in-memory maps/state.
+- WeightedMemoryFusion / SignificanceScorer – rely on per-instance config influencing calculations.
+- L1/L2/L3 memory layer classes & MemoryController – encapsulate layer state & orchestration.
+- DatabaseManager / OllamaService – manage external connections/resources.
+
+
+No pure static utility classes detected; step marked complete with no code changes.
 
 ### Step 11: Final stylistic polish
 
