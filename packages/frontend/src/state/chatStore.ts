@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { sendChat, type ChatMessageResponse } from '../services/memoryClient';
+import type { ChatTurn } from '@rpg/types';
 import { isEnabled } from '../utils/flags';
 // Minimal inline intent detection (subset) to avoid cross-package build coupling for Sprint 1
 type MiniIntent = 'neutral' | 'excited' | 'annoyed';
@@ -13,13 +14,6 @@ function detectIntent(text: string): MiniIntent {
   for (const kw of INTENT_KEYWORDS.excited) { if (lower.includes(kw)) return 'excited'; }
   for (const kw of INTENT_KEYWORDS.annoyed) { if (lower.includes(kw)) return 'annoyed'; }
   return 'neutral';
-}
-
-export interface ChatTurn {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
 }
 
 interface ChatState {

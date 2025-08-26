@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { chatRequestSchema, chatResponseSchema } from '@rpg/types';
 import type { ChatRequest, ChatResponse } from '@rpg/types';
 import { OllamaService } from '../services/ollama.js';
 import { randomUUID } from 'crypto';
@@ -15,17 +16,17 @@ type ChatBody = ChatRequest & {
 export const inMemoryChatSessions = new Map<string, { turns: Array<{ id: string; role: string; content: string; timestamp: string; character_id?: string | null }> }>();
 
 export function chatRoutes(fastify: FastifyInstance): void {
-  const ChatRequestSchema = z.object({
-    message: z.string().min(1),
+  // DEPRECATED: Local ChatRequestSchema / ChatResponseSchema replaced by shared schemas (Sprint 2)
+  const ChatRequestSchema = chatRequestSchema.extend({
+    // Accept camelCase compatibility fields without enforcing
     sessionId: z.string().uuid().optional(),
-    session_id: z.string().uuid().optional(), // accept snake alias
     personaId: z.string().optional(),
     persona_id: z.string().optional(),
-    fusion_weights: z.object({ w_L1: z.number(), w_L2: z.number(), w_L3: z.number() }).partial().optional()
+    fusion_weights: chatRequestSchema.shape.fusion_weights.optional()
   });
-  const ChatResponseSchema = z.object({
-    sessionId: z.string(),
-    reply: z.string()
+  const ChatResponseSchema = chatResponseSchema.extend({
+    sessionId: z.string().optional(), // compatibility alias
+    reply: z.string().optional(), // compatibility alias
   }).passthrough();
   const ollama = new OllamaService();
   const characterRegistry = CharacterRegistry.getInstance();
