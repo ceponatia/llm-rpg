@@ -39,12 +39,10 @@ Secondary (stretch) outcomes:
 
 ### Shared Types & Schemas
 
-* [ ] Add `chatTurnSchema` (`id`, `role`, `content`, `timestamp`, optional `tokens`, `characterId`, `sessionId`).
-* [ ] Add `chatRequestSchema` & `chatResponseSchema` (align existing backend fields; include compatibility fields but mark legacy).
 * [x] Add `chatTurnSchema` (`id`, `role`, `content`, `timestamp`, optional `tokens`, `characterId`, `sessionId`).
 * [x] Add `chatRequestSchema` & `chatResponseSchema` (align existing backend fields; include compatibility fields but mark legacy).
 * [x] Export TypeScript types + Zod schemas from `@rpg/types` index.
-* [ ] Generate & publish updated type build (adjust build if necessary to avoid committing large d.ts duplicates).
+* [ ] Generate & publish updated type build (adjust build if necessary to avoid committing large d.ts duplicates). – Skipped publish (internal monorepo only now; will publish when external consumers exist).
 * [x] Backend: replace local Zod/chat interfaces with imports from `@rpg/types`.
 * [x] Frontend: update store + client normalization to use shared types.
 * [x] Deprecation note in backend route about removed local schema.
