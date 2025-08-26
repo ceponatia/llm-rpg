@@ -74,10 +74,10 @@ Non‑goals (explicitly deferred):
 * [x] Intent detection: import `IntentDetector`, instantiate with sample rules (subset already in tests) inside `chatStore.send` after user send / after assistant reply (choose one consistent pass). 
 * [x] Display last detected intent subtly (e.g., tooltip or small badge). 
 * [x] Update feature flag docs / .env.example keys. 
-* [ ] Add tests: 
-  * Store test: sending user message appends user turn then assistant turn (mock fetch). 
-  * Affection delta test. 
-  * ChatPanel render test behind flag (flag on/off conditional). 
+* [x] Add tests:
+  * [x] Store test: sending user message appends user turn then assistant turn (mock fetch).
+  * [x] Affection delta test.
+  * [x] ChatPanel render test behind flag (flag on/off conditional).
 
 ## Shared types / packages
 
