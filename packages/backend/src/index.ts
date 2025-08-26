@@ -1,4 +1,5 @@
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify';
+import { logger } from '../../utils/src/logger.ts';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
 import { config } from './config.js';
@@ -26,22 +27,21 @@ try {
   const mod = await import('@rpg/mca');
   MemoryController = mod.MemoryController as MemoryControllerCtor;
 } catch (e: unknown) { // explicit unknown
-  console.warn('MemoryController not available, continuing without MCA layer:', e instanceof Error ? e.message : String(e));
+  logger.warn('MemoryController not available, continuing without MCA layer:', e instanceof Error ? e.message : String(e));
 }
 
 const fastify = Fastify({
   logger: { level: config.NODE_ENV === 'development' ? 'debug' : 'info' }
 });
 
-// Task 6: register compression globally (gzip/brotli) for responses including static assets
-// Using dynamic import to avoid type resolution issues if types are absent.
+// Enable compression (Fastify v5 compatible)
 try {
   const compressMod = await import('@fastify/compress');
   const plugin: unknown = (compressMod as Record<string, unknown>).default ?? compressMod;
   await fastify.register(plugin as (typeof import('@fastify/compress'))['default'], { global: true });
-} catch (e: unknown) {
-  const msg = e instanceof Error ? e.message : String(e);
-  fastify.log.warn(`Compression plugin failed to register: ${msg}`);
+  fastify.log.info('Compression plugin enabled');
+} catch {
+  fastify.log.warn('Compression plugin failed to load');
 }
 
 // Register plugins (broadened CORS for story + admin dashboards)
@@ -80,7 +80,7 @@ await setupStaticAdmin(fastify, { serve: process.env.SERVE_ADMIN_STATIC === 'tru
 // Initialize database connections
   const redisUrl = config.REDIS_URL;
   const dbManager = new DatabaseManager({
-    neo4j: { uri: config.NEO4J_URI, user: config.NEO4J_USER, password: config.NEO4J_PASSWORD },
+    neo4j: { uri: config.NEO4J_URI, user: config.NEO4J_USER, password: config.NEO4J_PASSWORD, optional: process.env.NEO4J_OPTIONAL === 'true', maxRetries: parseInt(process.env.NEO4J_MAX_RETRIES ?? '5', 10), retryDelayMs: parseInt(process.env.NEO4J_RETRY_DELAY_MS ?? '1000', 10) },
     faiss: { indexPath: config.FAISS_INDEX_PATH, dimension: config.VECTOR_DIMENSION },
     redis: (typeof redisUrl === 'string' && redisUrl.length > 0) ? { url: redisUrl } : undefined
   });

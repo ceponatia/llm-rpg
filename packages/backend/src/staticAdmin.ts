@@ -84,11 +84,8 @@ export async function setupStaticAdmin(fastify: FastifyInstance, opts: StaticAdm
           }
         }
         reply.header('Cache-Control', 'no-cache');
-        interface ReplyWithFile { sendFile: (path: string) => void }
-        const hasSendFile = (r: typeof reply): r is typeof reply & ReplyWithFile =>
-          Object.prototype.hasOwnProperty.call(r, 'sendFile') && typeof (r as Record<string, unknown>).sendFile === 'function';
-        if (hasSendFile(reply)) {
-          reply.sendFile('index.html');
+        if ('sendFile' in reply && typeof (reply as { sendFile?: unknown }).sendFile === 'function') {
+          (reply as { sendFile: (p: string) => void }).sendFile('index.html');
         } else {
           const html = await fs.readFile(join(chosen, 'index.html'), 'utf-8');
           reply.type('text/html').send(html);

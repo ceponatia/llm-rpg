@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import neo4j from 'neo4j-driver';
 import { config } from '../config.js';
 import type { CharacterProfile, CharacterAttribute } from '@rpg/types';
-import { logger } from '../../../utils/src/logger.ts';
+import { logger } from '@rpg/utils';
 
 interface ScalarWrapper { value: string | number | boolean }
 function isScalarWrapper(v: unknown): v is ScalarWrapper {

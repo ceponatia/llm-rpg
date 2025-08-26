@@ -5,7 +5,7 @@ import type { MemoryRetrievalResult } from '@rpg/types';
 import { encoding_for_model, type Tiktoken } from 'tiktoken';
 import { renderTemplate, injectMemory, type PromptTemplateId } from '../prompts/templates.js';
 import { ConsistencyInjector, getConsistencyFragment } from '../prompts/consistency.js';
-import { logger } from '../../../utils/src/logger.ts';
+import { logger } from '@rpg/utils';
 
 export interface LLMResponse {
   response: string;

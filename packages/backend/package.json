@@ -9,13 +9,14 @@
     "start": "node dist/index.js",
     "seed:characters": "tsx src/scripts/seed-characters.ts",
     "write:admin-config": "tsx src/scripts/write-admin-config.ts",
-    "test": "vitest run"
+  "test": "vitest run",
+  "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@fastify/compress": "^8.1.0",
-    "@fastify/cors": "^9.0.1",
-    "@fastify/static": "^7.0.0",
-    "@fastify/websocket": "^10.0.1",
+  "@fastify/compress": "^8.1.0",
+  "@fastify/cors": "^11.1.0",
+  "@fastify/static": "^8.2.0",
+  "@fastify/websocket": "^11.2.0",
     "@rpg/mca": "workspace:*",
     "@rpg/types": "workspace:*",
     "@rpg/utils": "workspace:*",
@@ -23,7 +24,7 @@
     "dotenv": "^17.2.1",
     "esbuild": "^0.25.8",
     "faiss-node": "^0.5.1",
-    "fastify": "^4.28.1",
+  "fastify": "^5.0.0",
     "neo4j-driver": "^5.19.0",
     "ollama": "^0.5.9",
     "redis": "^5.7.0",
@@ -36,6 +37,6 @@
     "supertest": "^7.1.4",
     "tsx": "^4.7.1",
     "typescript": "^5.0.0",
-    "vitest": "^1.6.1"
+  "vitest": "^3.2.4"
   }
 }

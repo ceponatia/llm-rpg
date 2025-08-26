@@ -11,16 +11,17 @@ export function memoryRoutes(fastify: FastifyInstance): void {
   
   // Pre-handler for admin-only endpoints
   const adminPreHandler = (request: unknown, reply: unknown, done: (err?: Error) => void): void => {
-    const maybeVerify: unknown = (fastify as unknown).verifyAdmin;
+    const maybeVerify = (fastify as Partial<FastifyInstance> & { verifyAdmin?: (req: unknown, rep: unknown) => unknown }).verifyAdmin;
     if (typeof maybeVerify === 'function') {
       try {
-        const result = (maybeVerify as (req: unknown, rep: unknown) => Promise<void> | void)(request, reply);
+        const result = maybeVerify(request, reply);
         if (result instanceof Promise) {
-          result.then(() => done()).catch(err => done(err as Error));
+          void result.then(() => done()).catch(err => done(err instanceof Error ? err : new Error(String(err))));
           return;
         }
       } catch (err) {
-        done(err as Error); return;
+        done(err instanceof Error ? err : new Error(String(err)));
+        return;
       }
     }
     done();

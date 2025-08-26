@@ -5,12 +5,15 @@ import { promises as fs } from 'fs';
 import { dirname } from 'path';
 // Using local copy of interface until mca package builds and exports properly
 import type { IDatabaseManager } from '../../../mca/src/interfaces/database.js';
-import { logger } from '../../../utils/src/logger.ts';
+import { logger } from '@rpg/utils';
 
 interface Neo4jConfig {
   uri: string;
   user: string;
   password: string;
+  optional?: boolean; // do not throw if connection fails
+  maxRetries?: number; // retry attempts
+  retryDelayMs?: number; // base delay
 }
 
 interface FaissConfig {
@@ -53,29 +56,50 @@ export class DatabaseManager implements IDatabaseManager {
   }
 
   private async initializeNeo4j(): Promise<void> {
-    try {
-      this.neo4jDriver = neo4j.driver(
-        this.config.neo4j.uri,
-        neo4j.auth.basic(this.config.neo4j.user, this.config.neo4j.password),
-        {
-          maxConnectionLifetime: 3 * 60 * 60 * 1000, // 3 hours
-          maxConnectionPoolSize: 50,
-          connectionAcquisitionTimeout: 2 * 60 * 1000, // 2 minutes
+    const { optional, maxRetries = 5, retryDelayMs = 1000 } = this.config.neo4j;
+    let attempt = 0;
+    while (true) {
+      try {
+        this.neo4jDriver = neo4j.driver(
+          this.config.neo4j.uri,
+          neo4j.auth.basic(this.config.neo4j.user, this.config.neo4j.password),
+          {
+            maxConnectionLifetime: 3 * 60 * 60 * 1000, // 3 hours
+            maxConnectionPoolSize: 50,
+            connectionAcquisitionTimeout: 2 * 60 * 1000, // 2 minutes
+          }
+        );
+        // Test connection
+        const session = this.neo4jDriver.session();
+        await session.run('RETURN 1');
+        await session.close();
+        await this.createNeo4jConstraints();
+        logger.info('Neo4j connection established');
+        return;
+      } catch (error) {
+        attempt++;
+        const authFailure = isAuthError(error);
+        logger.error(`Neo4j connection attempt ${attempt} failed${authFailure ? ' (auth failure)' : ''}`, error as Error);
+        if (authFailure) {
+          // auth failure won't be fixed by retrying unless credentials change
+          if (optional) {
+            logger.warn('Continuing without Neo4j due to auth failure (optional mode)');
+            this.neo4jDriver = null;
+            return;
+          }
+          throw error;
         }
-      );
-
-      // Test connection
-      const session = this.neo4jDriver.session();
-      await session.run('RETURN 1');
-      await session.close();
-      
-      // Create constraints and indexes
-      await this.createNeo4jConstraints();
-      
-      logger.info('Neo4j connection established');
-    } catch (error) {
-      logger.error('Failed to connect to Neo4j', error);
-      throw error;
+        if (attempt >= maxRetries) {
+          if (optional) {
+            logger.warn(`Neo4j unavailable after ${attempt} attempts; continuing in degraded mode`);
+            this.neo4jDriver = null;
+            return;
+          }
+          throw error;
+        }
+        const backoff = retryDelayMs * attempt;
+        await new Promise(res => setTimeout(res, backoff));
+      }
     }
   }
 
@@ -185,9 +209,7 @@ export class DatabaseManager implements IDatabaseManager {
   }
 
   public getNeo4jSession(): Session {
-    if (this.neo4jDriver == null) {
-      throw new Error('Neo4j driver not initialized');
-    }
+  if (this.neo4jDriver == null) { throw new Error('Neo4j driver not initialized'); }
     return this.neo4jDriver.session();
   }
 
@@ -268,4 +290,14 @@ function extractNumber(value: unknown): number {
     }
   }
   return 0;
+}
+
+// Detect auth-related Neo4j errors (code or message patterns)
+function isAuthError(err: unknown): boolean {
+  if (err && typeof err === 'object') {
+    const anyErr = err as { code?: string; message?: string };
+    if (anyErr.code && anyErr.code.includes('Unauthorized')) { return true; }
+    if (anyErr.message && /unauthorized|authentication failure/i.test(anyErr.message)) { return true; }
+  }
+  return false;
 }

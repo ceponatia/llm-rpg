@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync } from 'fs';
 import { resolve } from 'path';
 import { buildAdminRuntimeConfig } from '../adminConfig.js';
-import { logger } from '../../../utils/src/logger.ts';
+import { logger } from '@rpg/utils';
 
 // Simple CLI to emit current admin runtime config snapshot to a file (default stdout).
 // Usage: pnpm -F @rpg/backend write:admin-config [outputPath]

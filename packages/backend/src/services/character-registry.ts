@@ -2,7 +2,7 @@ import type { CharacterProfile } from '@rpg/types';
 import { readdirSync, readFileSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { logger } from '../../../utils/src/logger.ts';
+import { logger } from '@rpg/utils';
 // Local minimal type guard (avoid cross-package resolution issues)
 function isCharacterProfile(value: unknown): value is CharacterProfile {
   return typeof value === 'object' && value !== null && 'id' in value && 'name' in value;
