@@ -16,6 +16,10 @@ export function chatRoutes(fastify: FastifyInstance): void {
 
   // Send a chat message
   fastify.post<{ Body: ChatBody }>('/message', async (request, reply) => {
+    // Feature flag gate – keeps route dormant until explicitly enabled
+    if (process.env.ENABLE_CHAT_API !== 'true') {
+      return reply.status(501).send({ error: 'Chat API disabled (set ENABLE_CHAT_API=true to enable)' });
+    }
     const body: ChatBody = request.body;
     const { message, session_id, fusion_weights, prompt_template, template_vars, character_id } = body;
   if (message === '') {
@@ -52,20 +56,28 @@ export function chatRoutes(fastify: FastifyInstance): void {
         }
       }
       
-      // Retrieve relevant context from memory layers (scoped by session + character)
-      const memoryResult = await fastify.mca.retrieveRelevantContext({
-        query_text: message,
-        session_id: sessionId,
-        fusion_weights: weights,
-        character_id: character_id
-      });
-      
-      // Generate response using Ollama with optional template
-      const response = await ollama.generateResponse(message, memoryResult, {
-        templateId: effectiveTemplate,
-        templateVars: vars,
-        sessionId
-      });
+      // Lightweight echo mode bypasses heavy model + memory calls (used in tests / local dev scaffolding)
+      const echoMode = process.env.CHAT_ECHO_MODE === 'true';
+      let memoryResult: any;
+      let response: { response: string; prompt_sections?: unknown };
+      if (echoMode) {
+        memoryResult = { l1: { token_count: 0 }, l2: { token_count: 0 }, l3: { token_count: 0 } };
+        response = { response: `echo: ${message}` };
+      } else {
+        // Retrieve relevant context from memory layers (scoped by session + character)
+        memoryResult = await fastify.mca.retrieveRelevantContext({
+          query_text: message,
+          session_id: sessionId,
+          fusion_weights: weights,
+          character_id: character_id
+        });
+        // Generate response using Ollama with optional template
+        response = await ollama.generateResponse(message, memoryResult, {
+          templateId: effectiveTemplate,
+          templateVars: vars,
+          sessionId
+        });
+      }
       
       // Process the conversation turn for memory ingestion
       const userTurn = {
@@ -73,7 +85,7 @@ export function chatRoutes(fastify: FastifyInstance): void {
         role: 'user' as const,
         content: message,
         timestamp: new Date().toISOString(),
-        tokens: await ollama.countTokens(message),
+        tokens: echoMode ? message.length : await ollama.countTokens(message),
         character_id: character_id
       };
       
@@ -82,12 +94,12 @@ export function chatRoutes(fastify: FastifyInstance): void {
         role: 'assistant' as const,
         content: response.response,
         timestamp: new Date().toISOString(),
-        tokens: await ollama.countTokens(response.response),
+        tokens: echoMode ? response.response.length : await ollama.countTokens(response.response),
         character_id: character_id
       };
       
-      // Ingest conversation turns into memory
-      const ingestionResult = await fastify.mca.ingestConversationTurn(
+      // Ingest conversation turns into memory (skip in echo mode to avoid dependency on MCA)
+      const ingestionResult = echoMode ? { operations_performed: [], emotional_changes: [] } : await fastify.mca.ingestConversationTurn(
         assistantTurn,
         [userTurn],
         sessionId
@@ -95,8 +107,9 @@ export function chatRoutes(fastify: FastifyInstance): void {
       
       // Persist turns to Neo4j for cross-session history
       try {
-        const neo4jSession = fastify.db.getNeo4jSession();
-        await neo4jSession.executeWrite(async tx => {
+        if (!echoMode) {
+          const neo4jSession = fastify.db.getNeo4jSession();
+          await neo4jSession.executeWrite(async tx => {
           // Ensure Session node
             await tx.run(
               'MERGE (s:Session {id: $sessionId}) ON CREATE SET s.created_at = timestamp() SET s.last_updated = timestamp()',
@@ -132,15 +145,16 @@ export function chatRoutes(fastify: FastifyInstance): void {
               { characterId: character_id, turnId: userTurn.id }
             );
           }
-        });
-        await neo4jSession.close();
+          });
+          await neo4jSession.close();
+        }
       } catch (persistErr) {
         fastify.log.error({ err: persistErr }, 'Failed to persist turns');
       }
       
       const processingTime = Date.now() - startTime;
       
-      const chatResponse: ChatResponse = {
+  const chatResponse: ChatResponse = {
         id: assistantTurn.id,
         content: response.response,
         session_id: sessionId,
@@ -148,9 +162,9 @@ export function chatRoutes(fastify: FastifyInstance): void {
         metadata: {
           tokens: {
             total_tokens: userTurn.tokens + assistantTurn.tokens,
-            l1_tokens: memoryResult.l1.token_count,
-            l2_tokens: memoryResult.l2.token_count,
-            l3_tokens: memoryResult.l3.token_count,
+    l1_tokens: memoryResult.l1?.token_count ?? 0,
+    l2_tokens: memoryResult.l2?.token_count ?? 0,
+    l3_tokens: memoryResult.l3?.token_count ?? 0,
             estimated_cost: 0 // TODO: Calculate actual cost
           },
           processing_time: processingTime,
@@ -163,7 +177,7 @@ export function chatRoutes(fastify: FastifyInstance): void {
               new_state: ec.new_vad,
               trigger: ec.trigger
             })),
-          prompt_sections: response.prompt_sections
+          prompt_sections: (response as { prompt_sections?: unknown }).prompt_sections as ChatResponse['metadata']['prompt_sections']
         }
       };
       
@@ -177,7 +191,12 @@ export function chatRoutes(fastify: FastifyInstance): void {
         }
       });
       
-  return chatResponse;
+  // Add compatibility top-level fields expected by early frontend client
+  return {
+    ...chatResponse,
+    sessionId: chatResponse.session_id,
+    reply: chatResponse.content
+  } as unknown as ChatResponse;
     } catch (error) {
       fastify.log.error(error);
       reply.status(500).send({
