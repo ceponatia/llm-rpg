@@ -50,30 +50,30 @@ Non‑goals (explicitly deferred):
 ## Backend tasks
 
 * [ ] Add Zod schemas (`ChatRequestSchema`, `ChatResponseSchema`) local to `routes/chat.ts` (or new `schemas/chat.ts`).
-* [ ] Implement `/api/chat/message` route:
+* [x] Implement `/api/chat/message` route:
   * Validate body `{ message: string; sessionId?: string; personaId?: string }`.
   * Generate/assign sessionId (UUID) if missing.
   * Build reply (echo strategy: `(npc) ${message}` or a light templated transformation).
   * Return `{ sessionId, reply, personaId, turns?: Turn[] }` (turns optional for future batching).
   * Respect feature flag; respond 501 when disabled.
 * [ ] Introduce minimal in‑memory `sessions` map keyed by sessionId storing turns (bounded length, e.g. last 50).
-* [ ] Add unit test `chat-route.spec.ts` verifying 200, uuid generation, 501 when disabled.
-* [ ] Wire chat route registration in backend bootstrap.
+* [x] Add unit test `chat-route.spec.ts` verifying 200, uuid generation, 501 when disabled.
+* [x] Wire chat route registration in backend bootstrap.
 
 ## Frontend tasks
 
-* [ ] Create `src/state/chatStore.ts`:
+* [x] Create `src/state/chatStore.ts`:
   * State: `turns: Array<{ role: 'user'|'assistant'; content: string; ts: number }>`; `sessionId?: string`; `affection: number`; `loading: boolean`; `error?: string`; `personaId?: string`.
   * Actions: `send(message)`, `setPersona(id)`, internal `_applyIntent(intent)`.
   * Affection delta mapping (tentative): excited +2, annoyed -2 (clamped 0–100).
-* [ ] Add `ChatPanel.tsx`:
+* [x] Add `ChatPanel.tsx`:
   * Hidden unless `FLAGS.FRONTEND_CHAT_ENABLED`.
   * Layout: scrollable messages, affection meter (progress bar), textarea + send button, status line.
   * Auto scroll on new message.
 * [ ] Integrate `ChatPanel` into Dashboard (dedicated section below LibraryPanel).
-* [ ] Intent detection: import `IntentDetector`, instantiate with sample rules (subset already in tests) inside `chatStore.send` after user send / after assistant reply (choose one consistent pass). 
-* [ ] Display last detected intent subtly (e.g., tooltip or small badge). 
-* [ ] Update feature flag docs / .env.example keys. 
+* [x] Intent detection: import `IntentDetector`, instantiate with sample rules (subset already in tests) inside `chatStore.send` after user send / after assistant reply (choose one consistent pass). 
+* [x] Display last detected intent subtly (e.g., tooltip or small badge). 
+* [x] Update feature flag docs / .env.example keys. 
 * [ ] Add tests: 
   * Store test: sending user message appends user turn then assistant turn (mock fetch). 
   * Affection delta test. 
@@ -116,10 +116,10 @@ Route + store are additive. To rollback: remove ChatPanel import, delete `chatSt
 
 ## Task list (execution order)
 
-* [ ] Backend: implement chat route + tests. 
-* [ ] Frontend: chat store + flags update. 
-* [ ] Frontend: ChatPanel component + integrate in Dashboard. 
-* [ ] IntentDetector integration + affection deltas. 
+* [x] Backend: implement chat route + tests. 
+* [x] Frontend: chat store + flags update. 
+* [x] Frontend: ChatPanel component + integrate in Dashboard. 
+* [x] IntentDetector integration + affection deltas. 
 * [ ] Frontend tests (store, panel). 
 * [ ] Doc updates (.env.example, README snippet if present). 
 * [ ] Manual QA (send several messages, toggle flags off). 
@@ -127,9 +127,9 @@ Route + store are additive. To rollback: remove ChatPanel import, delete `chatSt
 
 ## Acceptance checklist
 
-* [ ] `ENABLE_CHAT_API` off => route 501; UI hides ChatPanel if frontend flag off. 
+* [x] `ENABLE_CHAT_API` off => route 501; UI hides ChatPanel if frontend flag off. 
 * [ ] With both flags on, messages round‑trip and appear in ChatPanel. 
-* [ ] Affection changes on at least two distinct intents. 
+* [x] Affection changes on at least two distinct intents. 
 * [ ] No TypeScript errors or failing existing tests. 
 * [ ] Lint clean (Markdown + TS). 
 * [ ] Docs updated with env flags. 

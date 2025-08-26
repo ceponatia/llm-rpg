@@ -16,10 +16,15 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "types": ["vitest", "node"],
-    "baseUrl": "./src"
+    "baseUrl": "./src",
+    "paths": {
+      "@rpg/context-modifier": ["../context-modifier/src"],
+      "@rpg/context-modifier/*": ["../context-modifier/src/*"]
+    }
   },
   "include": ["src", "tests"],
   "references": [
-    { "path": "../types" }
+  { "path": "../types" },
+  { "path": "../context-modifier" }
   ]
 }

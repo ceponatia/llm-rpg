@@ -25,7 +25,9 @@
       "@rpg/frontend": ["./packages/frontend/src"],
       "@rpg/frontend/*": ["./packages/frontend/src/*"],
       "@rpg/utils": ["./packages/utils/src"],
-      "@rpg/utils/*": ["./packages/utils/src/*"]
+  "@rpg/utils/*": ["./packages/utils/src/*"],
+  "@rpg/context-modifier": ["./packages/context-modifier/src"],
+  "@rpg/context-modifier/*": ["./packages/context-modifier/src/*"]
     }
   },
   "references": [],
