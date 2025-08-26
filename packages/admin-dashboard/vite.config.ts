@@ -14,7 +14,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@rpg/types': path.resolve(__dirname, '../types/src')
+      '@rpg/types': path.resolve(__dirname, '../types/src'),
+      '@rpg/utils': path.resolve(__dirname, '../utils/src')
     }
   },
   server: {

@@ -1,4 +1,5 @@
 // Runtime configuration loader for admin dashboard (Phase 2)
+import { logger } from '@rpg/utils';
 export interface BrandingConfig {
   productName: string;
   primaryColor: string;
@@ -51,7 +52,7 @@ export async function loadRuntimeConfig(retries = 3): Promise<RuntimeConfig> {
       return data;
     } catch (err) {
       if (attempt === retries) {
-        console.warn('[runtime-config] using fallback after attempts', err);
+  logger.warn('[runtime-config] using fallback after attempts', err);
         cached = FALLBACK_CONFIG;
         applyBranding(FALLBACK_CONFIG.branding);
         return FALLBACK_CONFIG;

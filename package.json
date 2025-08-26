@@ -15,7 +15,10 @@
 		"dev:admin": "pnpm --filter @rpg/admin-dashboard dev",
 		"dev:frontend": "pnpm --filter @rpg/frontend dev",
 		"dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\" \"pnpm dev:admin\"",
-		"typecheck": "pnpm exec tsc -p tsconfig.base.json --noEmit"
+		"dev:all": "bash scripts/dev-all.sh",
+		"typecheck": "pnpm exec tsc -p tsconfig.base.json --noEmit",
+		"test": "pnpm -r --filter '@rpg/affect' --filter '@rpg/backend' --filter '@rpg/context-modifier' --filter '@rpg/mca' --filter '@rpg/admin-dashboard' test",
+		"coverage": "pnpm -r --filter '@rpg/affect' --filter '@rpg/backend' --filter '@rpg/context-modifier' --filter '@rpg/mca' --filter '@rpg/admin-dashboard' coverage"
 	},
 	"workspaces": [
 		"packages/*"
@@ -24,9 +27,11 @@
 		"@types/node": "^24.3.0",
 		"@typescript-eslint/eslint-plugin": "^8.41.0",
 		"@typescript-eslint/parser": "^8.41.0",
+		"@vitest/coverage-v8": "^3.2.4",
 		"concurrently": "^8.2.2",
 		"eslint": "^8.57.1",
 		"eslint-config-prettier": "^9.1.2",
-		"typescript": "^5.9.2"
+		"typescript": "^5.9.2",
+		"vitest": "^3.2.4"
 	}
 }

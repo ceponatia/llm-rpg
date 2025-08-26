@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { logger } from '@rpg/utils';
 import { Heart, TrendingUp, Crown, RefreshCw } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -61,9 +62,9 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
         setCharacters([]);
       }
     } catch (error) {
-      console.error('Failed to fetch characters:', error);
+      logger.error('Failed to fetch characters:', error);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally stable (mount-only)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only fetch; adding dependencies would cause unwanted refetch loops
   }, []);
 
   const fetchEmotionalHistory = async (characterId: string): Promise<void> => {
@@ -83,7 +84,7 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
         setEmotionalHistory([]);
       }
     } catch (error) {
-      console.error('Failed to fetch emotional history:', error);
+      logger.error('Failed to fetch emotional history:', error);
       setEmotionalHistory([]);
     } finally {
       setIsLoading(false);

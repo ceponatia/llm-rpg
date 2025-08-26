@@ -1,4 +1,4 @@
-import { VADState, Timestamp, AccessMetrics, ImportanceScore, MemoryOperation } from './common.js';
+import type { VADState, Timestamp, AccessMetrics, ImportanceScore, MemoryOperation } from './common.js';
 export interface WorkingMemoryTurn {
     id: string;
     role: 'user' | 'assistant' | 'system';
@@ -8,7 +8,7 @@ export interface WorkingMemoryTurn {
     character_id?: string;
 }
 export interface WorkingMemory {
-    turns: WorkingMemoryTurn[];
+    turns: Array<WorkingMemoryTurn>;
     max_turns: number;
     total_tokens: number;
 }
@@ -28,7 +28,7 @@ export interface FactNode extends Timestamp {
     entity: string;
     attribute: string;
     current_value: string;
-    history: FactVersion[];
+    history: Array<FactVersion>;
     importance_score: number;
 }
 export interface RelationshipEdge extends Timestamp {
@@ -48,34 +48,34 @@ export interface VectorMetadata extends Timestamp, AccessMetrics, ImportanceScor
     doc_id: string;
     source_session_id: string;
     content_type: 'summary' | 'insight' | 'event';
-    tags: string[];
+    tags: Array<string>;
 }
 export interface VectorMemoryFragment {
     id: string;
-    embedding: number[];
+    embedding: Array<number>;
     content: string;
     metadata: VectorMetadata;
     similarity_score?: number;
 }
 export interface VectorMemory {
-    fragments: VectorMemoryFragment[];
+    fragments: Array<VectorMemoryFragment>;
     dimension: number;
     index_size: number;
 }
 export interface L1RetrievalResult {
-    turns: WorkingMemoryTurn[];
+    turns: Array<WorkingMemoryTurn>;
     relevance_score: number;
     token_count: number;
 }
 export interface L2RetrievalResult {
-    characters: Character[];
-    facts: FactNode[];
-    relationships: RelationshipEdge[];
+    characters: Array<Character>;
+    facts: Array<FactNode>;
+    relationships: Array<RelationshipEdge>;
     relevance_score: number;
     token_count: number;
 }
 export interface L3RetrievalResult {
-    fragments: VectorMemoryFragment[];
+    fragments: Array<VectorMemoryFragment>;
     relevance_score: number;
     token_count: number;
 }
@@ -92,10 +92,10 @@ export interface MemoryRetrievalResult {
     total_tokens: number;
 }
 export interface FactWriteResult {
-    operations: MemoryOperation[];
-    fact_ids: string[];
+    operations: Array<MemoryOperation>;
+    fact_ids: Array<string>;
 }
 export interface RelationshipWriteResult {
-    operations: MemoryOperation[];
-    relationship_ids: string[];
+    operations: Array<MemoryOperation>;
+    relationship_ids: Array<string>;
 }

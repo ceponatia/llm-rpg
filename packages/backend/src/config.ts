@@ -5,8 +5,9 @@ import { dirname, resolve } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from root .env file
+// Load environment variables: base .env then optional .env.local overrides
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
+dotenv.config({ path: resolve(__dirname, '../../../.env.local') });
 
 interface Config {
   // Server

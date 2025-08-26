@@ -1,4 +1,4 @@
-import { VADState } from './common.js';
+import type { VADState } from './common.js';
 export type AttributeCategory = 'physical' | 'personality' | 'background' | 'abilities' | 'preferences' | 'speech' | 'meta';
 export type AttributePrimitive = string | number | boolean;
 export interface AttributeScalar {
@@ -9,7 +9,7 @@ export interface CharacterAttribute {
     key: string;
     category: AttributeCategory;
     value: AttributePrimitive | AttributeScalar;
-    aliases?: string[];
+    aliases?: Array<string>;
     salience?: number;
     confidence?: number;
     lastUpdated?: string;
@@ -20,5 +20,5 @@ export interface CharacterProfile {
     description?: string;
     avatar_url?: string;
     baseline_vad?: VADState;
-    attributes?: CharacterAttribute[];
+    attributes?: Array<CharacterAttribute>;
 }

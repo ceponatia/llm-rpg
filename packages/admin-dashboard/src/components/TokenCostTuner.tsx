@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logger } from '@rpg/utils';
 import { Sliders, DollarSign, Zap } from 'lucide-react';
 import type { WeightedMemoryFusion, TokenCost } from '@rpg/types';
 
@@ -59,7 +60,7 @@ export const TokenCostTuner: React.FC<TokenCostTunerProps> = ({
           setTokenEstimate(null);
         }
       } catch (error) {
-        console.error('Failed to estimate token cost:', error);
+        logger.error('Failed to estimate token cost:', error);
       } finally {
         setIsEstimating(false);
       }

@@ -53,3 +53,6 @@ pnpm-debug.log*
 
 # Type declaration maps (often large / reproducible)
 **/*.d.ts.map
+
+# Temporary legacy frontend staging directory
+dev-front/

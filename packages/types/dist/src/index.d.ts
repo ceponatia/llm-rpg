@@ -11,3 +11,5 @@ export { workingMemoryTurnSchema, vectorMemoryFragmentSchema, memoryRetrievalRes
 export { webSocketMessageSchema, webSocketResponseSchema } from './zod/websocket.zod.js';
 export { modifierStateSchema, intentSchema, intentDetectionRuleSchema, modifierFragmentSchema, personaDefinitionSchema, promptPartsSchema, contextModifierConfigSchema, modifierApplicationSchema } from './zod/contextModifier.zod.js';
 export type { Intent, IntentDetectionRule, ModifierFragment, PersonaDefinition, ModifierState, PromptParts, ContextModifierConfig, ModifierApplication } from './zod/contextModifier.zod.js';
+export { idSchema as panelIdSchema, unixTimestampSchema as panelUnixTimestampSchema, tagSchema as panelTagSchema, panelCharacterSchema, panelSettingSchema, panelLocationSchema, panelObjectAssetSchema, panelConversationTurnSchema, } from './panels.js';
+export type { PanelCharacter, PanelSetting, PanelLocation, PanelObjectAsset, PanelConversationTurn, } from './panels.js';

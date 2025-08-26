@@ -2,22 +2,25 @@
   "name": "@rpg/utils",
   "version": "1.0.0",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/utils/src/index.js",
+  "types": "./dist/utils/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/utils/src/index.d.ts",
+      "import": "./dist/utils/src/index.js"
     }
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
   "@rpg/types": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^1.6.1"
   }
 }

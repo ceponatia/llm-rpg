@@ -1,5 +1,5 @@
-import { VADState, TokenCost, MemoryOperation } from './common.js';
-import { MemoryRetrievalResult } from './memory.js';
+import type { VADState, TokenCost, MemoryOperation } from './common.js';
+import type { MemoryRetrievalResult } from './memory.js';
 export interface PromptSections {
     system: string;
     working_memory: string;
@@ -16,15 +16,15 @@ export interface ChatMessage {
     metadata?: {
         tokens?: TokenCost;
         processing_time?: number;
-        memory_operations?: MemoryOperation[];
+        memory_operations?: Array<MemoryOperation>;
         memory_retrieval?: MemoryRetrievalResult;
-        emotional_state_changes?: VADStateChange[];
+        emotional_state_changes?: Array<VADStateChange>;
         prompt_sections?: PromptSections;
     };
 }
 export interface ChatSession {
     id: string;
-    messages: ChatMessage[];
+    messages: Array<ChatMessage>;
     created_at: string;
     last_updated: string;
     total_tokens: number;
@@ -47,8 +47,8 @@ export interface ChatResponse {
         tokens: TokenCost;
         processing_time: number;
         memory_retrieval: MemoryRetrievalResult;
-        memory_operations: MemoryOperation[];
-        emotional_state_changes?: VADStateChange[];
+        memory_operations: Array<MemoryOperation>;
+        emotional_state_changes?: Array<VADStateChange>;
         prompt_sections?: PromptSections;
     };
 }

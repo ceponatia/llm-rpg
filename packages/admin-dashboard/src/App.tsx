@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@rpg/utils';
 import { ChatPanel } from './components/ChatPanel';
 import { UnderTheHoodPanel } from './components/UnderTheHoodPanel';
 import { MemoryInspectorPanel } from './components/MemoryInspectorPanel';
@@ -35,7 +36,7 @@ function App(): JSX.Element {
       try {
         const res = await fetch('/api/characters');
         if (!res.ok) {
-          console.warn('Failed to fetch characters');
+          logger.warn('Failed to fetch characters');
           return;
         }
         const json: unknown = await res.json();
@@ -49,12 +50,12 @@ function App(): JSX.Element {
         }
         setCharacters(list);
       } catch (e) {
-        console.error('Error fetching characters', e);
+        logger.error('Error fetching characters', e);
       } finally {
         setCharactersLoading(false);
       }
     };
-    fetchCharacters().catch((err) => console.error('fetchCharacters root error', err));
+    fetchCharacters().catch((err) => logger.error('fetchCharacters root error', err));
   }, []);
 
   const handleNewMessage = (message: ChatMessage): void => {

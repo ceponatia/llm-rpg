@@ -19,5 +19,7 @@
     "baseUrl": "./src"
   },
   "include": ["src", "tests"],
-  "references": []
+  "references": [
+    { "path": "../types" }
+  ]
 }

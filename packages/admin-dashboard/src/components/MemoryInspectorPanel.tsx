@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { logger } from '@rpg/utils';
 import { Database, Clock, Brain, RefreshCw, Users, FileText, GitBranch } from 'lucide-react';
 
 interface MemoryInspectorPanelProps {
@@ -58,7 +59,7 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
     try {
       const response = await fetch('/api/memory/inspect');
       if (!response.ok) {
-        console.error('Failed to fetch memory state');
+        logger.error('Failed to fetch memory state');
         setMemoryState(null);
         return;
       }
@@ -66,11 +67,11 @@ export const MemoryInspectorPanel: React.FC<MemoryInspectorPanelProps> = ({ sess
       if (isMemoryState(raw)) {
         setMemoryState(raw);
       } else {
-        console.error('Invalid memory state shape');
+        logger.error('Invalid memory state shape');
         setMemoryState(null);
       }
     } catch (error) {
-      console.error('Error fetching memory state:', error);
+      logger.error('Error fetching memory state:', error);
     } finally {
       setIsLoading(false);
     }
