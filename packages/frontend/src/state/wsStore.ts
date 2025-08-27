@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
 // Minimal event representation; refine as backend schemas stabilize
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface MemoryEventBase { type: string; timestamp?: string; [k: string]: any }
+// Use unknown instead of any for event payload fields to encourage narrowing at use sites
+interface MemoryEventBase { type: string; timestamp?: string; [k: string]: unknown }
 
 interface WSState {
   connected: boolean;
