@@ -1,5 +1,4 @@
-/**** Tailwind Config copied ****/ 
-const colors = require('tailwindcss/colors');
+// Tailwind configuration
 
 module.exports = {
   darkMode: 'class',

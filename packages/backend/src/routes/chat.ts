@@ -1,7 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { chatRequestSchema, chatResponseSchema } from '@rpg/types';
-import type { ChatRequest, ChatResponse } from '@rpg/types';
+import { chatRequestSchema, chatResponseSchema, type ChatRequest, type ChatResponse } from '@rpg/types';
 import { createChatService } from '../modules/chat/chatService.js';
 import { FLAGS } from '../config/flags.js';
 import { ChatRepository } from '../modules/chat/chatRepository.js';
@@ -27,9 +26,11 @@ export function chatRoutes(fastify: FastifyInstance): void {
     persona_id: z.string().optional(),
     fusion_weights: chatRequestSchema.shape.fusion_weights.optional()
   });
-  const ChatResponseSchema = chatResponseSchema.extend({
-    sessionId: z.string().optional(), // compatibility alias
-    reply: z.string().optional(), // compatibility alias
+  // Extended response schema kept for backward compatibility (local variations)
+  // Intentionally not re-used directly below, kept for potential future validation extension.
+  chatResponseSchema.extend({
+    sessionId: z.string().optional(),
+    reply: z.string().optional()
   }).passthrough();
   const chatService = createChatService({
     fastify,
@@ -54,8 +55,7 @@ export function chatRoutes(fastify: FastifyInstance): void {
       reply.status(400).send({ error: 'Message text required' });
       return;
     }
-    const startTime = Date.now();
-    
+  // timing captured only for processing section (overall start unused)
     try {
       const processingStart = Date.now();
       const chatResponse = await chatService.handleMessage({
@@ -68,7 +68,9 @@ export function chatRoutes(fastify: FastifyInstance): void {
         template_vars
       });
       // attach processing time (approximate)
-      (chatResponse as any).metadata.processing_time = Date.now() - processingStart;
+      // Attach processing time without casting whole object to any
+  // Mutate existing metadata object (defined in ChatResponse type) with processing_time
+  chatResponse.metadata.processing_time = Date.now() - processingStart;
       broadcastChatResponse(fastify.websocketClients, chatResponse as unknown as ChatResponse);
       return chatResponse;
     } catch (error) {

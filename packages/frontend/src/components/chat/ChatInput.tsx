@@ -4,7 +4,12 @@ interface ChatInputProps { onSend: (text: string) => Promise<void> | void; sendi
 
 export const ChatInput: React.FC<ChatInputProps> = ({ onSend, sending }) => {
   const [text, setText] = React.useState('');
-  const onSubmit = (e: React.FormEvent) => { e.preventDefault(); const value = text.trim(); if (!value) return; Promise.resolve(onSend(value)).finally(() => setText('')); };
+  const onSubmit = (e: React.FormEvent): void => {
+    e.preventDefault();
+    const value = text.trim();
+    if (!value) return;
+    void Promise.resolve(onSend(value)).finally(() => setText(''));
+  };
   return (
     <form onSubmit={onSubmit} className="flex gap-2">
       <input

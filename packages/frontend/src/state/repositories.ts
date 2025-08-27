@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { postNarrativeEvent } from '../services/memoryClient';
-import { z } from 'zod';
+import type { ZodType } from 'zod';
 import {
   panelCharacterSchema as CharacterSchema,
   panelSettingSchema as SettingSchema,
@@ -21,27 +21,27 @@ interface RepoState<T extends { id: string; createdAt: number; updatedAt: number
   clear: () => void;
 }
 
-function makeRepoStore<T extends { id: string; createdAt: number; updatedAt: number }>() {
-  return create<RepoState<T>>((set, get) => ({
+function makeRepoStore<T extends { id: string; createdAt: number; updatedAt: number }>(): RepoState<T> & { getState: () => RepoState<T> } {
+  const store = create<RepoState<T>>((set, get) => ({
     items: {},
-    upsert: (entity) =>
+    upsert: (entity): void =>
       set((s) => {
-        const exists = !!s.items[entity.id];
-        postNarrativeEvent({
+        const exists = Object.prototype.hasOwnProperty.call(s.items, entity.id);
+        void postNarrativeEvent({
           type: exists ? 'entity_updated' : 'entity_created',
           payload: { id: entity.id, kind: 'generic', updatedAt: entity.updatedAt }
-        }).catch(() => {});
+        });
         return { items: { ...s.items, [entity.id]: entity } };
       }),
-    remove: (id) => set((s) => {
-      const next = { ...s.items };
-      delete next[id];
-      return { items: next };
+    remove: (id): void => set((s) => {
+      const rest = Object.fromEntries(Object.entries(s.items).filter(([k]) => k !== id)) as Record<string, T>;
+      return { items: rest };
     }),
-    get: (id) => get().items[id],
-    all: () => Object.values(get().items).sort((a, b) => b.updatedAt - a.updatedAt),
-    clear: () => set({ items: {} }),
+  get: (id): T | undefined => get().items[id],
+  all: (): T[] => Object.values(get().items).sort((a, b) => b.updatedAt - a.updatedAt),
+  clear: (): void => set({ items: {} }),
   }));
+  return Object.assign(store.getState(), { getState: store.getState });
 }
 
 export const useCharacterRepo = makeRepoStore<Character>();
@@ -49,10 +49,10 @@ export const useSettingRepo = makeRepoStore<Setting>();
 export const useLocationRepo = makeRepoStore<Location>();
 export const useObjectRepo = makeRepoStore<ObjectAsset>();
 
-export const validateCharacter = (data: unknown) => CharacterSchema.parse(data);
-export const validateSetting = (data: unknown) => SettingSchema.parse(data);
-export const validateLocation = (data: unknown) => LocationSchema.parse(data);
-export const validateObjectAsset = (data: unknown) => ObjectAssetSchema.parse(data);
+export const validateCharacter = (data: unknown): Character => CharacterSchema.parse(data);
+export const validateSetting = (data: unknown): Setting => SettingSchema.parse(data);
+export const validateLocation = (data: unknown): Location => LocationSchema.parse(data);
+export const validateObjectAsset = (data: unknown): ObjectAsset => ObjectAssetSchema.parse(data);
 
 export interface ImportResult<T> {
   ok: boolean;
@@ -60,7 +60,7 @@ export interface ImportResult<T> {
   errors: { index: number; error: string }[];
 }
 
-export function safeParseArray<T>(schema: z.ZodType<T>, arr: unknown[]): ImportResult<T> {
+export function safeParseArray<T>(schema: ZodType<T>, arr: unknown[]): ImportResult<T> {
   const data: T[] = [];
   const errors: { index: number; error: string }[] = [];
   arr.forEach((raw, idx) => {
