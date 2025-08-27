@@ -7,8 +7,8 @@ import { ChatInput } from '../chat/ChatInput';
 import { Panel } from '../ui/Panel';
 
 export const ChatPanel: React.FC = () => {
-  if (!isEnabled('FRONTEND_CHAT_ENABLED')) return null;
   const { turns, send, sending, error, affection, lastIntent } = useChatStore();
+  if (!isEnabled('FRONTEND_CHAT_ENABLED')) return null;
   return (
   <Panel>
       <h2 className="text-lg font-semibold tracking-tight">Chat</h2>

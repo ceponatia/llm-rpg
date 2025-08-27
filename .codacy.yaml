@@ -1,0 +1,54 @@
+---
+# Codacy configuration file to reduce lint noise and use ESLint 9 in a monorepo.
+# Documentation: https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+# Notes:
+# - Adding this file disables the UI "Ignored files" list; manage ignores here.
+# - Patterns use Java glob syntax (NOT regex). They are evaluated from repo root.
+# - We exclude generated, build, coverage and distribution assets so only real source is analyzed.
+# - ESLint 9 engine name in Codacy is "eslint-9" (per docs). We don't need extra options yet,
+#   but we scope its excludes defensively to avoid tool-specific processing of artifacts.
+
+exclude_paths:
+  # Root & nested coverage outputs
+  - "coverage/**"
+  - "**/coverage/**"
+  - "**/lcov-report/**"
+  # Build / distribution artifact folders across packages
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.vite/**"
+  # Generated type or schema artifacts
+  - "**/*.d.ts"
+  - "**/*.generated.*"
+  # Temporary or cache directories sometimes committed
+  - "**/.cache/**"
+  # (node_modules already ignored by default, but keep explicit for clarity)
+  - "**/node_modules/**"
+
+engines:
+  eslint-9:
+    # Duplicate a minimal exclude list specifically for ESLint in case future
+    # tool-specific path handling diverges from global exclude_paths.
+    exclude_paths:
+      - "coverage/**"
+      - "**/coverage/**"
+      - "**/lcov-report/**"
+      - "**/dist/**"
+      - "**/build/**"
+      - "**/.vite/**"
+      - "**/*.d.ts"
+      - "**/*.generated.*"
+  # Also prevent duplication/minor metrics tools from processing build outputs
+  duplication:
+    exclude_paths:
+      - "coverage/**"
+      - "**/coverage/**"
+      - "**/dist/**"
+      - "**/build/**"
+      - "**/.vite/**"
+
+# If we later need to re-include a path inside an excluded tree, we can add include_paths:
+# include_paths:
+#   - "packages/some-lib/src/**"
+
+# No language customizations yet; add if we introduce unusual extensions.

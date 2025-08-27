@@ -12,8 +12,8 @@ export interface ChatMessageResponse {
 	reply: string; // assistant content alias
 	content?: string; // original backend field
 	id?: string;
-	metadata?: any; // TODO strong type
-	traces?: Array<unknown>;
+	metadata?: unknown; // TODO strong type
+	traces?: unknown[];
 }
 
 export async function sendChat(message: string, sessionId?: string): Promise<ChatMessageResponse> {
@@ -31,15 +31,22 @@ export async function sendChat(message: string, sessionId?: string): Promise<Cha
 		throw new Error('Chat API route not available on backend');
 	}
 	if (!res.ok) throw new Error(`Chat failed: ${res.status}`);
-	const raw = await res.json() as ChatMessageResponse;
-	// Normalize if backend only returned session_id/content
-	if (!raw.sessionId && (raw as any).session_id) {
-		(raw as any).sessionId = (raw as any).session_id;
+	const rawUnknown = await res.json() as unknown;
+	// Perform runtime shape checks then normalize in a copy to avoid unsafe any
+	if (rawUnknown !== null && typeof rawUnknown === 'object') {
+		const base = rawUnknown as Partial<ChatMessageResponse> & Record<string, unknown>;
+		if ((base.sessionId == null || base.sessionId === '') && typeof base.session_id === 'string') {
+			base.sessionId = base.session_id;
+		}
+		if ((base.reply == null || base.reply === '') && typeof base.content === 'string') {
+			base.reply = base.content;
+		}
+		// After normalization assert required fields
+		if (typeof base.sessionId === 'string' && typeof base.reply === 'string') {
+			return base as ChatMessageResponse;
+		}
 	}
-	if (!raw.reply && (raw as any).content) {
-		(raw as any).reply = (raw as any).content as string;
-	}
-	return raw;
+	throw new Error('Malformed chat response');
 }
 
 export interface MemorySummary { sessions: number; characters: number; facts: number; lastEventAt?: string; }
