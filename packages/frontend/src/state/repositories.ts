@@ -22,37 +22,40 @@ interface RepoState<T extends { id: string; createdAt: number; updatedAt: number
 }
 
 function makeRepoStore<T extends { id: string; createdAt: number; updatedAt: number }>(): RepoState<T> & { getState: () => RepoState<T> } {
-  const store = create<RepoState<T>>((set, get) => ({
-    items: {},
+  const store = create<RepoState<T>>((set, get: () => RepoState<T>) => ({
+    items: {} as Record<string, T>,
     upsert: (entity: T): void => {
-      set((s) => {
-        const exists = Object.hasOwn(s.items, entity.id);
+      set((s: RepoState<T>) => {
+        const exists = Object.prototype.hasOwnProperty.call(s.items, entity.id);
         void postNarrativeEvent({
           type: exists ? 'entity_updated' : 'entity_created',
           payload: { id: entity.id, kind: 'generic', updatedAt: entity.updatedAt }
         });
-        return { items: { ...s.items, [entity.id]: entity } };
+        const nextItems: Record<string, T> = { ...s.items, [entity.id]: entity };
+        return { items: nextItems } as Partial<RepoState<T>>;
       });
     },
     remove: (id: string): void => {
-      set((s) => {
-        // Destructure to omit the id without using Object.entries (avoids any widening)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [id]: _removed, ...rest } = s.items;
-        return { items: rest };
+      set((s: RepoState<T>) => {
+        const next: Record<string, T> = {};
+        for (const key in s.items) {
+          if (Object.prototype.hasOwnProperty.call(s.items, key) && key !== id) {
+            next[key] = s.items[key];
+          }
+        }
+        return { items: next } as Partial<RepoState<T>>;
       });
     },
-    get: (id: string): T | undefined => {
-      const state = get();
-      return state.items[id];
+    get: (id: string): T | undefined => get().items[id],
+    all: (): T[] => {
+      const values: T[] = Object.values(get().items);
+      return values.sort((a, b) => b.updatedAt - a.updatedAt);
     },
-  all: (): T[] => {
-      const state = get();
-      return Object.values(state.items).sort((a, b) => b.updatedAt - a.updatedAt);
-    },
-    clear: (): void => { set({ items: {} }); }
+    clear: (): void => { set({ items: {} as Record<string, T> }); }
   }));
-  return { ...store.getState(), getState: store.getState };
+  // Expose state snapshot plus getter (previous API contract)
+  const snapshot = store.getState();
+  return { ...snapshot, getState: store.getState };
 }
 
 export const useCharacterRepo = makeRepoStore<Character>();
@@ -60,10 +63,12 @@ export const useSettingRepo = makeRepoStore<Setting>();
 export const useLocationRepo = makeRepoStore<Location>();
 export const useObjectRepo = makeRepoStore<ObjectAsset>();
 
-export const validateCharacter = (data: unknown): Character => CharacterSchema.parse(data);
-export const validateSetting = (data: unknown): Setting => SettingSchema.parse(data);
-export const validateLocation = (data: unknown): Location => LocationSchema.parse(data);
-export const validateObjectAsset = (data: unknown): ObjectAsset => ObjectAssetSchema.parse(data);
+// Typed schema parse helpers to avoid any widening triggering unsafe-member-access
+const parseWith = <T>(schema: ZodType<T>, data: unknown): T => schema.parse(data);
+export const validateCharacter = (data: unknown): Character => parseWith<Character>(CharacterSchema as ZodType<Character>, data);
+export const validateSetting = (data: unknown): Setting => parseWith<Setting>(SettingSchema as ZodType<Setting>, data);
+export const validateLocation = (data: unknown): Location => parseWith<Location>(LocationSchema as ZodType<Location>, data);
+export const validateObjectAsset = (data: unknown): ObjectAsset => parseWith<ObjectAsset>(ObjectAssetSchema as ZodType<ObjectAsset>, data);
 
 export interface ImportResult<T> {
   ok: boolean;
