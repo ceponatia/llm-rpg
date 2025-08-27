@@ -1,5 +1,7 @@
 # LLM RPG Workspace
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/bd0a0a143f344cd086d7beb43d3471da)](https://app.codacy.com/gh/ceponatia/llm-rpg?utm_source=github.com&utm_medium=referral&utm_content=ceponatia/llm-rpg&utm_campaign=Badge_Grade)
+
 Monorepo containing memory backend, admin dashboard, and story/frontend prototypes.
 
 ## Quick start
