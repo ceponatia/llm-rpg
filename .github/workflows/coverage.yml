@@ -52,19 +52,14 @@ jobs:
           echo 'First 5 lines:'
           head -n 5 coverage/combined.lcov || true
 
-      - name: Upload coverage to Codacy
-        if: ${{ env.CODACY_PROJECT_TOKEN != '' }}
-        env:
-          CODACY_PROJECT_TOKEN: ${{ env.CODACY_PROJECT_TOKEN }}
-        run: |
-          set -euo pipefail
-          echo "Event: $GITHUB_EVENT_NAME Ref: $GITHUB_REF"
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] || { [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF" = "refs/heads/main" ]; }; then
-            echo 'Uploading coverage to Codacy...'
-            curl -Ls https://coverage.codacy.com/get.sh | bash -s report -r coverage/combined.lcov || { echo 'Codacy upload failed'; exit 1; }
-          else
-            echo 'Skipping Codacy upload (not main push or PR).'
-          fi
+      - name: Upload coverage to Codacy (official action)
+        if: ${{ env.CODACY_PROJECT_TOKEN != '' && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') }}
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ env.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage/combined.lcov
+          # Optionally specify commit if needed (defaults to current):
+          # commit-uuid: ${{ github.sha }}
 
       - name: Skip upload (no token available)
         run: |
