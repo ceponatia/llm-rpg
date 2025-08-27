@@ -48,8 +48,9 @@ export const useWSStore = create<WSState>((set, get) => ({
   socket.onclose = (): void => {
         set({ connected: false });
       };
-    } catch (e) {
-      set({ error: e instanceof Error ? e.message : 'WebSocket init failed' });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'WebSocket init failed';
+      set({ error: msg });
     }
   },
   disconnect: (): void => {
@@ -58,5 +59,5 @@ export const useWSStore = create<WSState>((set, get) => ({
       g.close();
     }
   },
-  clear: (): void => set({ events: [], lastMessage: undefined })
+  clear: (): void => { set({ events: [], lastMessage: undefined }); }
 }));

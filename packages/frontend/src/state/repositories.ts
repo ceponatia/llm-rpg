@@ -24,24 +24,35 @@ interface RepoState<T extends { id: string; createdAt: number; updatedAt: number
 function makeRepoStore<T extends { id: string; createdAt: number; updatedAt: number }>(): RepoState<T> & { getState: () => RepoState<T> } {
   const store = create<RepoState<T>>((set, get) => ({
     items: {},
-    upsert: (entity): void =>
+    upsert: (entity: T): void => {
       set((s) => {
-        const exists = Object.prototype.hasOwnProperty.call(s.items, entity.id);
+        const exists = Object.hasOwn(s.items, entity.id);
         void postNarrativeEvent({
           type: exists ? 'entity_updated' : 'entity_created',
           payload: { id: entity.id, kind: 'generic', updatedAt: entity.updatedAt }
         });
         return { items: { ...s.items, [entity.id]: entity } };
-      }),
-    remove: (id): void => set((s) => {
-      const rest = Object.fromEntries(Object.entries(s.items).filter(([k]) => k !== id)) as Record<string, T>;
-      return { items: rest };
-    }),
-  get: (id): T | undefined => get().items[id],
-  all: (): T[] => Object.values(get().items).sort((a, b) => b.updatedAt - a.updatedAt),
-  clear: (): void => set({ items: {} }),
+      });
+    },
+    remove: (id: string): void => {
+      set((s) => {
+        // Destructure to omit the id without using Object.entries (avoids any widening)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { [id]: _removed, ...rest } = s.items;
+        return { items: rest };
+      });
+    },
+    get: (id: string): T | undefined => {
+      const state = get();
+      return state.items[id];
+    },
+  all: (): T[] => {
+      const state = get();
+      return Object.values(state.items).sort((a, b) => b.updatedAt - a.updatedAt);
+    },
+    clear: (): void => { set({ items: {} }); }
   }));
-  return Object.assign(store.getState(), { getState: store.getState });
+  return { ...store.getState(), getState: store.getState };
 }
 
 export const useCharacterRepo = makeRepoStore<Character>();

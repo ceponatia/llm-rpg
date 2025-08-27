@@ -7,7 +7,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, sending }) => {
   const onSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     const value = text.trim();
-    if (!value) return;
+  if (value.length === 0) { return; }
     void Promise.resolve(onSend(value)).finally(() => setText(''));
   };
   return (

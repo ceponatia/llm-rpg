@@ -18,19 +18,21 @@ type ChatBody = ChatRequest & {
 export { inMemoryChatSessions };
 
 export function chatRoutes(fastify: FastifyInstance): void {
+  const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
   // DEPRECATED: Local ChatRequestSchema / ChatResponseSchema replaced by shared schemas (Sprint 2)
+  const zString = z.string;
   const ChatRequestSchema = chatRequestSchema.extend({
     // Accept camelCase compatibility fields without enforcing
-    sessionId: z.string().uuid().optional(),
-    personaId: z.string().optional(),
-    persona_id: z.string().optional(),
+    sessionId: zString().uuid().optional(),
+    personaId: zString().optional(),
+    persona_id: zString().optional(),
     fusion_weights: chatRequestSchema.shape.fusion_weights.optional()
   });
   // Extended response schema kept for backward compatibility (local variations)
   // Intentionally not re-used directly below, kept for potential future validation extension.
   chatResponseSchema.extend({
-    sessionId: z.string().optional(),
-    reply: z.string().optional()
+    sessionId: zString().optional(),
+    reply: zString().optional()
   }).passthrough();
   const chatService = createChatService({
     fastify,
@@ -56,7 +58,7 @@ export function chatRoutes(fastify: FastifyInstance): void {
       return;
     }
   // timing captured only for processing section (overall start unused)
-    try {
+  try {
       const processingStart = Date.now();
       const chatResponse = await chatService.handleMessage({
         message,
@@ -70,7 +72,10 @@ export function chatRoutes(fastify: FastifyInstance): void {
       // attach processing time (approximate)
       // Attach processing time without casting whole object to any
   // Mutate existing metadata object (defined in ChatResponse type) with processing_time
-  chatResponse.metadata.processing_time = Date.now() - processingStart;
+      const meta = chatResponse.metadata;
+      if (isRecord(meta)) {
+        meta.processing_time = Date.now() - processingStart;
+      }
       broadcastChatResponse(fastify.websocketClients, chatResponse as unknown as ChatResponse);
       return chatResponse;
     } catch (error) {

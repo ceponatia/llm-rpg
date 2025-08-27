@@ -35,10 +35,10 @@ export async function sendChat(message: string, sessionId?: string): Promise<Cha
 	// Perform runtime shape checks then normalize in a copy to avoid unsafe any
 	if (rawUnknown !== null && typeof rawUnknown === 'object') {
 		const base = rawUnknown as Partial<ChatMessageResponse> & Record<string, unknown>;
-		if (!base.sessionId && typeof base.session_id === 'string') {
+		if ((base.sessionId == null || base.sessionId === '') && typeof base.session_id === 'string') {
 			base.sessionId = base.session_id;
 		}
-		if (!base.reply && typeof base.content === 'string') {
+		if ((base.reply == null || base.reply === '') && typeof base.content === 'string') {
 			base.reply = base.content;
 		}
 		// After normalization assert required fields
