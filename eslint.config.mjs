@@ -80,9 +80,15 @@ export default [
     ],
     languageOptions: {
       sourceType: 'module',
-      parserOptions: { project: null }
+      parserOptions: { project: null },
+      globals: {
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        process: 'readonly',
+        console: 'readonly'
+      }
     },
-    env: { node: true },
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
