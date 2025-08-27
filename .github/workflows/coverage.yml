@@ -36,6 +36,14 @@ jobs:
       - name: Run coverage (all packages)
         run: pnpm coverage:all
 
+      - name: Verify Codacy token present
+        run: |
+          if [ -z "${{ env.CODACY_PROJECT_TOKEN }}" ]; then
+            echo 'ERROR: CODACY_PROJECT_TOKEN not set (add it in Settings > Secrets and variables > Actions)';
+            exit 1;
+          fi
+          echo "Codacy project token detected (length=${#CODACY_PROJECT_TOKEN})."
+
       - name: Verify lcov not empty
         run: |
           COUNT=$(grep -c '^SF:' coverage/combined.lcov || true)
