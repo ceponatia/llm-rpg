@@ -7,6 +7,7 @@ import { setupRoutes } from './routes/index.js';
 import { DatabaseManager } from './database/manager.js';
 import { CharacterRegistry } from './services/character-registry.js';
 import { setupStaticAdmin } from './staticAdmin.js';
+import { FLAGS } from './config/flags.js';
 
 interface MemoryControllerConfig {
   l1_max_turns: number;
@@ -75,12 +76,12 @@ fastify.decorate('verifyAdmin', async (req: FastifyRequest, reply: FastifyReply)
 await fastify.register(websocket);
 
 // Optionally serve static admin dashboard (consolidated deployment)
-await setupStaticAdmin(fastify, { serve: process.env.SERVE_ADMIN_STATIC === 'true' });
+await setupStaticAdmin(fastify, { serve: FLAGS.SERVE_ADMIN_STATIC });
 
 // Initialize database connections
   const redisUrl = config.REDIS_URL;
   const dbManager = new DatabaseManager({
-    neo4j: { uri: config.NEO4J_URI, user: config.NEO4J_USER, password: config.NEO4J_PASSWORD, optional: process.env.NEO4J_OPTIONAL === 'true', maxRetries: parseInt(process.env.NEO4J_MAX_RETRIES ?? '5', 10), retryDelayMs: parseInt(process.env.NEO4J_RETRY_DELAY_MS ?? '1000', 10) },
+  neo4j: { uri: config.NEO4J_URI, user: config.NEO4J_USER, password: config.NEO4J_PASSWORD, optional: FLAGS.NEO4J_OPTIONAL, maxRetries: FLAGS.NEO4J_MAX_RETRIES, retryDelayMs: FLAGS.NEO4J_RETRY_DELAY_MS },
     faiss: { indexPath: config.FAISS_INDEX_PATH, dimension: config.VECTOR_DIMENSION },
     redis: (typeof redisUrl === 'string' && redisUrl.length > 0) ? { url: redisUrl } : undefined
   });
@@ -93,7 +94,7 @@ await setupRoutes(fastify);
 // Health check
 fastify.get('/health', async () => {
   const neo4jHealth = await dbManager.checkNeo4jHealth();
-  return { status: 'ok', timestamp: new Date().toISOString(), services: { neo4j: neo4jHealth ? 'healthy' : 'unhealthy', faiss: 'healthy', redis: dbManager.redis !== null ? 'healthy' : 'not_configured' } };
+  return { status: 'ok', timestamp: new Date().toISOString(), services: { neo4j: neo4jHealth ? 'healthy' : 'unhealthy', faiss: 'healthy', redis: dbManager.hasRedis() ? 'healthy' : 'not_configured' } };
 });
 
 // Graceful shutdown

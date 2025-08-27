@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method -- Fastify dynamic imports & logger methods are safe to call directly in this context */
 import type { FastifyInstance } from 'fastify';
+import { FLAGS } from './config/flags.js';
 import { buildAdminRuntimeConfig } from './adminConfig.js';
 
 interface StaticAdminOptions {
@@ -34,7 +35,7 @@ export async function setupStaticAdmin(fastify: FastifyInstance, opts: StaticAdm
     };
     const basePath = ensureBasePath(rawBase);
 
-  const explicitDir = process.env.ADMIN_STATIC_DIR;
+  const explicitDir = process.env.ADMIN_STATIC_DIR; // directory path is not a boolean flag; read raw
   const candidates: Array<string> = [];
   if (typeof explicitDir === 'string' && explicitDir !== '') {candidates.push(explicitDir);}
     candidates.push('../../admin-dashboard/dist');
@@ -76,9 +77,9 @@ export async function setupStaticAdmin(fastify: FastifyInstance, opts: StaticAdm
   fastify.get(basePath + '*', async (req, reply) => {
       const url = req.raw.url ?? '';
       if (isHtmlRequest(url)) {
-        if (process.env.ADMIN_PUBLIC !== 'true') {
+  if (!FLAGS.ADMIN_PUBLIC) {
           const provided = req.headers['x-admin-key'];
-          const expected = process.env.ADMIN_API_KEY;
+          const expected = process.env.ADMIN_API_KEY; // secret; not normalized into FLAGS
           if (typeof expected === 'string' && expected !== '' && provided !== expected) {
             return reply.code(401).send({ error: 'Unauthorized' });
           }

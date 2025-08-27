@@ -3,7 +3,7 @@
  * Handles loading and managing static persona definitions
  */
 
-import { personaDefinitionSchema, type PersonaDefinition } from '../../types/src/zod/contextModifier.zod.js';
+import { personaDefinitionSchema, type PersonaDefinition } from '@rpg/types';
 
 /**
  * Persona manager for loading and caching character definitions

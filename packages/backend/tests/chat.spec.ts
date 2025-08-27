@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { setupRoutes } from '../src/routes/index.js';
-import { inMemoryChatSessions } from '../src/routes/chat.js';
+// import session store directly (avoid importing chat route before env flags set)
+import { inMemoryChatSessions } from '../src/modules/chat/sessionStore.js';
 
 // Helper to spin up a minimal Fastify without MCA / heavy deps for echo mode
 async function build(opts: { enable: boolean; echo: boolean }): Promise<FastifyInstance> {
   // set flags
   process.env.ENABLE_CHAT_API = opts.enable ? 'true' : 'false';
   process.env.CHAT_ECHO_MODE = opts.echo ? 'true' : 'false';
+  // refresh flags module so routes see updated values
+  const { refreshFlags } = await import('../src/config/flags.js');
+  refreshFlags();
   const fastify: FastifyInstance = Fastify({ logger: false });
   // minimal stubs for properties accessed in chat route when echo mode true (skips heavy calls)
   const mcaStub: any = {
@@ -18,6 +21,8 @@ async function build(opts: { enable: boolean; echo: boolean }): Promise<FastifyI
   fastify.decorate('mca', mcaStub);
   const dbStub: any = { getNeo4jSession: () => ({ executeWrite: async () => undefined, close: async () => {} }) };
   fastify.decorate('db', dbStub);
+  // dynamic import after env set so FLAGS reflect current process.env
+  const { setupRoutes } = await import('../src/routes/index.js');
   await setupRoutes(fastify);
   await fastify.ready();
   return fastify;

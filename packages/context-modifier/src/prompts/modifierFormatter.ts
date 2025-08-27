@@ -1,7 +1,7 @@
 /**
  * Formatter utilities for modifier fragments & intensities.
  */
-import type { ModifierFragment } from '../../../types/src/zod/contextModifier.zod.js';
+import type { ModifierFragment } from '@rpg/types';
 
 export function formatActiveModifiers(fragments: Array<ModifierFragment>, intensities: Record<string, number>): string {
   if (fragments.length === 0) { return 'None'; }

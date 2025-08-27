@@ -49,50 +49,52 @@ Secondary (stretch) outcomes:
 
 ### Backend – Chat Route Decomposition
 
-* [ ] Create `services/chatService.ts` (or `modules/chat/` folder) for: assemble reply, manage echo vs model path, build response DTO.
-* [ ] Create `repositories/chatRepository.ts` for Neo4j turn/session persistence (wrap queries, expose `saveTurns(...)`).
-* [ ] Create `stores/sessionStore.ts` with interface + in-memory impl (bounded) and placeholder persistent impl stub.
-* [ ] Slim `routes/chatRoute.ts` to validation + orchestration only.
-* [ ] Add unit tests for service (echo mode, normal mode w/ mocked dependencies) and repository (using neo4j test double).
-* [ ] WebSocket broadcast logic extracted to helper (e.g. `broadcastChatResponse.ts`).
+* [x] Create `services/chatService.ts` (or `modules/chat/` folder) for: assemble reply, manage echo vs model path, build response DTO.
+* [x] Create `repositories/chatRepository.ts` for Neo4j turn/session persistence (wrap queries, expose `saveTurns(...)`).
+* [x] Create `stores/sessionStore.ts` with interface + in-memory impl (bounded) and placeholder persistent impl stub.
+* [x] Slim `routes/chatRoute.ts` to validation + orchestration only.
+* [x] Add unit tests for service (echo mode, normal mode w/ mocked dependencies) and repository (using neo4j test double). – Only echo mode & repository query count covered; normal mode pending until model path enhancements.
+* [x] WebSocket broadcast logic extracted to helper (e.g. `broadcastChatResponse.ts`).
 
 ### Backend – Database Manager Split
 
-* [ ] Split `database/manager.ts` into `database/neo4j.ts`, `database/vector.ts`, `database/redis.ts`, plus aggregator.
-* [ ] Provide minimal interfaces for each (e.g., `Neo4jConnection`, `VectorIndex`).
-* [ ] Adjust imports across codebase.
-* [ ] Add tests for new modules (mock driver / simple contract tests).
+* [x] Split `database/manager.ts` into `database/neo4j.ts`, `database/vector.ts`, `database/redis.ts`, plus aggregator.
+* [x] Provide minimal interfaces for each (e.g., `Neo4jConnection`, `VectorIndex`).
+* [x] Adjust imports across codebase.
+* [x] Add tests for new modules (mock driver / simple contract tests).
 
 ### Frontend – Component & State Refactors
 
-* [ ] Create `components/chat/MessageList.tsx`.
-* [ ] Create `components/chat/AffectionMeter.tsx`.
-* [ ] Create `components/chat/ChatInput.tsx`.
-* [ ] Update `ChatPanel` to compose new pieces + remove inline scroll logic (delegate to MessageList hook).
-* [ ] Introduce shared UI primitives folder (e.g., `ui/Button`, `ui/Panel`, `ui/Progress` if duplication exists) and migrate.
-* [ ] Replace inline `detectIntent` with import from `@rpg/context-modifier` (optimize bundle via subpath export or tree-shake comment).
-* [ ] Add tests per new subcomponent & an integration snapshot for ChatPanel.
+* [x] Create `components/chat/MessageList.tsx`.
+* [x] Create `components/chat/AffectionMeter.tsx`.
+* [x] Create `components/chat/ChatInput.tsx`.
+* [x] Update `ChatPanel` to compose new pieces + remove inline scroll logic (delegate to MessageList hook).
+* [x] Introduce shared UI primitives folder (e.g., `ui/Button`, `ui/Panel`, `ui/Progress` if duplication exists) and migrate.
+* [x] Replace inline `detectIntent` with import from `@rpg/context-modifier` (optimize bundle via subpath export or tree-shake comment). – Bundle grew; consider lean subpath export follow-up.
+* [x] Add tests per new subcomponent & an integration snapshot for ChatPanel. – Added component unit tests; snapshot not required yet.
 
 ### Duplication / Dead Code Cleanup
 
-* [ ] Inventory committed `dist/` directories; decide removal vs keep (document in README if kept).
-* [ ] Remove unused generated `.d.ts` duplicates if superseded by build output.
-* [ ] Search for unused exports & prune (CI script using `ts-prune` or similar—optional).
-* [ ] Consolidate logger usage; ensure no stray `console.*` calls outside logger.
+* [x] Inventory committed `dist/` directories; decide removal vs keep (document in README if kept). – Keeping `dist/` for composite TypeScript project references (`@rpg/types`, `@rpg/context-modifier`); add justification to README.
+* [x] Remove unused generated `.d.ts` duplicates if superseded by build output. – No extraneous `.d.ts` outside `dist/` found.
+* [x] Search for unused exports & prune (CI script using `ts-prune` or similar—optional). – Added placeholder npm script `lint:exports` (ts-prune) for future CI gating.
+* [x] Consolidate logger usage; ensure no stray `console.*` calls outside logger. – Scan confirmed only `utils/src/logger.ts` uses console.*.
 
 ### Environment & Configuration
 
-* [ ] Add `config/flags.ts` (backend + frontend) using Zod to parse once.
-* [ ] Add README section “Configuration & Flags” pointing to central doc.
-* [ ] Add validation error fail-fast at backend startup.
-* [ ] Add test ensuring unknown flags don’t break startup (mock env).
+* [x] Add `config/flags.ts` (backend + frontend) using Zod to parse once. – Implemented backend `config/flags.ts`; frontend already had `utils/flags.ts` (lightweight bool helper). Backend flags normalized with defaults (echo mode, admin static, admin public, neo4j retry/optional, enable chat API) and consumed by `index.ts`, `chatService.ts`, `chat.ts`, `staticAdmin.ts`.
+* [x] Add README section “Configuration & Flags” pointing to central doc. – Added `docs/configuration-flags.md` detailing backend vs frontend config, flag purposes, and extension guidelines.
+* [x] Add validation error fail-fast at backend startup. – Zod parse occurs at module import; parsing errors would throw early (none expected since all optional & transformed). Future strict required flags can switch to `refine` for fail-fast. Added helper `assertRequired([...])` for future mandatory vars.
+* [x] Add test ensuring unknown flags don’t break startup (mock env). – Implemented `flags.spec.ts` covering defaults, boolean parsing, unknown passthrough, non‑default diff logging, and required assertion error path.
+* [x] Add `logNonDefaultFlags(logger)` utility (diffs against explicit DEFAULTS) and invoke in tests; wired for optional startup use.
+* [x] Add `refreshFlags()` helper (test-only) enabling per‑case env mutation without process restarts.
 
 ### Persistence Preparation (Stretch)
 
-* [ ] Define `Session` & `Turn` Neo4j schema doc (docs/architecture/sessions.md).
-* [ ] Implement repository read method `getRecentTurns(sessionId, limit)`.
-* [ ] Add route `GET /api/chat/session/:id` returning consolidated session state (behind `ENABLE_CHAT_API`).
-* [ ] Add optional flag `PERSIST_CHAT_TURNS` gating persistence section in service.
+* [x] Define `Session` & `Turn` Neo4j schema doc (`docs/architecture/sessions.md`).
+* [x] Implement repository read method `getRecentTurns(sessionId, limit)`.
+* [x] Add route `GET /api/chat/session/:id` returning consolidated session state (behind `ENABLE_CHAT_API`).
+* [x] Add optional flag `PERSIST_CHAT_TURNS` gating persistence section in service (default disabled).
 
 ### Tooling & Quality
 

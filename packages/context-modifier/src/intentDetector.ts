@@ -3,7 +3,7 @@
  * Analyzes user messages to detect emotional/contextual intent using lightweight NLP
  */
 
-import { intentSchema, intentDetectionRuleSchema, type Intent, type IntentDetectionRule } from '../../types/src/zod/contextModifier.zod.js';
+import { intentSchema, intentDetectionRuleSchema, type Intent, type IntentDetectionRule } from '@rpg/types';
 
 /**
  * Result of intent detection analysis

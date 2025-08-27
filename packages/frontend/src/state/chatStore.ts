@@ -2,19 +2,18 @@ import { create } from 'zustand';
 import { sendChat, type ChatMessageResponse } from '../services/memoryClient';
 import type { ChatTurn } from '@rpg/types';
 import { isEnabled } from '../utils/flags';
-// Minimal inline intent detection (subset) to avoid cross-package build coupling for Sprint 1
-type MiniIntent = 'neutral' | 'excited' | 'annoyed';
-const INTENT_KEYWORDS: Record<MiniIntent, string[]> = {
-  neutral: [],
-  excited: ['love','great','awesome','wow','yay'],
-  annoyed: ['boring','annoying','stupid','hate']
-};
-function detectIntent(text: string): MiniIntent {
-  const lower = text.toLowerCase();
-  for (const kw of INTENT_KEYWORDS.excited) { if (lower.includes(kw)) return 'excited'; }
-  for (const kw of INTENT_KEYWORDS.annoyed) { if (lower.includes(kw)) return 'annoyed'; }
-  return 'neutral';
-}
+import { IntentDetector } from '@rpg/context-modifier';
+
+// Singleton intent detector (lightweight). Rule set mirrors previous keyword logic.
+const intentDetector = new IntentDetector({
+  defaultIntent: 'neutral',
+  confidenceThreshold: 0, // allow any match
+  enableFallback: true,
+  rules: [
+    { intent: 'excited', keywords: ['love','great','awesome','wow','yay'], patterns: [], confidence_threshold: 0, priority: 1 },
+    { intent: 'annoyed', keywords: ['boring','annoying','stupid','hate'], patterns: [], confidence_threshold: 0, priority: 1 }
+  ]
+});
 
 interface ChatState {
   sessionId?: string;
@@ -47,8 +46,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const tempId = `local-${Date.now()}`;
     // optimistic user turn
     // Detect intent on user message
-    const intent = detectIntent(trimmed);
-    const delta = intent === 'excited' ? 2 : intent === 'annoyed' ? -2 : 0;
+  const detection = intentDetector.detectIntent(trimmed);
+  const intent = detection.intent;
+  const delta = intent === 'excited' ? 2 : intent === 'annoyed' ? -2 : 0;
     set(s => ({
       turns: [...s.turns, { id: tempId, role: 'user', content: trimmed, timestamp: now }],
       error: undefined,

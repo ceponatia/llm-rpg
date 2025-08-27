@@ -10,7 +10,7 @@
     "seed:characters": "tsx src/scripts/seed-characters.ts",
     "write:admin-config": "tsx src/scripts/write-admin-config.ts",
   "test": "vitest run",
-  "coverage": "vitest run --coverage"
+  "coverage": "vitest run --coverage --coverage.reporter=lcov --coverage.reporter=text"
   },
   "dependencies": {
   "@fastify/compress": "^8.1.0",

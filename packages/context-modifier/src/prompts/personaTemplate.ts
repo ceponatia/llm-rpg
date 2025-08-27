@@ -1,7 +1,7 @@
 /**
  * Persona templating helpers.
  */
-import type { PersonaDefinition } from '../../../types/src/zod/contextModifier.zod.js';
+import type { PersonaDefinition } from '@rpg/types';
 
 export function renderPersona(persona: PersonaDefinition): string {
   return [

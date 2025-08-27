@@ -3,7 +3,7 @@
  * Main orchestrator that composes final system prompts from persona + modifier + RAG context
  */
 
-import type { PersonaDefinition, ModifierState, PromptParts, ModifierFragment } from '../../types/src/zod/contextModifier.zod.js';
+import type { PersonaDefinition, ModifierState, PromptParts, ModifierFragment } from '@rpg/types';
 import type { VADState } from '../../types/src/common.js';
 import { PersonaManager } from './persona.js';
 import { IntentDetector, type IntentDetectionResult } from './intentDetector.js';

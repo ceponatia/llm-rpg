@@ -3,7 +3,7 @@
  * Manages scene-specific modifiers and their application logic
  */
 
-import { modifierFragmentSchema, type Intent, type ModifierFragment } from '../../types/src/zod/contextModifier.zod.js';
+import { modifierFragmentSchema, type Intent, type ModifierFragment } from '@rpg/types';
 import type { VADState } from '../../types/src/common.js';
 
 /**

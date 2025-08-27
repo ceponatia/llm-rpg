@@ -57,3 +57,7 @@ pnpm-debug.log*
 
 # Temporary legacy frontend staging directory
 dev-front/
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

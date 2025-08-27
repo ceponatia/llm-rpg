@@ -3,7 +3,7 @@
  * Handles persistence and state management across conversation turns
  */
 
-import type { Intent, ModifierState } from '../../types/src/zod/contextModifier.zod.js';
+import type { Intent, ModifierState } from '@rpg/types';
 import type { VADState } from '../../types/src/common.js';
 
 /**

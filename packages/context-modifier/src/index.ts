@@ -32,7 +32,7 @@ export type {
 } from './buildPrompt.js';
 
 // Re-export types from the types package for convenience
-export type { Intent, IntentDetectionRule, ModifierFragment, PersonaDefinition, ModifierState, PromptParts, ContextModifierConfig } from '../../types/src/zod/contextModifier.zod.js';
+export type { Intent, IntentDetectionRule, ModifierFragment, PersonaDefinition, ModifierState, PromptParts, ContextModifierConfig } from '@rpg/types';
 
 /**
  * Factory function to create a fully configured PromptBuilder
