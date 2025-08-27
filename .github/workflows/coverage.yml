@@ -15,6 +15,8 @@ jobs:
       CODACY_ORG_PROVIDER: gh
       CODACY_ORG_NAME: ceponatia
       CODACY_REPO_NAME: llm-rpg
+  # Static Codacy project token injected from repository secrets (add in GitHub Settings > Secrets > Actions)
+  CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,33 +52,8 @@ jobs:
           echo 'First 5 lines:'
           head -n 5 coverage/combined.lcov || true
 
-      - name: Obtain Codacy project token (dynamic)
-        id: codacy_token
-        env:
-          CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN || '' }}
-          CODACY_PROJECT_TOKEN_STATIC: ${{ secrets.CODACY_PROJECT_TOKEN || '' }}
-        run: |
-          if [ -n "$CODACY_PROJECT_TOKEN_STATIC" ]; then
-            echo "codacy_project_token=$CODACY_PROJECT_TOKEN_STATIC" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [ -z "$CODACY_API_TOKEN" ]; then
-            echo 'No static project token or API token; skipping token generation.'
-            exit 0
-          fi
-          node scripts/codacy-get-or-create-project-token.mjs | tail -n 1 | sed 's/^TOKEN=//' > token.txt
-          TOK=$(cat token.txt)
-          echo "codacy_project_token=$TOK" >> "$GITHUB_OUTPUT"
-
-      - name: Set Codacy project token env
-        run: |
-          TOKEN="${{ steps.codacy_token.outputs.codacy_project_token }}"
-          if [ -n "$TOKEN" ]; then
-            echo "CODACY_PROJECT_TOKEN=$TOKEN" >> $GITHUB_ENV
-          fi
-
       - name: Upload coverage to Codacy
-        if: ${{ env.CODACY_PROJECT_TOKEN }}
+        if: ${{ env.CODACY_PROJECT_TOKEN != '' }}
         env:
           CODACY_PROJECT_TOKEN: ${{ env.CODACY_PROJECT_TOKEN }}
         run: |
@@ -91,6 +68,6 @@ jobs:
 
       - name: Skip upload (no token available)
         run: |
-          if [ -z "${{ env.CODACY_PROJECT_TOKEN || '' }}" ]; then
+          if [ -z "${{ env.CODACY_PROJECT_TOKEN }}" ]; then
             echo 'No Codacy token available; skipping coverage upload.'
           fi
