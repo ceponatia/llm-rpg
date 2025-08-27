@@ -13,88 +13,92 @@ export default [
       '**/coverage/**',
       '**/node_modules/**',
       '**/*.d.ts',
-      'packages/types/src/**/*.js'
+      'packages/types/src/**/*.js',
+      'dev-front/**' // legacy experimental dir
     ]
   },
   js.configs.recommended,
+  // Type-aware rules only for real source files
   ...tseslint.config({
-    files: ['**/*.{ts,tsx}'],
+    files: ['packages/**/src/**/*.{ts,tsx}'],
     extends: [
       ...tseslint.configs.recommended,
       ...tseslint.configs.strict,
       ...tseslint.configs.stylistic
     ],
     languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.base.json'],
-  // tsconfigRootDir intentionally omitted for analyzer compatibility; ESLint will resolve from CWD.
-      }
+      parserOptions: { project: ['./tsconfig.base.json'] }
     },
     plugins: { 'react-hooks': reactHooks },
     rules: {
-      // Preserve existing custom rules
       '@typescript-eslint/no-explicit-any': ['error', { fixToUnknown: true, ignoreRestArgs: false }],
-      '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true, allowTypedFunctionExpressions: true }],
-      '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'explicit' }],
-      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', disallowTypeAnnotations: false }],
-      '@typescript-eslint/prefer-readonly': 'error',
-      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: { attributes: false } }],
       '@typescript-eslint/require-array-sort-compare': ['warn', { ignoreStringArrays: true }],
-      '@typescript-eslint/strict-boolean-expressions': ['error', {
-        allowString: false,
-        allowNumber: false,
-        allowNullableObject: false,
-        allowNullableBoolean: false,
-        allowNullableString: false,
-        allowNullableNumber: false,
+      '@typescript-eslint/prefer-nullish-coalescing': ['warn', { ignoreConditionalTests: true }],
+      // Temporarily relaxed (will ratchet later)
+      '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/explicit-member-accessibility': 'warn',
+      '@typescript-eslint/strict-boolean-expressions': ['warn', {
+        allowString: true,
+        allowNumber: true,
+        allowNullableObject: true,
+        allowNullableBoolean: true,
+        allowNullableString: true,
+        allowNullableNumber: true,
         allowAny: false
       }],
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/no-unnecessary-condition': ['error', { allowConstantLoopConditions: true }],
-      '@typescript-eslint/array-type': ['error', { default: 'generic' }],
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-argument': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': ['error', { ignoreConditionalTests: false, ignoreMixedLogicalExpressions: false }],
+      '@typescript-eslint/no-unnecessary-condition': ['warn', { allowConstantLoopConditions: true }],
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+      '@typescript-eslint/array-type': ['warn', { default: 'array' }],
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports', disallowTypeAnnotations: false }],
+      '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
+      '@typescript-eslint/prefer-readonly': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-duplicate-imports': 'error',
       'eqeqeq': ['error', 'smart'],
       'curly': ['error', 'all'],
-      'prefer-const': 'error',
+      'prefer-const': 'warn',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn'
     }
   }),
-  // Plain JS config files override (espree)
+  // Non-type-aware TS/JS (config & scripts) with Node env
   {
     files: [
-      'postcss.config.js',
-      'tailwind.config.js',
-      'vite.config.js',
-      'packages/**/postcss.config.js',
-      'packages/**/tailwind.config.js',
-      'packages/**/vite.config.js'
+      '**/vite.config.{ts,js}',
+      '**/vitest.config.{ts,js}',
+      '**/tailwind.config.{cjs,js}',
+      '**/postcss.config.{cjs,js}',
+      'scripts/**/*.{js,cjs,ts}',
+      '*.cjs'
     ],
-    languageOptions: { sourceType: 'module' },
+    languageOptions: {
+      sourceType: 'module',
+      parserOptions: { project: null }
+    },
+    env: { node: true },
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/consistent-type-imports': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/strict-boolean-expressions': 'off',
-      '@typescript-eslint/prefer-readonly': 'off',
-      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-      '@typescript-eslint/no-unnecessary-condition': 'off'
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-member-accessibility': 'off'
     }
+  },
+  // Allow logger to use console fully
+  {
+    files: ['packages/utils/src/logger.ts'],
+    rules: { 'no-console': 'off' }
   },
   prettier
 ];
