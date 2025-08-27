@@ -1,4 +1,3 @@
-import { create } from 'zustand';
 import { postNarrativeEvent } from '../services/memoryClient';
 import type { ZodType } from 'zod';
 import {
@@ -21,54 +20,49 @@ interface RepoState<T extends { id: string; createdAt: number; updatedAt: number
   clear: () => void;
 }
 
-function makeRepoStore<T extends { id: string; createdAt: number; updatedAt: number }>(): RepoState<T> & { getState: () => RepoState<T> } {
-  const store = create<RepoState<T>>((set, get: () => RepoState<T>) => ({
-    items: {} as Record<string, T>,
-    upsert: (entity: T): void => {
-      set((s: RepoState<T>) => {
-        const exists = Object.prototype.hasOwnProperty.call(s.items, entity.id);
-        void postNarrativeEvent({
-          type: exists ? 'entity_updated' : 'entity_created',
-          payload: { id: entity.id, kind: 'generic', updatedAt: entity.updatedAt }
-        });
-        const nextItems: Record<string, T> = { ...s.items, [entity.id]: entity };
-        return { items: nextItems } as Partial<RepoState<T>>;
+function makeRepoStore<T extends { id: string; createdAt: number; updatedAt: number }>(): RepoState<T> {
+  let items: Record<string, T> = {};
+  const api: RepoState<T> = {
+    get items() { return items; },
+    upsert: (entity: T) => {
+      const exists = Object.prototype.hasOwnProperty.call(items, entity.id);
+      void postNarrativeEvent({
+        type: exists ? 'entity_updated' : 'entity_created',
+        payload: { id: entity.id, kind: 'generic', updatedAt: entity.updatedAt }
       });
+      items = { ...items, [entity.id]: entity };
     },
-    remove: (id: string): void => {
-      set((s: RepoState<T>) => {
-        const next: Record<string, T> = {};
-        for (const key in s.items) {
-          if (Object.prototype.hasOwnProperty.call(s.items, key) && key !== id) {
-            next[key] = s.items[key];
-          }
+    remove: (id: string) => {
+      const next: Record<string, T> = {};
+      for (const key in items) {
+        if (Object.prototype.hasOwnProperty.call(items, key) && key !== id) {
+          next[key] = items[key];
         }
-        return { items: next } as Partial<RepoState<T>>;
-      });
+      }
+      items = next;
     },
-    get: (id: string): T | undefined => get().items[id],
-    all: (): T[] => {
-      const values: T[] = Object.values(get().items);
-      return values.sort((a, b) => b.updatedAt - a.updatedAt);
-    },
-    clear: (): void => { set({ items: {} as Record<string, T> }); }
-  }));
-  // Expose state snapshot plus getter (previous API contract)
-  const snapshot = store.getState();
-  return { ...snapshot, getState: store.getState };
+    get: (id: string) => items[id],
+  all: () => Object.values(items).sort((a, b) => b.updatedAt - a.updatedAt),
+    clear: () => { items = {}; }
+  };
+  return api;
 }
 
-export const useCharacterRepo = makeRepoStore<Character>();
-export const useSettingRepo = makeRepoStore<Setting>();
-export const useLocationRepo = makeRepoStore<Location>();
-export const useObjectRepo = makeRepoStore<ObjectAsset>();
+export const useCharacterRepo: RepoState<Character> = makeRepoStore<Character>();
+export const useSettingRepo: RepoState<Setting> = makeRepoStore<Setting>();
+export const useLocationRepo: RepoState<Location> = makeRepoStore<Location>();
+export const useObjectRepo: RepoState<ObjectAsset> = makeRepoStore<ObjectAsset>();
 
-// Typed schema parse helpers to avoid any widening triggering unsafe-member-access
-const parseWith = <T>(schema: ZodType<T>, data: unknown): T => schema.parse(data);
-export const validateCharacter = (data: unknown): Character => parseWith<Character>(CharacterSchema as ZodType<Character>, data);
-export const validateSetting = (data: unknown): Setting => parseWith<Setting>(SettingSchema as ZodType<Setting>, data);
-export const validateLocation = (data: unknown): Location => parseWith<Location>(LocationSchema as ZodType<Location>, data);
-export const validateObjectAsset = (data: unknown): ObjectAsset => parseWith<ObjectAsset>(ObjectAssetSchema as ZodType<ObjectAsset>, data);
+// Typed schema parse helpers using safeParse to avoid unsafe member access patterns
+const parseWith = <T>(schema: ZodType<T>) => (data: unknown): T => {
+  const result = schema.safeParse(data);
+  if (!result.success) throw new Error(result.error.message);
+  return result.data;
+};
+export const validateCharacter = parseWith(CharacterSchema as ZodType<Character>);
+export const validateSetting = parseWith(SettingSchema as ZodType<Setting>);
+export const validateLocation = parseWith(LocationSchema as ZodType<Location>);
+export const validateObjectAsset = parseWith(ObjectAssetSchema as ZodType<ObjectAsset>);
 
 export interface ImportResult<T> {
   ok: boolean;

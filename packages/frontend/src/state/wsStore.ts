@@ -17,7 +17,7 @@ interface WSState {
 const WS_PATH = '/ws/updates';
 const API_BASE = (import.meta.env.VITE_MEMORY_API ?? 'http://localhost:3001').replace(/\/$/, '');
 
-export const useWSStore = create<WSState>((set, get) => ({
+export const useWSStore = create<WSState>((set: (partial: Partial<WSState> | ((state: WSState) => Partial<WSState>)) => void, get) => ({
   connected: false,
   events: [],
   connect: (): void => {
@@ -27,7 +27,7 @@ export const useWSStore = create<WSState>((set, get) => ({
   const socket = new WebSocket(wsUrl);
   (window as unknown as { __MEMORY_WS__?: WebSocket }).__MEMORY_WS__ = socket;
   socket.onopen = (): void => {
-        set({ connected: true, error: undefined });
+  set({ connected: true, error: undefined });
         socket.send(JSON.stringify({ type: 'subscribe_to_memory_operations' }));
         socket.send(JSON.stringify({ type: 'subscribe_to_emotional_changes' }));
       };
@@ -36,21 +36,21 @@ export const useWSStore = create<WSState>((set, get) => ({
           const parsed: unknown = JSON.parse(ev.data as string);
           if (parsed !== null && typeof parsed === 'object' && Object.prototype.hasOwnProperty.call(parsed, 'type')) {
             const data = parsed as MemoryEventBase;
-            set(s => ({ lastMessage: data, events: [...s.events.slice(-199), data] }));
+            set((s: WSState) => ({ lastMessage: data, events: [...s.events.slice(-199), data] }));
           }
         } catch {
           // ignore parse errors
         }
       };
   socket.onerror = (): void => {
-        set({ error: 'WebSocket error' });
+  set({ error: 'WebSocket error' });
       };
   socket.onclose = (): void => {
-        set({ connected: false });
+  set({ connected: false });
       };
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'WebSocket init failed';
-      set({ error: msg });
+  set({ error: msg });
     }
   },
   disconnect: (): void => {

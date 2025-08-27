@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { chatRequestSchema, chatResponseSchema, type ChatRequest, type ChatResponse } from '@rpg/types';
+import { chatRequestSchema, type ChatRequest, type ChatResponse } from '@rpg/types';
 import { createChatService } from '../modules/chat/chatService.js';
 import { FLAGS } from '../config/flags.js';
 import { ChatRepository } from '../modules/chat/chatRepository.js';
@@ -20,20 +20,12 @@ export { inMemoryChatSessions };
 export function chatRoutes(fastify: FastifyInstance): void {
   const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
   // DEPRECATED: Local ChatRequestSchema / ChatResponseSchema replaced by shared schemas (Sprint 2)
-  const zString = z.string;
   const ChatRequestSchema = chatRequestSchema.extend({
-    // Accept camelCase compatibility fields without enforcing
-    sessionId: zString().uuid().optional(),
-    personaId: zString().optional(),
-    persona_id: zString().optional(),
+    sessionId: z.string().uuid().optional(),
+    personaId: z.string().optional(),
+    persona_id: z.string().optional(),
     fusion_weights: chatRequestSchema.shape.fusion_weights.optional()
   });
-  // Extended response schema kept for backward compatibility (local variations)
-  // Intentionally not re-used directly below, kept for potential future validation extension.
-  chatResponseSchema.extend({
-    sessionId: zString().optional(),
-    reply: zString().optional()
-  }).passthrough();
   const chatService = createChatService({
     fastify,
     repository: new ChatRepository(fastify.db),

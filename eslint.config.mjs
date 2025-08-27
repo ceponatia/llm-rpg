@@ -1,8 +1,10 @@
 // Flat ESLint config (ESLint 9+)
+// Never add .eslintignore file back to project!
 import tseslint from 'typescript-eslint';
 import js from '@eslint/js';
 import * as reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
+import globals from 'globals';
 
 export default [
   {
@@ -18,6 +20,23 @@ export default [
     ]
   },
   js.configs.recommended,
+  // Browser application packages (React frontends etc.)
+  {
+    files: [
+      'packages/admin-dashboard/src/**/*.{js,jsx,ts,tsx}',
+      'packages/frontend/src/**/*.{js,jsx,ts,tsx}',
+      'packages/affect/src/**/*.{js,jsx,ts,tsx}',
+      'packages/context-modifier/src/**/*.{js,jsx,ts,tsx}',
+      'packages/mca/src/**/*.{js,jsx,ts,tsx}'
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        // Allow testing globals (Vitest / Jest style) where relevant
+        ...globals.es2024
+      }
+    }
+  },
   // Type-aware rules only for real source files
   ...tseslint.config({
     files: ['packages/**/src/**/*.{ts,tsx}'],
@@ -27,7 +46,7 @@ export default [
       ...tseslint.configs.stylistic
     ],
     languageOptions: {
-      parserOptions: { project: ['./tsconfig.base.json'] }
+      parserOptions: { project: ['./tsconfig.base.json'], tsconfigRootDir: '.' }
     },
     plugins: { 'react-hooks': reactHooks },
     rules: {
@@ -82,11 +101,12 @@ export default [
       sourceType: 'module',
       parserOptions: { project: null },
       globals: {
-        module: 'readonly',
-        require: 'readonly',
-        __dirname: 'readonly',
-        process: 'readonly',
-        console: 'readonly'
+  ...globals.node,
+  module: 'readonly',
+  require: 'readonly',
+  __dirname: 'readonly',
+  process: 'readonly',
+  console: 'readonly'
       }
     },
     rules: {
@@ -98,7 +118,9 @@ export default [
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/strict-boolean-expressions': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-member-accessibility': 'off'
+  '@typescript-eslint/explicit-member-accessibility': 'off',
+  // Requires parserServices (TS only) - disable for plain JS scripts
+  '@typescript-eslint/consistent-type-imports': 'off'
     }
   },
   // Allow logger to use console fully
