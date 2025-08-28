@@ -1,7 +1,8 @@
 // Flat ESLint config (ESLint 9+)
 import tseslint from 'typescript-eslint';
 import js from '@eslint/js';
-import * as reactHooks from 'eslint-plugin-react-hooks';
+// react-hooks plugin (CommonJS) should be imported as default in ESM flat config
+import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 
 export default [

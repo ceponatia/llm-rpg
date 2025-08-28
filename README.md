@@ -45,3 +45,5 @@ pnpm typecheck
 ## Development notes
 
 Sprint 1 delivered the initial chat loop with in‑memory session turns (bounded 50), simple intent detection (excited / annoyed), and an affection meter (0–100). Persistence beyond process memory and advanced romance logic are deferred to a later sprint.
+
+<!-- ci test trigger -->
