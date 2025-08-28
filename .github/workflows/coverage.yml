@@ -15,26 +15,22 @@ jobs:
       CODACY_ORG_PROVIDER: gh
       CODACY_ORG_NAME: ceponatia
       CODACY_REPO_NAME: llm-rpg
-      # Static Codacy project token injected from repository secrets (add it in: Settings > Secrets and variables > Actions)
       CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node (enable Corepack for pnpm)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install deps
-        run: pnpm install --frozen-lockfile
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
 
       - name: Run coverage (all packages)
         run: pnpm coverage:all
+
+      - name: Aggregate debug (list found lcov.info files)
+        run: |
+          echo 'Searching for lcov.info files:'
+          find packages -type f -path '*/coverage/lcov.info' -print || true
+          if [ ! -f coverage/combined.lcov ]; then
+            echo 'combined.lcov missing AFTER coverage run.'
+            ls -R . | head -n 200 || true
+          fi
 
       - name: Verify Codacy token present
         run: |
@@ -46,30 +42,37 @@ jobs:
 
       - name: Verify lcov not empty
         run: |
+          if [ ! -f coverage/combined.lcov ]; then
+            echo 'ERROR: coverage/combined.lcov not found.'
+            exit 1
+          fi
           COUNT=$(grep -c '^SF:' coverage/combined.lcov || true)
           echo "Source file count: $COUNT"
+            # Show path samples
+          grep '^SF:' coverage/combined.lcov | head -n 20 || true
           if [ "$COUNT" -eq 0 ]; then
             echo 'ERROR: combined.lcov contains zero source files.'
             exit 1
           fi
 
-      - name: Show combined lcov summary
-        run: |
-          echo 'File count:'
-          grep -c '^SF:' coverage/combined.lcov || true
-          echo 'First 5 lines:'
-          head -n 5 coverage/combined.lcov || true
-
       - name: Upload coverage to Codacy (official action)
         if: ${{ env.CODACY_PROJECT_TOKEN != '' && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') }}
-        # Pinned to commit for supply-chain security (v1 tag commit)
         uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699
         with:
           project-token: ${{ env.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage/combined.lcov
-          # Optionally specify commit if needed (defaults to current):
-          # commit-uuid: ${{ github.sha }}
 
-      - name: Skip upload (no token available)
-        if: ${{ env.CODACY_PROJECT_TOKEN == '' }}
-        run: echo 'No Codacy token available; skipping coverage upload.'
+      - name: Upload coverage artifact (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-combined
+          path: |
+            coverage/combined.lcov
+            packages/**/coverage/lcov.info
+          if-no-files-found: warn
+
+      - name: Failure summary
+        if: failure()
+        run: |
+          echo 'Coverage job failed. See collected artifacts for investigation.'

@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 # Husky v10 pre-commit hook
 pnpm typecheck || exit 1
+pnpm lint || exit 1
+pnpm format || exit 1
 pnpm lint:exports || exit 1

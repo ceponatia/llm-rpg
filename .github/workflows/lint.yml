@@ -1,4 +1,4 @@
-name: Lint
+name: Quality
 
 on:
   pull_request:
@@ -9,30 +9,37 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  quality:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Setup environment (checkout + node + pnpm install)
+        uses: ./.github/actions/setup-env
 
-      - name: Setup Node (enable Corepack for pnpm)
-        uses: actions/setup-node@v4
+      - name: Restore ESLint cache
+        uses: actions/cache@v4
         with:
-          node-version: 20
-          cache: pnpm
+          path: .eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs','packages/**/*.ts','packages/**/*.tsx') }}
+          restore-keys: |
+            eslint-${{ runner.os }}-
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: ESLint (check only)
+        run: pnpm lint:check --cache --cache-location .eslintcache
 
-      - name: Install deps
-        run: pnpm install --frozen-lockfile
+      - name: Prettier (format check)
+        run: pnpm format:check
 
-      - name: Run ESLint
-        run: pnpm lint
-        continue-on-error: true
+      - name: Upload quality artifacts (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-logs
+          path: |
+            .eslintcache
+          if-no-files-found: ignore
 
-      - name: Report ESLint summary
+      - name: Export summary
         if: always()
         run: |
-          echo 'ESLint completed (non-blocking initial run).'
-          echo 'Make it blocking later by removing continue-on-error.'
+          echo 'Quality checks completed.'
+          echo 'Includes: ESLint (no --fix), Prettier check.'
