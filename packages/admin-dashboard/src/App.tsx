@@ -17,10 +17,10 @@ function App(): JSX.Element {
     w_L3: 0.2
   });
   
-  const [messages, setMessages] = useState<Array<ChatMessage>>([]);
-  const [memoryOperations, setMemoryOperations] = useState<Array<MemoryOperation>>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [memoryOperations, setMemoryOperations] = useState<MemoryOperation[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
-  const [characters, setCharacters] = useState<Array<CharacterProfile>>([]);
+  const [characters, setCharacters] = useState<CharacterProfile[]>([]);
   const [charactersLoading, setCharactersLoading] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterProfile | null>(null);
 
@@ -40,9 +40,9 @@ function App(): JSX.Element {
           return;
         }
         const json: unknown = await res.json();
-        let list: Array<CharacterProfile> = [];
+        let list: CharacterProfile[] = [];
         if (json !== null && typeof json === 'object' && Array.isArray((json as { characters?: unknown }).characters)) {
-          const raw = (json as { characters: Array<unknown> }).characters;
+          const raw = (json as { characters: unknown[] }).characters;
             // Narrow each element minimally
           list = raw.filter((c): c is CharacterProfile =>
             c !== null && typeof c === 'object' && 'id' in c && typeof (c as { id?: unknown }).id === 'string' && 'name' in c && typeof (c as { name?: unknown }).name === 'string'

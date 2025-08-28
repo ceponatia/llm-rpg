@@ -11,7 +11,7 @@ export interface WorkingMemoryTurn {
 }
 
 export interface WorkingMemory {
-  turns: Array<WorkingMemoryTurn>;
+  turns: WorkingMemoryTurn[];
   max_turns: number;
   total_tokens: number;
 }
@@ -35,7 +35,7 @@ export interface FactNode extends Timestamp {
   entity: string;
   attribute: string;
   current_value: string;
-  history: Array<FactVersion>;
+  history: FactVersion[];
   importance_score: number;
 }
 
@@ -59,40 +59,40 @@ export interface VectorMetadata extends Timestamp, AccessMetrics, ImportanceScor
   doc_id: string;
   source_session_id: string;
   content_type: 'summary' | 'insight' | 'event';
-  tags: Array<string>;
+  tags: string[];
 }
 
 export interface VectorMemoryFragment {
   id: string;
-  embedding: Array<number>;
+  embedding: number[];
   content: string;
   metadata: VectorMetadata;
   similarity_score?: number;
 }
 
 export interface VectorMemory {
-  fragments: Array<VectorMemoryFragment>;
+  fragments: VectorMemoryFragment[];
   dimension: number;
   index_size: number;
 }
 
 // Memory Layer Retrieval Results
 export interface L1RetrievalResult {
-  turns: Array<WorkingMemoryTurn>;
+  turns: WorkingMemoryTurn[];
   relevance_score: number;
   token_count: number;
 }
 
 export interface L2RetrievalResult {
-  characters: Array<Character>;
-  facts: Array<FactNode>;
-  relationships: Array<RelationshipEdge>;
+  characters: Character[];
+  facts: FactNode[];
+  relationships: RelationshipEdge[];
   relevance_score: number;
   token_count: number;
 }
 
 export interface L3RetrievalResult {
-  fragments: Array<VectorMemoryFragment>;
+  fragments: VectorMemoryFragment[];
   relevance_score: number;
   token_count: number;
 }
@@ -112,12 +112,12 @@ export interface MemoryRetrievalResult {
 
 // L2 Write Result Interfaces
 export interface FactWriteResult {
-  operations: Array<MemoryOperation>;
-  fact_ids: Array<string>;
+  operations: MemoryOperation[];
+  fact_ids: string[];
 }
 
 export interface RelationshipWriteResult {
-  operations: Array<MemoryOperation>;
-  relationship_ids: Array<string>;
+  operations: MemoryOperation[];
+  relationship_ids: string[];
 }
 

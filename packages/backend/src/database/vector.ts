@@ -6,8 +6,8 @@ export interface FaissConfig { indexPath: string; dimension: number; }
 
 // Minimal mock index used for now
 export interface MockFaissIndex {
-  add(v: Array<Array<number>>): void;
-  search(v: Array<Array<number>>, k: number): { distances: Array<Array<number>>; labels: Array<Array<number>> };
+  add(v: number[][]): void;
+  search(v: number[][], k: number): { distances: number[][]; labels: number[][] };
   ntotal(): number;
   writeIndex(path: string): Promise<void>;
   readIndex(path: string): Promise<void>;

@@ -8,7 +8,7 @@ interface Neo4jNode { properties: { id: string; entity: string; attribute: strin
 export async function retrieveRelevantFacts(
   tx: ManagedTransaction,
   query: MemoryRetrievalQuery
-): Promise<Array<FactNode>> {
+): Promise<FactNode[]> {
   const cypherQuery = `
     MATCH (f:Fact)
     WHERE toLower(f.attribute) CONTAINS toLower($queryText)

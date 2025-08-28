@@ -10,9 +10,9 @@ export interface PersistArgs {
 }
 
 export class ChatRepository {
-  constructor(private readonly db: DatabaseManager) {}
+  public constructor(private readonly db: DatabaseManager) {}
 
-  async persistTurns(args: PersistArgs): Promise<void> {
+  public async persistTurns(args: PersistArgs): Promise<void> {
     const { sessionId, userTurn, assistantTurn, useCharacter, character_id } = args;
     const neo4jSession = this.db.getNeo4jSession();
     try {
@@ -47,10 +47,10 @@ export class ChatRepository {
     }
   }
 
-  async getRecentTurns(sessionId: string, limit = 50): Promise<ChatTurn[]> {
+  public async getRecentTurns(sessionId: string, limit = 50): Promise<ChatTurn[]> {
     const neo4jSession = this.db.getNeo4jSession();
     try {
-      const result = await neo4jSession.executeRead(tx => tx.run(
+  const result = await neo4jSession.executeRead(tx => tx.run(
         `MATCH (s:Session {id: $sessionId})<-[:IN_SESSION]-(t:Turn)
          RETURN t { .id, .role, .content, timestamp: toString(t.timestamp), .tokens, character_id: t.character_id, session_id: s.id } AS turn
          ORDER BY t.timestamp DESC
@@ -58,7 +58,7 @@ export class ChatRepository {
         { sessionId, limit }
       ));
       // neo4j driver returns records with get method; fake session in tests will adapt
-      return (result as any).records.map((r: any) => r.get('turn')) as ChatTurn[];
+  return (result.records as Array<{ get: (k: string) => unknown }>).map(r => r.get('turn') as ChatTurn);
     } finally {
       await neo4jSession.close();
     }

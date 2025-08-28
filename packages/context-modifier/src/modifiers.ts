@@ -17,7 +17,7 @@ export interface ModifierConfig {
 }
 
 export interface ModifierApplicationResult {
-  applied_modifiers: Array<string>;
+  applied_modifiers: string[];
   intensities: Record<string, number>;
   emotional_adjustment: VADState;
   final_intensity?: number;
@@ -28,7 +28,7 @@ export interface ModifierApplicationResult {
  */
 export class ModifierManager {
   private readonly modifiers = new Map<string, ModifierFragment>();
-  private readonly intentMappings = new Map<Intent, Array<string>>();
+  private readonly intentMappings = new Map<Intent, string[]>();
   private config: ModifierConfig;
 
   public constructor(config?: Partial<ModifierConfig>) {
@@ -63,7 +63,7 @@ export class ModifierManager {
     baseEmotionalState: VADState
   ): ModifierApplicationResult {
     const mapping = this.intentMappings.get(intent) ?? [];
-    const candidates: Array<ModifierFragment> = (mapping.length > 0
+    const candidates: ModifierFragment[] = (mapping.length > 0
       ? mapping.map(id => this.modifiers.get(id)).filter((m): m is ModifierFragment => m != null)
       : Array.from(this.modifiers.values())
     ).sort((a, b) => a.priority - b.priority);
@@ -102,7 +102,7 @@ export class ModifierManager {
    * Get modifiers for a specific intent
    * TODO: Implement modifier retrieval by intent
    */
-  public getModifiersForIntent(intent: Intent): Array<ModifierFragment> {
+  public getModifiersForIntent(intent: Intent): ModifierFragment[] {
     const ids = this.intentMappings.get(intent);
   if (ids === undefined) { return []; }
     return ids.map(id => this.modifiers.get(id)).filter((m): m is ModifierFragment => m != null);
@@ -112,7 +112,7 @@ export class ModifierManager {
    * Set intent to modifier mappings
    * TODO: Implement intent mapping configuration
    */
-  public setIntentMappings(mappings: Map<Intent, Array<string>>): void {
+  public setIntentMappings(mappings: Map<Intent, string[]>): void {
     this.intentMappings.clear();
     for (const [intent, ids] of mappings.entries()) {
       const validIds = ids.filter(id => this.modifiers.has(id));
@@ -135,8 +135,8 @@ export class ModifierManager {
    */
   private blendEmotionalStates(
     baseState: VADState,
-    modifierStates: Array<VADState>,
-    intensities: Array<number>
+    modifierStates: VADState[],
+    intensities: number[]
   ): VADState {
     if (modifierStates.length === 0) { return baseState; }
     let total = 0;
@@ -161,9 +161,9 @@ export class ModifierManager {
    * TODO: Implement prompt text generation
    */
   private generatePromptAdditions(
-    activeModifiers: Array<ModifierFragment>,
-    intensities: Array<number>
-  ): Array<string> {
+    activeModifiers: ModifierFragment[],
+    intensities: number[]
+  ): string[] {
     return activeModifiers.map((m, i) => `${m.text} (x${intensities[i]?.toFixed(2) ?? '0.00'})`);
   }
 
@@ -171,7 +171,7 @@ export class ModifierManager {
    * List all registered modifiers
    * TODO: Implement modifier listing
    */
-  public listModifiers(): Array<ModifierFragment> {
+  public listModifiers(): ModifierFragment[] {
     return Array.from(this.modifiers.values()).sort((a, b) => a.priority - b.priority);
   }
 

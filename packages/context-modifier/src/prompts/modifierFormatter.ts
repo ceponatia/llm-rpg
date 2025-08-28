@@ -3,7 +3,7 @@
  */
 import type { ModifierFragment } from '@rpg/types';
 
-export function formatActiveModifiers(fragments: Array<ModifierFragment>, intensities: Record<string, number>): string {
+export function formatActiveModifiers(fragments: ModifierFragment[], intensities: Record<string, number>): string {
   if (fragments.length === 0) { return 'None'; }
   return fragments
     .map((f: ModifierFragment) => {

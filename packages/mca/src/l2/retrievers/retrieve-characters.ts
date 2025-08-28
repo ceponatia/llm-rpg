@@ -8,7 +8,7 @@ interface Neo4jNode { properties: { id: string; name: string; emotional_state?: 
 export async function retrieveRelevantCharacters(
   tx: ManagedTransaction, 
   query: MemoryRetrievalQuery
-): Promise<Array<Character>> {
+): Promise<Character[]> {
   const cypherQuery = `
     MATCH (c:Character)
     WHERE toLower(c.name) CONTAINS toLower($queryText)

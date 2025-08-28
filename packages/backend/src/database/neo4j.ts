@@ -47,7 +47,7 @@ export class Neo4jConnection {
   public async initialize(): Promise<void> {
     const { optional, maxRetries = 5, retryDelayMs = 1000 } = this.cfg;
     let attempt = 0;
-    while (true) { // eslint-disable-line no-constant-condition
+    while (true) {  
       try {
         this.driver = this.driverFactory(
           this.cfg.uri,

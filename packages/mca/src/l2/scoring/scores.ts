@@ -2,9 +2,9 @@
 import type { Character, FactNode, RelationshipEdge } from '@rpg/types';
 
 export function calculateL2RelevanceScore(
-  characters: Array<Character>, 
-  facts: Array<FactNode>, 
-  relationships: Array<RelationshipEdge>
+  characters: Character[], 
+  facts: FactNode[], 
+  relationships: RelationshipEdge[]
 ): number {
   const totalItems = characters.length + facts.length + relationships.length;
   if (totalItems === 0) {return 0;}
@@ -14,9 +14,9 @@ export function calculateL2RelevanceScore(
 }
 
 export function estimateL2TokenCount(
-  characters: Array<Character>, 
-  facts: Array<FactNode>, 
-  relationships: Array<RelationshipEdge>
+  characters: Character[], 
+  facts: FactNode[], 
+  relationships: RelationshipEdge[]
 ): number {
   let tokenCount = 0;
   

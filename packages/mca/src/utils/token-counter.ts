@@ -62,7 +62,7 @@ export function truncateToTokenLimit(text: string, maxTokens: number): string {
   return truncated + '...';
 }
 
-export function batchEstimate(texts: Array<string>): Array<{ text: string; tokens: number }> {
+export function batchEstimate(texts: string[]): { text: string; tokens: number }[] {
   return texts.map(text => ({ text, tokens: estimateTokens(text) }));
 }
 

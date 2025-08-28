@@ -3,7 +3,7 @@ import { FileText, Copy, Eye, EyeOff, Zap } from 'lucide-react';
 import type { ChatMessage, WeightedMemoryFusion } from '@rpg/types';
 
 interface PromptInspectorPanelProps {
-  messages: Array<ChatMessage>;
+  messages: ChatMessage[];
   fusionWeights: WeightedMemoryFusion;
 }
 

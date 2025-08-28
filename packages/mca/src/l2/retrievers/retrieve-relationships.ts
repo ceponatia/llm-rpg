@@ -8,7 +8,7 @@ interface Neo4jRecordLike { get(key: string): unknown }
 export async function retrieveRelevantRelationships(
   tx: ManagedTransaction, 
   query: MemoryRetrievalQuery
-): Promise<Array<RelationshipEdge>> {
+): Promise<RelationshipEdge[]> {
   const cypherQuery = `
     MATCH (from)-[r:RELATIONSHIP]->(to)
     WHERE toLower(r.relationship_type) CONTAINS toLower($queryText)

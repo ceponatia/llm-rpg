@@ -10,7 +10,7 @@ export function cleanText(text: string): string {
     .toLowerCase();
 }
 
-export function extractKeywords(text: string, minLength = 3): Array<string> {
+export function extractKeywords(text: string, minLength = 3): string[] {
     const stopWords = new Set([
       'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
       'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
@@ -124,7 +124,7 @@ export function detectSentiment(text: string): { polarity: number; confidence: n
   return { polarity, confidence };
 }
 
-  export function extractPotentialNames(text: string): Array<string> {
+  export function extractPotentialNames(text: string): string[] {
       // Look for capitalized words that could be names
       const capitalizedWordsMatch = text.match(/\b[A-Z][a-z]+\b/g);
   const capitalizedWords = capitalizedWordsMatch ?? [];

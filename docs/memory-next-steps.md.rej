@@ -1,0 +1,14 @@
+--- docs/memory-next-steps.md
++++ docs/memory-next-steps.md
+@@ -29 +29 @@
+-  - Friction monotonic increase with distance.
++		- Friction monotonic increase with distance.
+@@ -30 +30 @@
+-  		- Trait cap corridor not exceeded.
++		- Trait cap corridor not exceeded.
+@@ -31 +31 @@
+-  		- Saturation plateau (delta magnitude decreases past threshold).
++		- Saturation plateau (delta magnitude decreases past threshold).
+@@ -32 +32 @@
+-  		- Corridor enforcement if added.
++		- Corridor enforcement if added.

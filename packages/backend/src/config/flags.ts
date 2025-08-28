@@ -20,8 +20,9 @@ const flagsSchema = z.object({
   NEO4J_RETRY_DELAY_MS: z.string().optional().transform(v => v === undefined ? undefined : parseInt(v, 10)).pipe(z.number().int().nonnegative().catch(1000)).optional()
 }).passthrough(); // allow additional vars without failure
 
-function parseCurrent() { return flagsSchema.parse(process.env); }
-let parsed = parseCurrent();
+function parseCurrent(): ParsedFlags { return flagsSchema.parse(process.env); }
+type ParsedFlags = z.infer<typeof flagsSchema>;
+let parsed: ParsedFlags = parseCurrent();
 
 // Capture default values for diff / logging reference
 const DEFAULTS = {
@@ -42,8 +43,8 @@ export let FLAGS = {
   ADMIN_PUBLIC: parsed.ADMIN_PUBLIC ?? DEFAULTS.ADMIN_PUBLIC,
   NEO4J_OPTIONAL: parsed.NEO4J_OPTIONAL ?? DEFAULTS.NEO4J_OPTIONAL,
   PERSIST_CHAT_TURNS: parsed.PERSIST_CHAT_TURNS ?? false,
-  NEO4J_MAX_RETRIES: (parsed as any).NEO4J_MAX_RETRIES ?? DEFAULTS.NEO4J_MAX_RETRIES,
-  NEO4J_RETRY_DELAY_MS: (parsed as any).NEO4J_RETRY_DELAY_MS ?? DEFAULTS.NEO4J_RETRY_DELAY_MS
+  NEO4J_MAX_RETRIES: parsed.NEO4J_MAX_RETRIES ?? DEFAULTS.NEO4J_MAX_RETRIES,
+  NEO4J_RETRY_DELAY_MS: parsed.NEO4J_RETRY_DELAY_MS ?? DEFAULTS.NEO4J_RETRY_DELAY_MS
 } as const;
   
 
@@ -61,8 +62,8 @@ export function refreshFlags(): void {
     ADMIN_PUBLIC: parsed.ADMIN_PUBLIC ?? DEFAULTS.ADMIN_PUBLIC,
     NEO4J_OPTIONAL: parsed.NEO4J_OPTIONAL ?? DEFAULTS.NEO4J_OPTIONAL,
   PERSIST_CHAT_TURNS: parsed.PERSIST_CHAT_TURNS ?? false,
-    NEO4J_MAX_RETRIES: (parsed as any).NEO4J_MAX_RETRIES ?? DEFAULTS.NEO4J_MAX_RETRIES,
-    NEO4J_RETRY_DELAY_MS: (parsed as any).NEO4J_RETRY_DELAY_MS ?? DEFAULTS.NEO4J_RETRY_DELAY_MS
+  NEO4J_MAX_RETRIES: parsed.NEO4J_MAX_RETRIES ?? DEFAULTS.NEO4J_MAX_RETRIES,
+  NEO4J_RETRY_DELAY_MS: parsed.NEO4J_RETRY_DELAY_MS ?? DEFAULTS.NEO4J_RETRY_DELAY_MS
   } as const;
   
 }
@@ -73,7 +74,7 @@ export function getRaw(name: string): string | undefined { return env[name]; }
 // Log non-default active flags (call during startup). Accepts a logger-like with info method.
 export function logNonDefaultFlags(loggerLike: { info: (msg: string, meta?: unknown) => void } | Console = console): void {
   const diffs: Record<string, unknown> = {};
-  (Object.keys(FLAGS) as Array<BackendFlag>).forEach(k => {
+  (Object.keys(FLAGS) as BackendFlag[]).forEach(k => {
     const current = FLAGS[k];
     const def = (DEFAULTS as Record<string, unknown>)[k];
     if (current !== def) { diffs[k] = current; }
@@ -86,7 +87,7 @@ export function logNonDefaultFlags(loggerLike: { info: (msg: string, meta?: unkn
 }
 
 // Assert required env vars exist (fail-fast).  Use in startup or tests.
-export function assertRequired(required: Array<string>): void {
+export function assertRequired(required: string[]): void {
   const missing = required.filter(r => !env[r] || env[r] === '');
   if (missing.length) {
     throw new Error(`Missing required environment variable(s): ${missing.join(', ')}`);

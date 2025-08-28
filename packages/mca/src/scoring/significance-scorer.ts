@@ -33,7 +33,7 @@ export class SignificanceScorer  {
   /**
    * Score a conversation turn for significance (0-10 scale)
    */
-  public scoreConversationTurn(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): number {
+  public scoreConversationTurn(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): number {
     let score = 0;
 
     // Base score for all turns
@@ -75,7 +75,7 @@ export class SignificanceScorer  {
   /**
    * Detect significant events in a conversation turn
    */
-  public detectEvents(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): EventDetectionResult {
+  public detectEvents(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): EventDetectionResult {
     const significance_score = this.scoreConversationTurn(turn, context);
     const is_significant = significance_score >= this.config.l2_significance_threshold;
 
@@ -135,8 +135,8 @@ export class SignificanceScorer  {
     return Math.min(2, intensity);
   }
 
-  private extractEvents(content: string): Array<DetectedEvent> {
-    const events: Array<DetectedEvent> = [];
+  private extractEvents(content: string): DetectedEvent[] {
+    const events: DetectedEvent[] = [];
     const lowerContent = content.toLowerCase();
 
     Object.entries(this.significantEvents).forEach(([eventType, keywords]) => {
@@ -158,8 +158,8 @@ export class SignificanceScorer  {
     return events;
   }
 
-  private detectEmotionalChanges(content: string, context: Array<WorkingMemoryTurn>): Array<EmotionalChange> {
-    const changes: Array<EmotionalChange> = [];
+  private detectEmotionalChanges(content: string, context: WorkingMemoryTurn[]): EmotionalChange[] {
+    const changes: EmotionalChange[] = [];
     const entities = this.extractNamedEntities(content);
 
     // For each detected person, estimate their emotional state
@@ -183,8 +183,8 @@ export class SignificanceScorer  {
     return changes;
   }
 
-  private extractNamedEntities(content: string): Array<NamedEntity> {
-    const entities: Array<NamedEntity> = [];
+  private extractNamedEntities(content: string): NamedEntity[] {
+    const entities: NamedEntity[] = [];
     
     // Simple pattern-based NER (in reality, would use a proper NER model)
     
@@ -236,7 +236,7 @@ export class SignificanceScorer  {
     return 'PERSON';
   }
 
-  private findNearbyEntities(content: string, keyword: string): Array<string> {
+  private findNearbyEntities(content: string, keyword: string): string[] {
     // Find proper nouns within 50 characters of the keyword
     const keywordIndex = content.toLowerCase().indexOf(keyword.toLowerCase());
     if (keywordIndex === -1) {return [];}
@@ -264,7 +264,7 @@ export class SignificanceScorer  {
     return { valence: Math.max(-1, Math.min(1, valence)), arousal: Math.max(0, Math.min(1, arousal)), dominance: Math.max(0, Math.min(1, dominance)) };
   }
 
-  private findPreviousVAD(entityName: string, context: Array<WorkingMemoryTurn>): VADState | null {
+  private findPreviousVAD(entityName: string, context: WorkingMemoryTurn[]): VADState | null {
     // Look through previous turns for mentions of this entity
     for (let i = context.length - 1; i >= 0; i--) {
       const turn = context[i];

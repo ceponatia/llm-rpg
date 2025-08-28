@@ -11,7 +11,7 @@ import { intentSchema, intentDetectionRuleSchema, type Intent, type IntentDetect
 export interface IntentDetectionResult {
   intent: Intent;
   confidence: number;
-  matchedRules: Array<string>;
+  matchedRules: string[];
   fallbackUsed: boolean;
 }
 
@@ -19,7 +19,7 @@ export interface IntentDetectionResult {
  * Configuration for intent detection
  */
 export interface IntentDetectorConfig {
-  rules: Array<IntentDetectionRule>;
+  rules: IntentDetectionRule[];
   defaultIntent: Intent;
   confidenceThreshold: number;
   enableFallback: boolean;
@@ -29,7 +29,7 @@ export interface IntentDetectorConfig {
  * Intent detector using keyword matching and pattern recognition
  */
 export class IntentDetector {
-  private rules: Array<InternalRule> = [];
+  private rules: InternalRule[] = [];
   private defaultIntent: Intent = 'neutral';
   private confidenceThreshold = 0.6;
   private enableFallback = true;
@@ -47,7 +47,7 @@ export class IntentDetector {
    */
   public detectIntent(userMessage: string): IntentDetectionResult {
     const normalized: string = userMessage.toLowerCase().trim();
-    const candidates: Array<{ rule: InternalRule; confidence: number; keywordScore: number; patternScore: number }> = [];
+    const candidates: { rule: InternalRule; confidence: number; keywordScore: number; patternScore: number }[] = [];
 
     for (const rule of this.rules) {
       const keywordScore: number = this.analyzeKeywords(normalized, rule.keywords);
@@ -141,7 +141,7 @@ export class IntentDetector {
    * Get current detection rules
    * TODO: Implement rule listing
    */
-  public getRules(): Array<IntentDetectionRule> {
+  public getRules(): IntentDetectionRule[] {
 	return this.rules
       .map(r => ({ intent: r.intent, keywords: [...r.keywords], patterns: [...r.patterns], confidence_threshold: r.confidence_threshold, priority: r.priority }))
       .sort((a, b) => a.priority - b.priority);
@@ -151,11 +151,11 @@ export class IntentDetector {
    * Analyze message for keyword matches (helper method)
    * TODO: Implement keyword analysis
    */
-  private analyzeKeywords(message: string, keywords: Array<string>): number {
+  private analyzeKeywords(message: string, keywords: string[]): number {
     if (keywords.length === 0) {
       return 0;
     }
-    const tokens: Array<string> = message.split(/[^a-z0-9]+/g).filter(Boolean);
+    const tokens: string[] = message.split(/[^a-z0-9]+/g).filter(Boolean);
     if (tokens.length === 0) {
       return 0;
     }
@@ -173,7 +173,7 @@ export class IntentDetector {
    * Apply pattern matching (helper method)  
    * TODO: Implement pattern matching
    */
-  private matchPatterns(message: string, patterns: Array<string>): number {
+  private matchPatterns(message: string, patterns: string[]): number {
     if (patterns.length === 0) {
       return 0;
     }
@@ -205,7 +205,7 @@ export class IntentDetector {
 /** Internal decorated rule */
 interface InternalRule extends IntentDetectionRule { __id: string; __numericId: number; }
 
-function arrayEqual(a: Array<string>, b: Array<string>): boolean {
+function arrayEqual(a: string[], b: string[]): boolean {
   if (a.length !== b.length) {return false;}
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) {return false;}

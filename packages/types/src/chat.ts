@@ -18,16 +18,16 @@ export interface ChatMessage {
   metadata?: {
     tokens?: TokenCost;
     processing_time?: number;
-    memory_operations?: Array<MemoryOperation>;
+    memory_operations?: MemoryOperation[];
     memory_retrieval?: MemoryRetrievalResult;
-    emotional_state_changes?: Array<VADStateChange>;
+    emotional_state_changes?: VADStateChange[];
     prompt_sections?: PromptSections;
   };
 }
 
 export interface ChatSession {
   id: string;
-  messages: Array<ChatMessage>;
+  messages: ChatMessage[];
   created_at: string;
   last_updated: string;
   total_tokens: number;
@@ -52,8 +52,8 @@ export interface ChatResponse {
     tokens: TokenCost;
     processing_time: number;
     memory_retrieval: MemoryRetrievalResult;
-    memory_operations: Array<MemoryOperation>;
-    emotional_state_changes?: Array<VADStateChange>;
+    memory_operations: MemoryOperation[];
+    emotional_state_changes?: VADStateChange[];
     prompt_sections?: PromptSections;
   };
 }

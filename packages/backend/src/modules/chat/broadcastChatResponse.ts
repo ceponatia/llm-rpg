@@ -1,6 +1,8 @@
 import type { ChatResponse } from '@rpg/types';
 
-export function broadcastChatResponse(clients: Set<any> | undefined, chatResponse: ChatResponse): void {
+interface WSClient { readyState: number; send: (data: string) => void }
+
+export function broadcastChatResponse(clients: Set<WSClient> | undefined, chatResponse: ChatResponse): void {
   if (!clients) return;
   clients.forEach(client => {
     if (client.readyState === 1) { // OPEN

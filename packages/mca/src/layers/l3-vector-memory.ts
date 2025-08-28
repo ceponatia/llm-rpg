@@ -32,9 +32,9 @@ export class L3VectorMemory {
     eventDetection: EventDetectionResult,
     sessionId: string
   ): Promise<{
-    operations: Array<MemoryOperation>;
+    operations: MemoryOperation[];
   }> {
-    const operations: Array<MemoryOperation> = [];
+    const operations: MemoryOperation[] = [];
 
     try {
       const summary = this.generateSummary(turn, eventDetection);
@@ -56,7 +56,7 @@ export class L3VectorMemory {
         }
       };
 
-      const faissIndex = this.dbManager.getFaissIndex() as { add(v: Array<Array<number>>): void };
+      const faissIndex = this.dbManager.getFaissIndex() as { add(v: number[][]): void };
       faissIndex.add([embedding]);
       this.fragments.set(fragment.id, fragment);
       await this.dbManager.saveFaissIndex();
@@ -92,13 +92,13 @@ export class L3VectorMemory {
         return { fragments: [], relevance_score: 0, token_count: 0 };
       }
   const queryEmbedding = this.generateEmbedding(query.query_text);
-      const faissIndex = this.dbManager.getFaissIndex() as { ntotal(): number; search(v: Array<Array<number>>, k: number): { distances: Array<Array<number>>; labels: Array<Array<number>> } };
+      const faissIndex = this.dbManager.getFaissIndex() as { ntotal(): number; search(v: number[][], k: number): { distances: number[][]; labels: number[][] } };
       const k = Math.min(10, this.fragments.size);
       if (faissIndex.ntotal() === 0) {
         return { fragments: [], relevance_score: 0, token_count: 0 };
       }
       const searchResult = faissIndex.search([queryEmbedding], k);
-      const relevantFragments: Array<VectorMemoryFragment> = [];
+      const relevantFragments: VectorMemoryFragment[] = [];
       const fragmentArray = Array.from(this.fragments.values());
       for (let i = 0; i < searchResult.distances[0].length; i++) {
         const index = searchResult.labels[0][i];
@@ -162,10 +162,10 @@ export class L3VectorMemory {
     return summary;
   }
 
-    private generateEmbedding(text: string): Array<number> {
+    private generateEmbedding(text: string): number[] {
       // Mock embedding generation - in reality, this would use a model like Sentence-BERT
       // For now, create a simple hash-based embedding
-      const embedding: Array<number> = Array.from({ length: this.config.l3_vector_dimension }, () => 0);
+      const embedding: number[] = Array.from({ length: this.config.l3_vector_dimension }, () => 0);
     
     // Simple character-based hash embedding
       for (let i = 0; i < text.length; i++) {
@@ -196,8 +196,8 @@ export class L3VectorMemory {
     }
   }
 
-  private extractTags(turn: WorkingMemoryTurn, eventDetection: EventDetectionResult): Array<string> {
-    const tags: Array<string> = [];
+  private extractTags(turn: WorkingMemoryTurn, eventDetection: EventDetectionResult): string[] {
+    const tags: string[] = [];
     
     // Add role as tag
     tags.push(turn.role);
@@ -220,7 +220,7 @@ export class L3VectorMemory {
     return [...new Set(tags)]; // Remove duplicates
   }
 
-  private estimateL3TokenCount(fragments: Array<VectorMemoryFragment>): number {
+  private estimateL3TokenCount(fragments: VectorMemoryFragment[]): number {
     // Rough estimation: average 100 tokens per fragment content
     return fragments.reduce((sum, fragment) => {
       const contentTokens = Math.ceil(fragment.content.length / 4); // 4 chars per token

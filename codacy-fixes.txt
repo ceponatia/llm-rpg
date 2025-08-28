@@ -1,0 +1,328 @@
+diff --git a/docs/development/implement-chat-route.md b/docs/development/implement-chat-route.md
+--- a/docs/development/implement-chat-route.md
++++ b/docs/development/implement-chat-route.md
+@@ -32,1 +32,1 @@
+-1. Register route in main registration point (likely `src/index.ts` or a `routes/index.ts`).
++
+1. Register route in main registration point (likely `src/index.ts` or a `routes/index.ts`).
+diff --git a/docs/architecture/sessions.md b/docs/architecture/sessions.md
+--- a/docs/architecture/sessions.md
++++ b/docs/architecture/sessions.md
+@@ -43,1 +43,1 @@
+-* Pagination & stream APIs (WebSocket) for history replay.
++
+diff --git a/docs/memory-next-steps.md b/docs/memory-next-steps.md
+--- a/docs/memory-next-steps.md
++++ b/docs/memory-next-steps.md
+@@ -6,1 +6,1 @@
+-## 1. Decouple From External Types (IN PROGRESS)
++
+## 1. Decouple From External Types (IN PROGRESS)
+@@ -28,1 +28,1 @@
+-	- Trust gate scaling monotonicity.
++ - Trust gate scaling monotonicity.
+@@ -29,1 +29,1 @@
+-		- Friction monotonic increase with distance.
++  - Friction monotonic increase with distance.
+@@ -30,1 +30,1 @@
+-		- Trait cap corridor not exceeded.
++  		- Trait cap corridor not exceeded.
+@@ -31,1 +31,1 @@
+-		- Saturation plateau (delta magnitude decreases past threshold).
++  		- Saturation plateau (delta magnitude decreases past threshold).
+@@ -32,1 +32,1 @@
+-		- Corridor enforcement if added.
++  		- Corridor enforcement if added.
+@@ -76,1 +76,1 @@
+-### Immediate Actions (Suggested Order)
++
+### Immediate Actions (Suggested Order)
+diff --git a/docs/consistency-guardrails.md b/docs/consistency-guardrails.md
+--- a/docs/consistency-guardrails.md
++++ b/docs/consistency-guardrails.md
+@@ -5,1 +5,1 @@
+-## Goals
++## Goals
+
+@@ -6,1 +6,1 @@
+-- Encourage stable persona and style over long sessions.
++
+- Encourage stable persona and style over long sessions.
+@@ -13,1 +13,1 @@
+-	- Track cosine similarity between the last K user messages and a rolling session theme centroid. If similarity drops below a threshold for N turns, schedule a consistency reminder.
++ - Track cosine similarity between the last K user messages and a rolling session theme centroid. If similarity drops below a threshold for N turns, schedule a consistency reminder.
+@@ -14,1 +14,1 @@
+-	- Compute using already-retrieved vector embeddings (l3) to avoid extra calls.
++ 	- Compute using already-retrieved vector embeddings (l3) to avoid extra calls.
+@@ -17,1 +17,1 @@
+-	- Ratio of referenced facts in the last response that match high-importance L2 facts. If too low across M turns, prompt a soft recall reminder.
++ 	- Ratio of referenced facts in the last response that match high-importance L2 facts. If too low across M turns, prompt a soft recall reminder.
+@@ -20,1 +20,1 @@
+-	- Compare recent speaking style and sentiment with the characterâs baseline VAD. If average absolute delta > threshold for T turns, inject a brief OOC style anchor.
++ - Compare recent speaking style and sentiment with the characterâs baseline VAD. If average absolute delta > threshold for T turns, inject a brief OOC style anchor.
+@@ -23,1 +23,1 @@
+-	- Light-weight classifier for phrases like âbtw as the AI,â âsystem prompt,â âas ChatGPT,â etc. If triggered, raise priority for the next consistency injection.
++ - Light-weight classifier for phrases like âbtw as the AI,â âsystem prompt,â âas ChatGPT,â etc. If triggered, raise priority for the next consistency injection.
+@@ -26,1 +26,1 @@
+-	- At scene changes or when a new character is introduced, provide a one-time, stronger persona recap.
++ 	- At scene changes or when a new character is introduced, provide a one-time, stronger persona recap.
+@@ -31,1 +31,1 @@
+-	- Maintain both turn-based and time-based cooldowns to avoid back-to-back reminders.
++ 	- Maintain both turn-based and time-based cooldowns to avoid back-to-back reminders.
+@@ -33,1 +33,1 @@
+-	- Skip reminders when prompt token count exceeds a soft limit (e.g., 85% of model context window).
++ - Skip reminders when prompt token count exceeds a soft limit (e.g., 85% of model context window).
+@@ -35,1 +35,1 @@
+-	- Convert multiple signals into a score; inject only if score exceeds threshold and cooldown allows.
++ - Convert multiple signals into a score; inject only if score exceeds threshold and cooldown allows.
+@@ -40,1 +40,1 @@
+-	- Surface when/why an injection occurred in the Under The Hood panel.
++ 	- Surface when/why an injection occurred in the Under The Hood panel.
+@@ -42,1 +42,1 @@
+-	- Expose env flags to disable or tune thresholds without redeploy.
++ - Expose env flags to disable or tune thresholds without redeploy.
+@@ -47,1 +47,1 @@
+-	- Recent turns (L1)
++ - Recent turns (L1)
+@@ -48,1 +48,1 @@
+-	- Selected L2 facts/characters and their importance
++ - Selected L2 facts/characters and their importance
+@@ -49,1 +49,1 @@
+-	- L3 retrieved fragments & similarities
++ 	- L3 retrieved fragments & similarities
+diff --git a/docs/CONSOLIDATION_TODO.md b/docs/CONSOLIDATION_TODO.md
+--- a/docs/CONSOLIDATION_TODO.md
++++ b/docs/CONSOLIDATION_TODO.md
+@@ -62,1 +62,1 @@
+-
++
+@@ -70,1 +70,1 @@
+-## Path Aliases & TypeScript
++
+## Path Aliases & TypeScript
+@@ -74,1 +74,1 @@
+-   - `"@rpg/frontend"`: `./packages/frontend/src`
++  - `"@rpg/frontend"`: `./packages/frontend/src`
+@@ -75,1 +75,1 @@
+-   - `"@rpg/frontend/*"`: `./packages/frontend/src/*`
++  - `"@rpg/frontend/*"`: `./packages/frontend/src/*`
+@@ -330,1 +330,1 @@
+-- Long-term: Consider external gateway (e.g., Envoy / API Gateway) only once multiple internal services split out.
++
+diff --git a/docs/development/closed/frontend-design.md b/docs/development/closed/frontend-design.md
+--- a/docs/development/closed/frontend-design.md
++++ b/docs/development/closed/frontend-design.md
+@@ -76,1 +76,1 @@
+-	components/
++ components/
+@@ -77,1 +77,1 @@
+-		auth/
++  auth/
+@@ -78,1 +78,1 @@
+-		primitives/        # (future) low-level reusable pieces
++  primitives/        # (future) low-level reusable pieces
+@@ -79,1 +79,1 @@
+-		panels/            # Dashboard-specific composite units
++  panels/            # Dashboard-specific composite units
+@@ -80,1 +80,1 @@
+-	pages/
++ pages/
+@@ -81,1 +81,1 @@
+-	sections/            # (rename to panels/ or integrate into components/panels)
++ sections/            # (rename to panels/ or integrate into components/panels)
+@@ -82,1 +82,1 @@
+-	state/
++ state/
+@@ -83,1 +83,1 @@
+-		index.ts
++  index.ts
+@@ -84,1 +84,1 @@
+-		sessionStore.ts
++  sessionStore.ts
+@@ -85,1 +85,1 @@
+-		wsStore.ts
++  wsStore.ts
+@@ -86,1 +86,1 @@
+-		uiStore.ts
++  uiStore.ts
+@@ -87,1 +87,1 @@
+-	services/
++ services/
+@@ -88,1 +88,1 @@
+-		api/
++  api/
+@@ -89,1 +89,1 @@
+-			memoryClient.ts
++   memoryClient.ts
+@@ -90,1 +90,1 @@
+-		ws/
++  ws/
+@@ -91,1 +91,1 @@
+-			eventStream.ts
++   eventStream.ts
+@@ -92,1 +92,1 @@
+-	utils/
++ utils/
+@@ -93,1 +93,1 @@
+-	hooks/               # (future) cross-cutting hooks (useFeatureFlag, useEventStream)
++ hooks/               # (future) cross-cutting hooks (useFeatureFlag, useEventStream)
+@@ -94,1 +94,1 @@
+-	styles.css
++ styles.css
+@@ -95,1 +95,1 @@
+-	main.tsx
++ main.tsx
+@@ -96,1 +96,1 @@
+-	env.d.ts
++ env.d.ts
+diff --git a/docs/neo4j.md b/docs/neo4j.md
+--- a/docs/neo4j.md
++++ b/docs/neo4j.md
+@@ -144,1 +144,1 @@
+-4. Browse http://localhost:7474 (optional) and run diagnostic:
++4. Browse <http://localhost:7474> (optional) and run diagnostic:
+diff --git a/docs/development/sprint1.md b/docs/development/sprint1.md
+--- a/docs/development/sprint1.md
++++ b/docs/development/sprint1.md
+@@ -86,1 +86,1 @@
+-
++
+diff --git a/docs/prompts.md b/docs/prompts.md
+--- a/docs/prompts.md
++++ b/docs/prompts.md
+@@ -3,1 +3,1 @@
+-## Overview
++## Overview
+
+@@ -31,1 +31,1 @@
+-- Model: `mistral:instruct` (configured in environment variables)
++
+- Model: `mistral:instruct` (configured in environment variables)
+@@ -80,1 +80,1 @@
+-1. **Character Token Awareness**: Explicitly defines {{char}} and {{user}} roles
++
+1. **Character Token Awareness**: Explicitly defines {{char}} and {{user}} roles
+@@ -87,1 +87,1 @@
+-- Replace {{char}} and {{user}} with actual character/user names in code
++
+- Replace {{char}} and {{user}} with actual character/user names in code
+@@ -109,1 +109,1 @@
+-### 1. Template Format
++### 1. Template Format
+
+@@ -115,1 +115,1 @@
+-### 2. Character Consistency Techniques
++### 2. Character Consistency Techniques
+
+@@ -116,1 +116,1 @@
+-- **Direct Reminders**: Include "Stay in character as {{char}}" in prompts
++
+- **Direct Reminders**: Include "Stay in character as {{char}}" in prompts
+@@ -121,1 +121,1 @@
+-### 3. Context Management
++### 3. Context Management
+
+@@ -122,1 +122,1 @@
+-- **Memory Integration**: Structure memory data clearly in designated sections
++
+- **Memory Integration**: Structure memory data clearly in designated sections
+@@ -126,1 +126,1 @@
+-### 4. Response Quality
++### 4. Response Quality
+
+@@ -127,1 +127,1 @@
+-- **Style Consistency**: Maintain {{char}}'s established speaking patterns
++
+- **Style Consistency**: Maintain {{char}}'s established speaking patterns
+@@ -131,1 +131,1 @@
+-### 5. Error Handling
++### 5. Error Handling
+
+@@ -132,1 +132,1 @@
+-- **Character Drift**: Implement automatic character consistency checks
++
+- **Character Drift**: Implement automatic character consistency checks
+diff --git a/.github/instructions/markdown.instructions.md b/.github/instructions/markdown.instructions.md
+--- a/.github/instructions/markdown.instructions.md
++++ b/.github/instructions/markdown.instructions.md
+@@ -9,1 +9,1 @@
+-## General Principles
++## General Principles
+
+@@ -10,1 +10,1 @@
+-* Prefer semantic headings (start at `#` for page title, then `##`, `###`, without skipping levels).
++
+* Prefer semantic headings (start at `#` for page title, then `##`, `###`, without skipping levels).
+@@ -17,1 +17,1 @@
+-### MD022 â Headings should be surrounded by blank lines
++### MD022 â Headings should be surrounded by blank lines
+
+@@ -29,1 +29,1 @@
+-### MD032 â Lists should be surrounded by blank lines
++### MD032 â Lists should be surrounded by blank lines
+
+@@ -32,1 +32,1 @@
+-### MD007 â Unordered list indentation
++### MD007 â Unordered list indentation
+
+@@ -36,1 +36,1 @@
+-	* Nested item
++ * Nested item
+@@ -40,1 +40,1 @@
+-### MD029 â Ordered list item prefix style
++### MD029 â Ordered list item prefix style
+
+@@ -43,1 +43,1 @@
+-### MD004 â Unordered list style
++### MD004 â Unordered list style
+
+@@ -46,1 +46,1 @@
+-### MD058 â Tables should be surrounded by blank lines
++### MD058 â Tables should be surrounded by blank lines
+
+@@ -58,1 +58,1 @@
+-### MD009 â No trailing spaces
++### MD009 â No trailing spaces
+
+@@ -61,1 +61,1 @@
+-### Additional Formatting Conventions
++### Additional Formatting Conventions
+
+@@ -62,1 +62,1 @@
+-* Headings: Sentence case (capitalize first word, proper nouns only).
++
+* Headings: Sentence case (capitalize first word, proper nouns only).
+@@ -70,1 +70,1 @@
+-## When Editing Existing Docs
++## When Editing Existing Docs
+
+@@ -71,1 +71,1 @@
+-1. If you encounter a violation, fix the immediate area (local cleanup) but avoid broad, styleâonly sweeping changes unrelated to the intent of the commit.
++
+1. If you encounter a violation, fix the immediate area (local cleanup) but avoid broad, styleâonly sweeping changes unrelated to the intent of the commit.
+@@ -75,1 +75,1 @@
+-## Task Lists & Checkboxes
++## Task Lists & Checkboxes
+
+@@ -76,1 +76,1 @@
+-* Use asterisks: `* [ ] Task` / `* [x] Done task`.
++
+* Use asterisks: `* [ ] Task` / `* [x] Done task`.
+@@ -80,1 +80,1 @@
+-## Common Pitfalls & Quick Fixes
++## Common Pitfalls & Quick Fixes
+
+@@ -90,1 +90,1 @@
+-## Review Checklist (Apply Before Commit)
++## Review Checklist (Apply Before Commit)
+
+@@ -91,1 +91,1 @@
+-* [ ] All headings have single blank line before/after.
++
+* [ ] All headings have single blank line before/after.
+diff --git a/docs/consolidation-notes.md b/docs/consolidation-notes.md
+--- a/docs/consolidation-notes.md
++++ b/docs/consolidation-notes.md
+@@ -37,1 +37,1 @@
+-- Static embedding for frontend: PENDING.
++

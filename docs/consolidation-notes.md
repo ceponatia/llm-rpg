@@ -32,5 +32,5 @@ Supplementary notes captured during migration of Memory + Story into the `rpg` w
 
 - Namespace migration: COMPLETE.
 - Docs baseline: CREATED (`integration-story-memory.md`, this file).
-- Static embedding for frontend: PENDING.
+
 

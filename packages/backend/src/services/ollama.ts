@@ -158,11 +158,11 @@ export class OllamaService {
     }
   }
 
-  public async getAvailableModels(): Promise<Array<string>> {
+  public async getAvailableModels(): Promise<string[]> {
     try {
       const response: unknown = await this.ollama.list();
       if (typeof response === 'object' && response != null && 'models' in response && Array.isArray((response as { models: unknown }).models)) {
-        const models = (response as { models: Array<{ name: string }> }).models;
+        const models = (response as { models: { name: string }[] }).models;
         return models.map(m => m.name);
       }
       return [];

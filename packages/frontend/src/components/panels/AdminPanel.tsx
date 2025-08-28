@@ -2,7 +2,7 @@ import { useSessionStore } from '../../state/sessionStore';
 import React from 'react';
 import { AdminFrame } from './AdminFrame';
 
-export const AdminPanel = () => {
+export const AdminPanel: React.FC = () => {
 	const { isAdmin } = useSessionStore();
 	const [showEmbedded, setShowEmbedded] = React.useState(true);
 	if (!isAdmin) return null;
@@ -20,7 +20,7 @@ export const AdminPanel = () => {
 					<button className="hover:text-accent-400">View Database (placeholder)</button>
 				</li>
 				<li>
-					<a href={(import.meta as any).env.VITE_ADMIN_DASHBOARD_ORIGIN || 'http://localhost:5173'} target="_blank" rel="noreferrer" className="hover:text-accent-400">Open Full Admin Dashboard</a>
+					<a href={((import.meta as unknown) as { env: Record<string,string|undefined> }).env.VITE_ADMIN_DASHBOARD_ORIGIN ?? 'http://localhost:5173'} target="_blank" rel="noreferrer" className="hover:text-accent-400">Open Full Admin Dashboard</a>
 				</li>
 			</ul>
 			{showEmbedded && <AdminFrame />}

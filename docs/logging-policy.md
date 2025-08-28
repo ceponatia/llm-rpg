@@ -4,9 +4,9 @@ This document defines how logging must be performed across the RPG consolidated 
 
 ## Goals
 
-- Consistent, structured logs.
-- Minimize noise while preserving diagnostic value.
-- Enable future redirection to external collectors (e.g. OpenTelemetry, Loki) without sweeping refactors.
+* Consistent, structured logs.
+* Minimize noise while preserving diagnostic value.
+* Enable future redirection to external collectors (e.g. OpenTelemetry, Loki) without sweeping refactors.
 
 ## Log API
 
@@ -35,24 +35,24 @@ Always pass a single object as the first metadata argument (after the message) w
 
 Recommended keys:
 
-- `sessionId`
-- `characterId`
-- `turnId`
-- `durationMs`
-- `error` (raw error object)
-- `count` (quantities, list sizes)
+* `sessionId`
+* `characterId`
+* `turnId`
+* `durationMs`
+* `error` (raw error object)
+* `count` (quantities, list sizes)
 
 ## Prohibited
 
-- Raw user PII (only anonymized / hashed if ever added).
-- Entire prompt payloads at `info` or lower (use `debug` if essential during dev).
-- Logging secrets or environment variable values.
+* Raw user PII (only anonymized / hashed if ever added).
+* Entire prompt payloads at `info` or lower (use `debug` if essential during dev).
+* Logging secrets or environment variable values.
 
 ## Patterns
 
-- Wrap external service calls: log start (debug) + completion (info) with duration.
-- For batch operations, log aggregate counts instead of each item at `info` level.
-- Pair every `warn` with an action hint (planned fallback, next step, or suppress justification).
+* Wrap external service calls: log start (debug) + completion (info) with duration.
+* For batch operations, log aggregate counts instead of each item at `info` level.
+* Pair every `warn` with an action hint (planned fallback, next step, or suppress justification).
 
 ## Migration Guidance
 
@@ -62,12 +62,12 @@ Recommended keys:
 
 ## Future Extensions
 
-- Pluggable sink adapter interface.
-- Correlation / trace IDs (future task) injected into a base context.
-- JSON serialization for structured ingestion.
+* Pluggable sink adapter interface.
+* Correlation / trace IDs (future task) injected into a base context.
+* JSON serialization for structured ingestion.
 
 ## Validation
 
-- Grep `console.log` (and other console methods) should return only explicitly allowed startup messages after migration task completed.
+* Grep `console.log` (and other console methods) should return only explicitly allowed startup messages after migration task completed.
 
 End of policy.

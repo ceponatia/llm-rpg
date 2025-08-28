@@ -3,13 +3,13 @@ import type { ManagedTransaction } from 'neo4j-driver';
 import type { WorkingMemoryTurn, MemoryOperation } from '@rpg/types';
 
 export interface RelationshipWriteResult {
-  operations: Array<MemoryOperation>;
-  relationship_ids: Array<string>;
+  operations: MemoryOperation[];
+  relationship_ids: string[];
 }
 
 export async function processRelationship(
   tx: ManagedTransaction, 
-  event: { entities_involved: Array<string>; type: string; confidence: number }, 
+  event: { entities_involved: string[]; type: string; confidence: number }, 
   turn: WorkingMemoryTurn, 
   sessionId: string
 ): Promise<RelationshipWriteResult> {
@@ -18,7 +18,7 @@ export async function processRelationship(
   }
 
   const relationshipId = `rel:${crypto.randomUUID()}`;
-  const operations: Array<MemoryOperation> = [];
+  const operations: MemoryOperation[] = [];
 
   const query = `
     MATCH (from:Character {id: $fromEntity})

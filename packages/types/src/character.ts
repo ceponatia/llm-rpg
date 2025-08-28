@@ -24,7 +24,7 @@ export interface CharacterAttribute {
   // Value can be a primitive or a scalar with unit
   value: AttributePrimitive | AttributeScalar;
   // Optional alternate terms to improve matching during retrieval
-  aliases?: Array<string>;            // e.g., ["hair", "haircolor"]
+  aliases?: string[];            // e.g., ["hair", "haircolor"]
   // Optional helpers for prioritization and maintenance
   salience?: number;             // 0..1, general importance for injection
   confidence?: number;           // 0..1, confidence in correctness
@@ -41,5 +41,5 @@ export interface CharacterProfile {
   baseline_vad?: VADState; // baseline emotional state
 
   // Structured, queryable attributes for prompt-time injection
-  attributes?: Array<CharacterAttribute>;
+  attributes?: CharacterAttribute[];
 }

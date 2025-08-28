@@ -36,9 +36,9 @@ interface EmotionalStateVisualizerProps {
 }
 
 export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> = ({ className }) => {
-  const [characters, setCharacters] = useState<Array<Character>>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string>('');
-  const [emotionalHistory, setEmotionalHistory] = useState<Array<EmotionalHistory>>([]);
+  const [emotionalHistory, setEmotionalHistory] = useState<EmotionalHistory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const chartRef = useRef(null);
 
@@ -50,8 +50,8 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
       if (!response.ok) { return; }
       const json: unknown = await response.json();
       if (json !== null && typeof json === 'object' && Array.isArray((json as { characters?: unknown }).characters)) {
-        const rawChars = (json as { characters: Array<unknown> }).characters;
-        const typed: Array<Character> = rawChars.filter((c): c is Character =>
+        const rawChars = (json as { characters: unknown[] }).characters;
+        const typed: Character[] = rawChars.filter((c): c is Character =>
           c !== null && typeof c === 'object' && 'id' in c && typeof (c as { id?: unknown }).id === 'string'
         );
         setCharacters(typed);
@@ -75,8 +75,8 @@ export const EmotionalStateVisualizer: React.FC<EmotionalStateVisualizerProps> =
       if (!response.ok) { return; }
       const json: unknown = await response.json();
       if (json !== null && typeof json === 'object' && Array.isArray((json as { emotional_history?: unknown }).emotional_history)) {
-        const rawHist = (json as { emotional_history: Array<unknown> }).emotional_history;
-        const typed: Array<EmotionalHistory> = rawHist.filter((h): h is EmotionalHistory =>
+        const rawHist = (json as { emotional_history: unknown[] }).emotional_history;
+        const typed: EmotionalHistory[] = rawHist.filter((h): h is EmotionalHistory =>
           h !== null && typeof h === 'object' && 'timestamp' in h && 'vad_state' in h
         );
         setEmotionalHistory(typed);

@@ -17,7 +17,7 @@ import { buildSceneContext } from './prompts/scene.js';
 
 // Temporary interface until proper export exists in @rpg/types
 interface ModifierApplicationResult {
-  applied_modifiers: Array<string>;
+  applied_modifiers: string[];
   intensities: Record<string, number>;
   emotional_adjustment: VADState;
   final_intensity?: number; // placeholder for future aggregate
@@ -41,7 +41,7 @@ export interface PromptBuildResult {
   finalPrompt: string;
   promptParts: PromptParts;
   detectedIntent: IntentDetectionResult;
-  appliedModifiers: Array<string>;
+  appliedModifiers: string[];
   totalTokens: number;
   truncated: boolean;
 }
@@ -85,7 +85,7 @@ export class PromptBuilder {
     userMessage: string,
     sessionId: string,
   personaId?: string,
-  ragContext?: Array<string>
+  ragContext?: string[]
   ): Promise<PromptBuildResult> {
     const persona: PersonaDefinition | null = personaId !== undefined && personaId !== ''
       ? await this.personaManager.loadPersona(personaId)
@@ -153,13 +153,13 @@ export class PromptBuilder {
    */
   private composePromptParts(
     persona: PersonaDefinition,
-    appliedModifiers: Array<string>,
+    appliedModifiers: string[],
     currentEmotionalState: VADState,
-    ragContext?: Array<string>
+    ragContext?: string[]
   ): PromptParts {
     const personaText: string = renderPersona(persona);
     const all = this.modifierManager.listModifiers();
-    const modifierObjects: Array<ModifierFragment> = appliedModifiers
+    const modifierObjects: ModifierFragment[] = appliedModifiers
       .map((id: string): ModifierFragment | undefined => all.find((m: ModifierFragment) => m.id === id))
       .filter((m: ModifierFragment | undefined): m is ModifierFragment => m !== undefined);
     const modifierText: string = formatActiveModifiers(modifierObjects, {});
@@ -220,7 +220,7 @@ export class PromptBuilder {
 
 export async function buildPrompt(
   userMessage: string, 
-  ragContext?: Array<string>
+  ragContext?: string[]
 ): Promise<string> {
   const personaManager: PersonaManager = new PersonaManager();
   const intentDetector: IntentDetector = new IntentDetector();

@@ -4,10 +4,10 @@ Derived from architecture & code health investigation (Aug 2025). This plan oper
 
 Conventions:
 
-- Status initial = PENDING
-- Types: BE (backend), MCA (memory core), CM (context-modifier), AFF (affect engine), FE (frontend), INF (infrastructure/devops), QA (quality/testing), OBS (observability), DOC (documentation), ARCH (architecture/refactor), DATA (data/graph/vector layer), DX (developer experience)
-- Every task ships with validation you can automate (unit/integration test, script output, or inspection command).
-- Keep PRs scoped to ≤ ~400 LOC net change unless noted.
+* Status initial = PENDING
+* Types: BE (backend), MCA (memory core), CM (context-modifier), AFF (affect engine), FE (frontend), INF (infrastructure/devops), QA (quality/testing), OBS (observability), DOC (documentation), ARCH (architecture/refactor), DATA (data/graph/vector layer), DX (developer experience)
+* Every task ships with validation you can automate (unit/integration test, script output, or inspection command).
+* Keep PRs scoped to ≤ ~400 LOC net change unless noted.
 
 ## Phase 0: Preconditions / Guard Rails
 
@@ -129,22 +129,22 @@ Phase 8 Exit: Clear contributor docs, architectural transparency, enforced cover
 
 ## Phase Exit Summary Targets
 
-- Phase 1: No stub throws in normal prompt flow.
-- Phase 2: Single canonical emotional types.
-- Phase 3: ≥70% coverage for new modules, prompt and manager logic validated.
-- Phase 4: Zero raw console.log (except startup); metrics present.
-- Phase 5: Tokenization abstraction and adaptive fusion working.
-- Phase 6: Affect influences prompt & modifiers with persistence.
-- Phase 7: Data constraints & retention enforced.
-- Phase 8: Contributor onboarding friction < 15 minutes (manual test).
+* Phase 1: No stub throws in normal prompt flow.
+* Phase 2: Single canonical emotional types.
+* Phase 3: ≥70% coverage for new modules, prompt and manager logic validated.
+* Phase 4: Zero raw console.log (except startup); metrics present.
+* Phase 5: Tokenization abstraction and adaptive fusion working.
+* Phase 6: Affect influences prompt & modifiers with persistence.
+* Phase 7: Data constraints & retention enforced.
+* Phase 8: Contributor onboarding friction < 15 minutes (manual test).
 
 ## Validation Matrix (Cross-Cutting)
 
-- Observability: CAS-040, 041, 042, 043, 053
-- Performance: CAS-050, 051, 052, 053, 054
-- Data Integrity: CAS-070, 071, 072, 073
-- Testing Quality: CAS-030–035, 033, 084
-- Integration (Affect): CAS-060–064
+* Observability: CAS-040, 041, 042, 043, 053
+* Performance: CAS-050, 051, 052, 053, 054
+* Data Integrity: CAS-070, 071, 072, 073
+* Testing Quality: CAS-030–035, 033, 084
+* Integration (Affect): CAS-060–064
 
 ## Suggested Implementation Order
 

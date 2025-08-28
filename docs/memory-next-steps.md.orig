@@ -3,7 +3,7 @@
 This document outlines the staged plan to evolve and integrate the `@rpg/affect` emotion system while keeping it fully decoupled (plug & play) from the rest of the monorepo.
 
 ---
-## 1. Decouple From External Types (IN PROGRESS)
+
 
 
 - Replace imports of `VADState` from `@rpg/types` with a local interface.
@@ -26,7 +26,7 @@ This document outlines the staged plan to evolve and integrate the `@rpg/affect`
 
 - Separate raw delta composition vs. adjustment stages (negativity bias, saturation, friction, trait caps, gates).
 - Add unit tests for:
-	- Trust gate scaling monotonicity.
+ - Trust gate scaling monotonicity.
 	- Friction monotonic increase with distance.
 	- Trait cap corridor not exceeded.
 	- Saturation plateau (delta magnitude decreases past threshold).
@@ -74,7 +74,7 @@ This document outlines the staged plan to evolve and integrate the `@rpg/affect`
 - Potential Bayesian upgrade (Option 4) if noise handling required.
 
 ---
-### Immediate Actions (Suggested Order)
+
 
 
 1. (✔) Add local `VADState` & remove external import.

@@ -35,7 +35,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   error: undefined,
   affection: 50,
   lastIntent: undefined,
-  async send(text: string) {
+  async send(text: string): Promise<void> {
     if (!isEnabled('FRONTEND_CHAT_ENABLED')) {
       set({ error: 'Chat disabled' });
       return;
@@ -61,7 +61,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const sid = res.sessionId;
       const replyContent = res.reply;
       const replyTurn: ChatTurn = {
-        id: res.id || `assistant-${Date.now()}`,
+  id: res.id ?? `assistant-${Date.now()}`,
         role: 'assistant',
         content: replyContent,
         timestamp: new Date().toISOString()
@@ -72,9 +72,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
         turns: s.turns.concat(replyTurn),
         sending: false
       }));
-    } catch (e: any) {
-      set({ error: e.message || 'Failed to send', sending: false });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to send';
+      set({ error: msg, sending: false });
     }
   },
-  clear() { set({ turns: [], sessionId: undefined, error: undefined, affection: 50, lastIntent: undefined }); }
+  clear(): void { set({ turns: [], sessionId: undefined, error: undefined, affection: 50, lastIntent: undefined }); }
 }));

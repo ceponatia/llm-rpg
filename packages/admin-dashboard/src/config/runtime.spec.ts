@@ -9,7 +9,7 @@ if (typeof document === 'undefined') {
 
 declare global {
   // Augment test global with optional runtime reset hook
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+   
   interface Global {
     __resetRuntimeConfig?: () => void;
   }

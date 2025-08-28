@@ -66,7 +66,7 @@ export class CharacterRegistry {
     }
   }
 
-  public list(): Array<CharacterProfile> {
+  public list(): CharacterProfile[] {
     if (this.loaded === false) { this.load(); }
     return Array.from(this.characters.values());
   }

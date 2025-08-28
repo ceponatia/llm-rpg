@@ -50,16 +50,16 @@ export class L2GraphMemory {
     eventDetection: EventDetectionResult,
     sessionId: string
   ): Promise<{
-    operations: Array<MemoryOperation>;
-    facts_updated: Array<string>;
-    relationships_modified: Array<string>;
+    operations: MemoryOperation[];
+    facts_updated: string[];
+    relationships_modified: string[];
   }> {
     const session = this.driver.session();
     try {
       return await session.executeWrite(async (tx: ManagedTransaction) => {
-        const operations: Array<MemoryOperation> = [];
-        const factsUpdated: Array<string> = [];
-        const relationshipsModified: Array<string> = [];
+        const operations: MemoryOperation[] = [];
+        const factsUpdated: string[] = [];
+        const relationshipsModified: string[] = [];
 
         // 1. Create or update characters with emotional states
         for (const emotionalChange of eventDetection.emotional_changes) {
@@ -164,7 +164,7 @@ export class L2GraphMemory {
   }
 
   // Public API methods
-  public async getAllCharacters(): Promise<Array<Character>> {
+  public async getAllCharacters(): Promise<Character[]> {
     const session = this.driver.session();
     try {
       return await session.executeRead(async (tx: ManagedTransaction) => {
@@ -179,7 +179,7 @@ export class L2GraphMemory {
     }
   }
 
-  public getEmotionalHistory(): Promise<Array<unknown>> {
+  public getEmotionalHistory(): Promise<unknown[]> {
     // TODO: Implement emotional history tracking
     return Promise.resolve([]);
   }

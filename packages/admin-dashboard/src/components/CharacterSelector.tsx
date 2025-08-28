@@ -2,7 +2,7 @@ import React from 'react';
 import type { CharacterProfile } from '@rpg/types';
 
 interface CharacterSelectorProps {
-  characters: Array<CharacterProfile>;
+  characters: CharacterProfile[];
   selectedCharacter: CharacterProfile | null;
   onSelect: (character: CharacterProfile | null) => void;
   loading?: boolean;

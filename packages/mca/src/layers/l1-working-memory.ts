@@ -84,7 +84,7 @@ export class L1WorkingMemory {
   /**
    * Calculate relevance score for working memory turns
    */
-  private calculateRelevanceScore(turns: Array<WorkingMemoryTurn>, query: string): number {
+  private calculateRelevanceScore(turns: WorkingMemoryTurn[], query: string): number {
     if (turns.length === 0) {return 0;}
 
     // Simple keyword matching for now
@@ -116,7 +116,7 @@ export class L1WorkingMemory {
   /**
    * Get chat history for a session
    */
-  public getHistory(sessionId: string): Array<WorkingMemoryTurn> {
+  public getHistory(sessionId: string): WorkingMemoryTurn[] {
     const session = this.sessions.get(sessionId);
     return session !== undefined ? [...session.turns] : [];
   }
@@ -124,8 +124,8 @@ export class L1WorkingMemory {
   /**
    * Get all active sessions
    */
-  public getAllSessions(): Array<ChatSession> {
-    const sessions: Array<ChatSession> = [];
+  public getAllSessions(): ChatSession[] {
+    const sessions: ChatSession[] = [];
     
     for (const [sessionId, memory] of this.sessions) {
   if (memory.turns.length > 0) {
@@ -157,7 +157,7 @@ export class L1WorkingMemory {
    */
   public clearOldSessions(maxAge: number = 24 * 60 * 60 * 1000): void {
     const now = Date.now();
-    const sessionsToDelete: Array<string> = [];
+    const sessionsToDelete: string[] = [];
 
     for (const [sessionId, memory] of this.sessions) {
       if (memory.turns.length === 0) {
@@ -183,7 +183,7 @@ export class L1WorkingMemory {
    */
   public async inspect(): Promise<unknown> {
     await Promise.resolve();
-    const sessionData: Array<{ session_id: string; turn_count: number; total_tokens: number; recent_activity: string | null; }> = [];
+    const sessionData: { session_id: string; turn_count: number; total_tokens: number; recent_activity: string | null; }[] = [];
     
     for (const [sessionId, memory] of this.sessions) {
       sessionData.push({

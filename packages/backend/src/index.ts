@@ -38,8 +38,9 @@ const fastify = Fastify({
 // Enable compression (Fastify v5 compatible)
 try {
   const compressMod = await import('@fastify/compress');
-  const plugin: any = (compressMod as any).default ?? compressMod; // cast to any to avoid TS plugin signature friction
-  await fastify.register(plugin, { global: true });
+  // Module may export either default or named; normalize to known plugin signature.
+  const plugin = (compressMod as { default?: unknown })?.default ?? compressMod;
+  await fastify.register(plugin as any, { global: true });
   fastify.log.info('Compression plugin enabled');
 } catch {
   fastify.log.warn('Compression plugin failed to load');
@@ -49,7 +50,7 @@ try {
 await fastify.register(cors, {
   origin: (origin: string | undefined, cb: (err: Error | null, allow: boolean) => void): void => {
     const allowedEnv = [process.env.STORY_ORIGIN, process.env.ADMIN_ORIGIN].filter((v): v is string => typeof v === 'string' && v !== '');
-    const allowed: Array<string> = [
+    const allowed: string[] = [
       'http://localhost:5173',
       'http://localhost:5174',
       ...allowedEnv

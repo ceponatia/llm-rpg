@@ -61,3 +61,6 @@ dev-front/
 
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
+
+# Docs: ignore all first-level subdirectories inside /docs but keep root docs files
+/docs/*/

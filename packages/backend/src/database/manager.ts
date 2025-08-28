@@ -30,7 +30,7 @@ export class DatabaseManager implements IDatabaseManager {
   public getFaissIndex(): MockFaissIndex { return this.vector.getIndex(); }
   public async saveFaissIndex(): Promise<void> { await this.vector.save(); }
   public async close(): Promise<void> { await Promise.all([this.neo4j.close(), this.vector.save(), this.redis.close()]); logger.info('Database connections closed'); }
-  public hasRedis(): boolean { return (this as any).redis?.client != null; }
+  public hasRedis(): boolean { return this.redis.client != null; }
 
   // High-level aggregate stats for lightweight public summary
   public async getHighLevelStats(): Promise<{ sessions: number; characters: number; facts: number; lastEventAt?: string } > {

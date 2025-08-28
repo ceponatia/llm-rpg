@@ -5,7 +5,7 @@ import { maybeTransition } from './mode.js';
 import { clamp, distanceFromBaseline, applyMaxStep } from './math.js';
 
 export function updateEmotion(state: EmotionState, signal: AffectSignal, cfg: EmotionConfig): UpdateResult {
-  const notes: Array<string> = [];
+  const notes: string[] = [];
   const prevState: EmotionState = state;
   const newDiscrete = normalizeAffects(applyStimuli(decayAffects(prevState.discrete, cfg), signal, cfg), cfg.clampRange.min, cfg.clampRange.max);
 

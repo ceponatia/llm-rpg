@@ -6,17 +6,17 @@ This document explains what Neo4j does in this codebase, how we model data, and 
 
 Neo4j stores *relational narrative state* that benefits from graph traversal:
 
-- Characters, their traits, relationships, and evolving connections.
-- Sessions (game/story segments) and Turns (chronological exchanges).
-- Facts / Memories derived from player + NPC interactions.
-- Topical links between memories (themes, locations, entities, quests).
-- Provenance (which turn produced which fact; which characters were involved).
+* Characters, their traits, relationships, and evolving connections.
+* Sessions (game/story segments) and Turns (chronological exchanges).
+* Facts / Memories derived from player + NPC interactions.
+* Topical links between memories (themes, locations, entities, quests).
+* Provenance (which turn produced which fact; which characters were involved).
 
 This enables:
 
-- Efficient retrieval of the most contextually relevant memories for LLM prompts (relationship weighted, recency, topical similarity).
-- Rich querying for analytics (e.g., “What unresolved quest threads involve Character A within 3 relationship hops?”).
-- Future intent / narrative consistency checks (cycles, dangling arcs, contradiction detection).
+* Efficient retrieval of the most contextually relevant memories for LLM prompts (relationship weighted, recency, topical similarity).
+* Rich querying for analytics (e.g., “What unresolved quest threads involve Character A within 3 relationship hops?”).
+* Future intent / narrative consistency checks (cycles, dangling arcs, contradiction detection).
 
 FAISS (vector index) handles semantic similarity; Neo4j stores structured narrative linkage and provenance. The retrieval layer can combine both: (1) candidate facts via vector similarity, (2) expand via graph (neighbors / quest chains).
 
@@ -24,19 +24,21 @@ FAISS (vector index) handles semantic similarity; Neo4j stores structured narrat
 
 Current (implemented or partially):
 
-- Nodes: Character, Session, Turn, Fact (Memory).
-- Relationships: PARTICIPATED_IN (Character→Turn), IN_SESSION (Turn→Session), PRODUCED (Turn→Fact), RELATED_TO / REFERS_TO (Fact→Fact or Fact→Character).
-  Planned:
-- Quest / Objective nodes.
-- Location nodes for scene continuity.
-- Tag / Topic nodes for clustering.
+* Nodes: Character, Session, Turn, Fact (Memory).
+* Relationships: PARTICIPATED_IN (Character→Turn), IN_SESSION (Turn→Session), PRODUCED (Turn→Fact), RELATED_TO / REFERS_TO (Fact→Fact or Fact→Character).
+
+Planned:
+
+* Quest / Objective nodes.
+* Location nodes for scene continuity.
+* Tag / Topic nodes for clustering.
 
 ## 3. Why Graph vs Relational
 
-- Variable, evolving relationships (N:N) without predefined join explosion.
-- Path / neighborhood queries (shortest path, bounded depth expansion).
-- Natural modeling for provenance chaining (Turn -> Fact -> Derived Fact).
-- Easier to express fuzzy retrieval augmentation (expand 2 hops, filter by recency).
+* Variable, evolving relationships (N:N) without predefined join explosion.
+* Path / neighborhood queries (shortest path, bounded depth expansion).
+* Natural modeling for provenance chaining (Turn -> Fact -> Derived Fact).
+* Easier to express fuzzy retrieval augmentation (expand 2 hops, filter by recency).
 
 ## 4. Data Model (Draft)
 
@@ -104,10 +106,10 @@ RETURN turn.id AS turnId, count(*) AS factCount
 
 (Names may differ slightly—adjust when refactoring.)
 
-- Graph initialization: creates Neo4j driver at startup.
-- Memory extraction pipeline: after a Turn is generated, salient facts are distilled and persisted with PRODUCED.
-- Context assembly: given active Session + character set, selects candidate Facts via (a) recency/importance sort, (b) relationship expansion.
-- (Planned) Contradiction check: search for conflicting facts (e.g., same subject with opposing attributes).
+* Graph initialization: creates Neo4j driver at startup.
+* Memory extraction pipeline: after a Turn is generated, salient facts are distilled and persisted with PRODUCED.
+* Context assembly: given active Session + character set, selects candidate Facts via (a) recency/importance sort, (b) relationship expansion.
+* (Planned) Contradiction check: search for conflicting facts (e.g., same subject with opposing attributes).
 
 ## 7. Environment Variables
 
@@ -125,26 +127,29 @@ RETURN turn.id AS turnId, count(*) AS factCount
 
 If `NEO4J_OPTIONAL=true` and connection fails:
 
-- Log a WARN (once).
-- Set internal `graphEnabled=false`.
-- Stub graph queries to return empty arrays or no-op writes.
-- Health endpoint reports `neo4j:false` but overall still 200 so the dev stack boots without local Neo4j.
+* Log a WARN (once).
+* Set internal `graphEnabled=false`.
+* Stub graph queries to return empty arrays or no-op writes.
+* Health endpoint reports `neo4j:false` but overall still 200 so the dev stack boots without local Neo4j.
 
 ## 9. Local Development
 
 1. Run a container:
-   ```bash
-   docker run -d --name neo4j \
-     -p 7474:7474 -p 7687:7687 \
-     -e NEO4J_AUTH=neo4j/devpassword \
-     neo4j:5.23
-   ```
-2. Export env vars (or use `.env` in backend package).
-3. Start dev stack (`pnpm dev:all`).
-4. Browse http://localhost:7474 (optional) and run diagnostic:
-   ```cypher
-   MATCH (n) RETURN count(n);
-   ```
+
+  ```bash
+  docker run -d --name neo4j \
+    -p 7474:7474 -p 7687:7687 \
+    -e NEO4J_AUTH=neo4j/devpassword \
+    neo4j:5.23
+  ```
+
+1. Export env vars (or use `.env` in backend package).
+1. Start dev stack (`pnpm dev:all`).
+1. Browse <http://localhost:7474> (optional) and run diagnostic:
+
+  ```cypher
+  MATCH (n) RETURN count(n);
+  ```
 
 ## 10. Minimal Driver Usage (Example Code)
 
@@ -173,19 +178,20 @@ export async function runQuery<T = unknown>(cypher: string, params: Record<strin
 
 We use a *migrateless* approach for now (dynamic MERGE). When relationships / labels change substantially:
 
-- Create a migration script (e.g., `scripts/graph-migrations/2025-09-add-quest-label.ts`).
-- Idempotent Cypher (repeat safe).
-- Add a root script `pnpm backend:migrate:graph` to run them in order.
+* Create a migration script (e.g., `scripts/graph-migrations/2025-09-add-quest-label.ts`).
+* Idempotent Cypher (repeat safe).
+* Add a root script `pnpm backend:migrate:graph` to run them in order.
 
 ## 12. Performance Considerations
 
-- Add indexes on high-selectivity properties (e.g., `:Fact(id)`, `:Turn(id)`, `:Session(id)`, `:Character(id)`).
+* Add indexes on high-selectivity properties (e.g., `:Fact(id)`, `:Turn(id)`, `:Session(id)`, `:Character(id)`).
+
   ```cypher
   CREATE INDEX fact_id IF NOT EXISTS FOR (f:Fact) ON (f.id);
   ```
-- For recency queries, consider storing numeric epoch (`createdAtEpoch`) to sort faster.
-- Batch writes: combine multiple MERGE statements in a single transaction per turn.
-- Use `EXPLAIN` / `PROFILE` for slow queries (watch for accidental Cartesian products).
+* For recency queries, consider storing numeric epoch (`createdAtEpoch`) to sort faster.
+* Batch writes: combine multiple MERGE statements in a single transaction per turn.
+* Use `EXPLAIN` / `PROFILE` for slow queries (watch for accidental Cartesian products).
 
 ## 13. Future Enhancements
 
@@ -208,12 +214,12 @@ We use a *migrateless* approach for now (dynamic MERGE). When relationships / la
 
 ## 15. Action Items (If Not Yet Implemented)
 
-- [ ] Add optional mode (env flag + stubs).
-- [ ] Add basic indexes (id fields).
-- [ ] Add retrieval service combining vector + graph hops.
-- [ ] Add migration scaffold folder.
-- [ ] Add test harness using an ephemeral Neo4j container or test double.
-- [ ] Add health sub-endpoint `/health/neo4j`.
+* [ ] Add optional mode (env flag + stubs).
+* [ ] Add basic indexes (id fields).
+* [ ] Add retrieval service combining vector + graph hops.
+* [ ] Add migration scaffold folder.
+* [ ] Add test harness using an ephemeral Neo4j container or test double.
+* [ ] Add health sub-endpoint `/health/neo4j`.
 
 (Once each is completed, check them off.)
 

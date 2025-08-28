@@ -1,14 +1,17 @@
-# LLM RPG Workspace
+LLM RPG Workspace
+=================
 
 Monorepo containing memory backend, admin dashboard, and story/frontend prototypes.
 
-## Quick start
+Quick start
+-----------
 
 1. Install deps: `pnpm install`
 1. Copy `.env.example` to `.env` and adjust ports/keys.
 1. Run backend + frontends: `pnpm dev`
 
-## Chat feature flags (Sprint 1)
+Chat feature flags (Sprint 1)
+-----------------------------
 
 Set these in `.env` to enable the foundational chat loop.
 
@@ -20,7 +23,8 @@ Set these in `.env` to enable the foundational chat loop.
 
 Turn all three on (ENABLE_CHAT_API=true, VITE_FRONTEND_CHAT_ENABLED=true) to exercise the end‑to‑end loop locally (leave CHAT_ECHO_MODE=true for stub replies).
 
-## Packages
+Packages
+--------
 
 * `@rpg/backend` – Fastify server (memory, chat, static embedding)
 * `@rpg/frontend` – Story/game UI prototype
@@ -28,7 +32,8 @@ Turn all three on (ENABLE_CHAT_API=true, VITE_FRONTEND_CHAT_ENABLED=true) to exe
 * `@rpg/types` – Shared types & (future) schemas
 * `@rpg/utils` – Cross-cutting utilities (logging)
 
-## Testing
+Testing
+-------
 
 Run all critical package tests:
 
@@ -42,6 +47,7 @@ Typecheck whole workspace:
 pnpm typecheck
 ```
 
-## Development notes
+Development notes
+-----------------
 
 Sprint 1 delivered the initial chat loop with in‑memory session turns (bounded 50), simple intent detection (excited / annoyed), and an affection meter (0–100). Persistence beyond process memory and advanced romance logic are deferred to a later sprint.

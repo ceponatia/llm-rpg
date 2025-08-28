@@ -67,7 +67,7 @@ export class PersonaManager {
    * List all available persona IDs
    * TODO: Implement persona listing
    */
-  public listPersonaIds(): Array<string> {
+  public listPersonaIds(): string[] {
 	return Array.from(this.personas.keys());
   }
 

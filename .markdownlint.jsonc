@@ -1,0 +1,20 @@
+{
+  // Use consistent asterisk style for unordered lists
+  "MD004": { "style": "asterisk" },
+  // Allow multiple consecutive blank lines only if needed (default false)
+  "MD012": true,
+  // Enforce fenced code blocks
+  "MD046": { "style": "fenced" },
+  // Use consistent ordered list numbering (1.)
+  "MD029": { "style": "ordered" },
+  // Require blank lines around fenced code blocks
+  "MD031": true,
+  // Enforce heading style (setext for h1/h2, atx otherwise)
+  "MD003": { "style": "atx" },
+  // Disallow bare URLs
+  "MD034": true,
+  // Trailing spaces (default)
+  "MD009": true,
+  // Line length disabled for now due to many long tables / URLs
+  "MD013": false
+}

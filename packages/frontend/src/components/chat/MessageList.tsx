@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import type { ChatTurn } from '@rpg/types';
 
-interface MessageListProps { turns: Array<ChatTurn>; className?: string; autoScroll?: boolean }
+interface MessageListProps { turns: ChatTurn[]; className?: string; autoScroll?: boolean }
 
-export const useAutoScroll = (deps: Array<unknown>) => {
+export const useAutoScroll = (deps: unknown[]) => {
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = ref.current;

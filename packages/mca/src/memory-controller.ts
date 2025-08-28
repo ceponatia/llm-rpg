@@ -41,7 +41,7 @@ export class MemoryController {
    */
   public async ingestConversationTurn(
     turn: WorkingMemoryTurn,
-    context: Array<WorkingMemoryTurn>,
+    context: WorkingMemoryTurn[],
     sessionId: string
   ): Promise<MemoryIngestionResult> {
     const operations = [];
@@ -64,8 +64,8 @@ export class MemoryController {
       const eventDetection = this.scorer.detectEvents(turn, context);
 
       // 3. If significant enough, process for L2 and L3
-      let factsUpdated: Array<string> = [];
-      let relationshipsModified: Array<string> = [];
+      let factsUpdated: string[] = [];
+      let relationshipsModified: string[] = [];
       const emotionalChanges = eventDetection.emotional_changes;
 
       if (eventDetection.is_significant) {
@@ -150,19 +150,19 @@ export class MemoryController {
    * PUBLIC API METHODS
    */
 
-  public getChatHistory(sessionId: string): Array<WorkingMemoryTurn> {
+  public getChatHistory(sessionId: string): WorkingMemoryTurn[] {
     return this.l1.getHistory(sessionId);
   }
 
-  public getAllSessions(): Array<ChatSession> {
+  public getAllSessions(): ChatSession[] {
     return this.l1.getAllSessions();
   }
 
-  public async getAllCharacters(): Promise<Array<Character>> {
+  public async getAllCharacters(): Promise<Character[]> {
     return this.l2.getAllCharacters();
   }
 
-  public async getCharacterEmotionalHistory(): Promise<Array<unknown>> {
+  public async getCharacterEmotionalHistory(): Promise<unknown[]> {
     return this.l2.getEmotionalHistory();
   }
 

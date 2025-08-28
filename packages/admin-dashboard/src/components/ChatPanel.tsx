@@ -15,7 +15,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   fusionWeights,
   selectedCharacter
 }) => {
-  const [messages, setMessages] = useState<Array<ChatMessage>>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

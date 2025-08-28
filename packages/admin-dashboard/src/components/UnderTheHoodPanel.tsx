@@ -4,11 +4,11 @@ import type { MemoryOperation } from '@rpg/types';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface UnderTheHoodPanelProps {
-  operations: Array<MemoryOperation>;
+  operations: MemoryOperation[];
 }
 
 export const UnderTheHoodPanel: React.FC<UnderTheHoodPanelProps> = ({ operations }) => {
-  const [allOperations, setAllOperations] = useState<Array<MemoryOperation>>(operations);
+  const [allOperations, setAllOperations] = useState<MemoryOperation[]>(operations);
   const { lastMessage } = useWebSocket();
 
   // Listen for real-time memory operations from WebSocket

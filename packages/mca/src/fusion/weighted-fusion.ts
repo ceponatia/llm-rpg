@@ -117,7 +117,7 @@ export class WeightedMemoryFusion {
     }
 
     // L2 decay (graph memory decays more slowly)
-    const processL2Items = (items: Array<{ last_updated: string }>): void => {
+    const processL2Items = (items: { last_updated: string }[]): void => {
       items.forEach(item => {
         const age = now - new Date(item.last_updated).getTime();
         const decayScore = Math.exp(-age / (7 * 24 * 60 * 60 * 1000 * this.config.importance_decay_rate)); // Decay over weeks

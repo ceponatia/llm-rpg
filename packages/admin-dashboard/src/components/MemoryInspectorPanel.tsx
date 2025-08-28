@@ -9,12 +9,12 @@ interface MemoryInspectorPanelProps {
 interface MemoryState {
   l1_working_memory: {
     total_sessions: number;
-    active_sessions: Array<{
+    active_sessions: {
       session_id: string;
       turn_count: number;
       total_tokens: number;
       recent_activity: string;
-    }>;
+    }[];
   };
   l2_graph_memory: {
     characters: number;

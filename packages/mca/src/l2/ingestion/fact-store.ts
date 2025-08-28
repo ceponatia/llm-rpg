@@ -3,20 +3,20 @@ import type { ManagedTransaction } from 'neo4j-driver';
 import type { WorkingMemoryTurn, MemoryOperation } from '@rpg/types';
 
 export interface FactWriteResult {
-  operations: Array<MemoryOperation>;
-  fact_ids: Array<string>;
+  operations: MemoryOperation[];
+  fact_ids: string[];
 }
 
 export async function processFact(
   tx: ManagedTransaction, 
-  event: { entities_involved: Array<string>; description: string; confidence: number }, 
+  event: { entities_involved: string[]; description: string; confidence: number }, 
   turn: WorkingMemoryTurn, 
   sessionId: string
 ): Promise<FactWriteResult> {
   // Extract fact information from the event
   // This is a simplified implementation - in reality, we'd use NLP
   const factId = `fact:${crypto.randomUUID()}`;
-  const operations: Array<MemoryOperation> = [];
+  const operations: MemoryOperation[] = [];
   
   // For now, create a simple fact from the event description
   const query = `

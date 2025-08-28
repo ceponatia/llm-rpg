@@ -31,16 +31,16 @@ export interface MCAConfig {
 export interface EventDetectionResult {
   is_significant: boolean;
   significance_score: number;
-  detected_events: Array<DetectedEvent>;
-  emotional_changes: Array<EmotionalChange>;
-  named_entities: Array<NamedEntity>;
+  detected_events: DetectedEvent[];
+  emotional_changes: EmotionalChange[];
+  named_entities: NamedEntity[];
 }
 
 export interface DetectedEvent {
   type: 'relationship_change' | 'fact_assertion' | 'emotional_peak' | 'conflict' | 'resolution';
   confidence: number;
   description: string;
-  entities_involved: Array<string>;
+  entities_involved: string[];
 }
 
 export interface EmotionalChange {
@@ -60,19 +60,19 @@ export interface NamedEntity {
 }
 
 export interface SignificanceScorer {
-  scoreConversationTurn(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): number;
-  detectEvents(turn: WorkingMemoryTurn, context: Array<WorkingMemoryTurn>): EventDetectionResult;
+  scoreConversationTurn(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): number;
+  detectEvents(turn: WorkingMemoryTurn, context: WorkingMemoryTurn[]): EventDetectionResult;
   calculateVADDelta(current: VADState, previous: VADState): number;
 }
 
 export interface MemoryIngestionResult {
   success: boolean;
-  operations_performed: Array<MemoryOperation>;
+  operations_performed: MemoryOperation[];
   significance_score: number;
-  events_detected: Array<DetectedEvent>;
-  emotional_changes: Array<EmotionalChange>;
-  facts_updated: Array<string>;
-  relationships_modified: Array<string>;
+  events_detected: DetectedEvent[];
+  emotional_changes: EmotionalChange[];
+  facts_updated: string[];
+  relationships_modified: string[];
 }
 
 export interface MemoryRetrievalQuery {

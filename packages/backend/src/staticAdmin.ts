@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method -- Fastify dynamic imports & logger methods are safe to call directly in this context */
+ 
 import type { FastifyInstance } from 'fastify';
 import { FLAGS } from './config/flags.js';
 import { buildAdminRuntimeConfig } from './adminConfig.js';
@@ -36,7 +36,7 @@ export async function setupStaticAdmin(fastify: FastifyInstance, opts: StaticAdm
     const basePath = ensureBasePath(rawBase);
 
   const explicitDir = process.env.ADMIN_STATIC_DIR; // directory path is not a boolean flag; read raw
-  const candidates: Array<string> = [];
+  const candidates: string[] = [];
   if (typeof explicitDir === 'string' && explicitDir !== '') {candidates.push(explicitDir);}
     candidates.push('../../admin-dashboard/dist');
     candidates.push('../../frontend/dist'); // legacy

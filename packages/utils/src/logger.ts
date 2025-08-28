@@ -28,22 +28,22 @@ const prefix = (lvl: LogLevel): string => `${new Date().toISOString()} ${color(c
 export const logger = {
   setLevel(level: LogLevel): void { cfg.level = level; },
   setColors(on: boolean): void { cfg.colors = on; },
-  debug(message: string, ...args: Array<unknown>): void {
+  debug(message: string, ...args: unknown[]): void {
     if (enabled('debug')) {
       console.debug(prefix('debug'), message, ...args);
     }
   },
-  info(message: string, ...args: Array<unknown>): void {
+  info(message: string, ...args: unknown[]): void {
     if (enabled('info')) {
       console.info(prefix('info'), message, ...args);
     }
   },
-  warn(message: string, ...args: Array<unknown>): void {
+  warn(message: string, ...args: unknown[]): void {
     if (enabled('warn')) {
       console.warn(prefix('warn'), message, ...args);
     }
   },
-  error(message: string, ...args: Array<unknown>): void {
+  error(message: string, ...args: unknown[]): void {
     if (enabled('error')) {
       console.error(prefix('error'), message, ...args);
     }
